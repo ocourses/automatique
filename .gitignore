@@ -1,0 +1,11 @@
+.DS_Store
+
+# Fichiers temporaires LaTeX
+*.aux
+*.fdb_latexmk
+*.fls
+*.log
+*.out
+*.synctex.gz
+*.toc
+build/
