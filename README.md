@@ -10,6 +10,21 @@ Ce dépôt rassemble les ressources accessibles aux étudiants :
 - [travaux pratiques](tp/README.md) ;
 - [examens et corrigés disponibles](examens/README.md).
 
+## Cloner et mettre à jour le dépôt
+
+Il est recommandé de cloner le dépôt plutôt que de télécharger les fichiers
+un par un. Cela permet de récupérer facilement les nouvelles ressources avec
+`git pull` :
+
+```bash
+git clone git@github.com:ocourses/automatique.git
+cd automatique
+git pull
+```
+
+Une fois le dépôt cloné, la commande `git pull` suffit pour récupérer les mises
+à jour publiées pendant le semestre.
+
 ## Organisation du dépôt
 
 Chaque répertoire possède son propre README avec les informations détaillées
