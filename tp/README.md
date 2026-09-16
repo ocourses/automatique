@@ -1,13 +1,13 @@
 # Travaux pratiques
 
-Ce répertoire est destiné aux supports et fichiers nécessaires aux travaux
-pratiques d'Automatique.
+Les TP mettent en pratique les notions du cours sur un système réel. La vidéo
+ci-dessous montre un robot LEGO qui réalise de manière autonome une
+stabilisation :
 
-## Objectif des TP
+<video controls width="640">
+  <source src="../cours/videos/robot-lego.mp4" type="video/mp4">
+  Votre navigateur ne permet pas de lire cette vidéo. [Télécharger la vidéo](../cours/videos/robot-lego.mp4).
+</video>
 
-Les travaux pratiques mettent en œuvre les notions du cours sur un système
-réel. La vidéo suivante montre un robot LEGO qui réalise de manière autonome
-une stabilisation :
-
-[Voir la vidéo du robot LEGO en stabilisation autonome](../cours/videos/MVI_2091.m4v)
-
+Les supports et fichiers de TP seront ajoutés dans ce répertoire lorsqu'ils
+seront disponibles.
