@@ -13,17 +13,21 @@ Ce dépôt rassemble les ressources accessibles aux étudiants :
 ## Cloner et mettre à jour le dépôt
 
 Il est recommandé de cloner le dépôt plutôt que de télécharger les fichiers
-un par un. Cela permet de récupérer facilement les nouvelles ressources avec
-`git pull` :
+un par un.
+
+Pour récupérer le dépôt la première fois :
 
 ```bash
 git clone git@github.com:ocourses/automatique.git
 cd automatique
-git pull
 ```
 
-Une fois le dépôt cloné, la commande `git pull` suffit pour récupérer les mises
-à jour publiées pendant le semestre.
+Pour récupérer les mises à jour ensuite :
+
+```bash
+cd automatique
+git pull
+```
 
 ## Organisation du dépôt
 
