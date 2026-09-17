@@ -8,5 +8,5 @@ stabilisation :
 
 [Regarder ou télécharger la vidéo MP4 sans son](../cours/videos/robot-lego.mp4)
 
-Les supports et fichiers de TP seront ajoutés dans ce répertoire lorsqu'ils
-seront disponibles.
+Les supports et fichiers de TP seront ajoutés dans ce répertoire ou sur Moodle
+lorsqu'ils seront disponibles.
