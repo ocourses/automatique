@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simulateur de stabilisation</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <header class="entete">
+      <h1>Simulateur de stabilisation</h1>
+      <p class="source">Automatique, première année — ENSEEIHT, Sciences du numérique</p>
+    </header>
+    <p class="intro">
+      Chaque exemple reprend un système du cours. On règle la condition initiale
+      et le contrôleur, puis on observe si le système se stabilise.
+    </p>
+    <main id="catalogue" class="catalogue"></main>
+    <script type="module">
+      import { catalogue } from './js/exemples/catalogue.js';
+
+      const racine = document.getElementById('catalogue');
+      for (const e of catalogue) {
+        const carte = document.createElement(e.disponible ? 'a' : 'div');
+        carte.className = 'carte exemple' + (e.disponible ? '' : ' a-venir');
+        if (e.disponible) carte.href = `exemple.html?id=${e.id}`;
+        const titre = document.createElement('h2');
+        titre.textContent = e.titre;
+        if (!e.disponible) {
+          const badge = document.createElement('span');
+          badge.className = 'badge';
+          badge.textContent = 'à venir';
+          titre.appendChild(badge);
+        }
+        const sousTitre = document.createElement('p');
+        sousTitre.className = 'sous-titre';
+        sousTitre.textContent = e.sous_titre;
+        const montre = document.createElement('p');
+        montre.textContent = e.montre;
+        const source = document.createElement('p');
+        source.className = 'source';
+        source.textContent = e.source;
+        carte.append(titre, sousTitre, montre, source);
+        racine.appendChild(carte);
+      }
+    </script>
+  </body>
+</html>

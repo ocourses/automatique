@@ -1,0 +1,340 @@
+:root {
+  --fond: #f6f6f3;
+  --fond-carte: #ffffff;
+  --texte: #1c1c1e;
+  --discret: #6b6b72;
+  --grille: #e2e2de;
+  --bordure: #dcdcd6;
+  --accent: #1f5fbf;
+  --zone-stable: rgba(31, 95, 191, 0.07);
+  --alerte: #a33a1a;
+  --police: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
+  --police-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --fond: #151517;
+    --fond-carte: #1e1e21;
+    --texte: #ececee;
+    --discret: #9a9aa2;
+    --grille: #2f2f34;
+    --bordure: #34343a;
+    --accent: #6ea2f2;
+    --zone-stable: rgba(110, 162, 242, 0.1);
+    --alerte: #f08a6a;
+    color-scheme: dark;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  margin: 0 0 0.5em;
+}
+
+h1 {
+  font-size: 1.6rem;
+}
+
+h2 {
+  font-size: 1.1rem;
+}
+
+button,
+select,
+input {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  color: var(--texte);
+}
+
+button {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: 6px;
+  padding: 0.35em 0.9em;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+}
+
+select,
+input[type='text'] {
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 0.2em 0.4em;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+/* ---- En-tête ----------------------------------------------------------- */
+
+.entete {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1.2rem 16px 0.4rem;
+}
+
+.retour {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.source {
+  color: var(--discret);
+  margin: 0;
+}
+
+/* ---- Grille de la page d'exemple --------------------------------------- */
+
+.grille {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0.8rem 16px 2rem;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.3fr) minmax(320px, 1fr);
+  align-items: start;
+}
+
+.colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+@media (max-width: 1150px) {
+  .grille {
+    grid-template-columns: minmax(300px, 1fr) minmax(340px, 1.3fr);
+  }
+  .grille > .colonne:last-child {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 720px) {
+  .grille {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .colonne-scene {
+    order: -1;
+  }
+}
+
+.carte {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: 8px;
+  padding: 0.9rem 1rem;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+.note {
+  color: var(--discret);
+  font-size: 0.92rem;
+  margin: 0.5em 0;
+}
+
+.katex-display {
+  margin: 0.5em 0;
+}
+
+/* ---- Champs ------------------------------------------------------------ */
+
+.champ {
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 1fr) 4.8em 3.5em;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.35em 0;
+}
+
+.champ-court {
+  grid-template-columns: 7em 6em auto;
+}
+
+.champ input[type='text'] {
+  width: 100%;
+}
+
+.unite {
+  color: var(--discret);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+}
+
+#lancer {
+  margin-top: 0.4em;
+}
+
+/* ---- Scène et lecture -------------------------------------------------- */
+
+#scene {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: 70vh;
+  touch-action: none;
+}
+
+#scene.saisissable {
+  cursor: grab;
+}
+
+#scene.saisi {
+  cursor: grabbing;
+}
+
+.lecture {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+  align-items: center;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+}
+
+.temps {
+  margin-left: auto;
+  color: var(--discret);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Analyse ----------------------------------------------------------- */
+
+#plan {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+}
+
+.legende > span {
+  margin-left: 0.6em;
+}
+
+.legende > span:first-child {
+  margin-left: 0;
+}
+
+.symbole-abk {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.symbole-zone {
+  color: var(--zone-stable);
+  -webkit-text-stroke: 1px var(--bordure);
+}
+
+.indications {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.indications li {
+  border-left: 3px solid var(--bordure);
+  padding: 0.2em 0 0.2em 0.7em;
+  margin: 0.5em 0;
+}
+
+.indications li.ok {
+  border-left-color: var(--accent);
+}
+
+.indications li.alerte {
+  border-left-color: var(--alerte);
+}
+
+/* ---- uPlot ------------------------------------------------------------- */
+
+.uplot {
+  font-family: var(--police-ui);
+  color: var(--texte);
+}
+
+.uplot .u-legend {
+  font-size: 0.8rem;
+}
+
+/* ---- Catalogue --------------------------------------------------------- */
+
+.intro {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: var(--discret);
+}
+
+.catalogue {
+  max-width: 1500px;
+  margin: 0 auto;
+  padding: 1rem 16px 2rem;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 280px), 1fr));
+}
+
+.exemple {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.exemple:hover {
+  border-color: var(--accent);
+}
+
+.exemple h2 {
+  margin-bottom: 0.1em;
+}
+
+.exemple .sous-titre {
+  margin: 0 0 0.5em;
+}
+
+.exemple .source {
+  font-size: 0.9rem;
+}
+
+.exemple.a-venir {
+  opacity: 0.55;
+}
+
+.badge {
+  font-family: var(--police-ui);
+  font-size: 0.75rem;
+  color: var(--discret);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  padding: 0.05em 0.6em;
+  margin-left: 0.4em;
+  vertical-align: middle;
+}

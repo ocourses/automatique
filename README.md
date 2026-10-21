@@ -8,7 +8,8 @@ Ce dépôt rassemble les ressources accessibles aux étudiants :
 - [supports de cours](cours/README.md) ;
 - [travaux dirigés](td/README.md) ;
 - [travaux pratiques](tp/README.md) ;
-- [examens et corrigés disponibles](examens/README.md).
+- [examens et corrigés disponibles](examens/README.md) ;
+- [simulateur web de stabilisation](simulateur/README.md), en cours de développement.
 
 ## Cloner et mettre à jour le dépôt
 
@@ -42,3 +43,4 @@ conservés dans le dépôt enseignant.
 | [`td/`](td/) | Sujets PDF des quatre travaux dirigés, avec leurs objectifs |
 | [`tp/`](tp/) | Supports et présentation des travaux pratiques |
 | [`examens/`](examens/) | Sujets et certains corrigés classés par année universitaire |
+| [`simulateur/`](simulateur/) | Simulateur web de stabilisation des exemples du cours (prototype) |

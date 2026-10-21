@@ -1,0 +1,9 @@
+{
+  "name": "simulateur-stabilisation",
+  "private": true,
+  "type": "module",
+  "description": "Simulateur web de stabilisation du cours d'Automatique (sans étape de build).",
+  "scripts": {
+    "test": "node --test"
+  }
+}
