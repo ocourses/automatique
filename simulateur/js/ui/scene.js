@@ -4,6 +4,7 @@
 import { couleurs } from './theme.js';
 
 const FENETRE_LANCER = 0.08; // s, durée du geste prise en compte au lâcher
+const OPACITE_FANTOME = 0.28;
 
 export class Scene {
   // rappels : { saisie(), relache(x), vitesseLecture() }
@@ -14,9 +15,18 @@ export class Scene {
     this.rappels = rappels;
     this.ctx = canvas.getContext('2d');
     this.saisi = false;
+    this.prise = null;
     this.geste = [];
+    this.avecFantome = false;
+    this.ajusteProportions();
     new ResizeObserver(() => this.dessine()).observe(canvas);
     if (modele.souris) this.ecouteSouris();
+  }
+
+  // Le canevas prend les proportions de la vue de l'exemple.
+  ajusteProportions() {
+    const v = this.modele.vue(this.sim.p);
+    this.canvas.style.aspectRatio = `${v.xmax - v.xmin} / ${v.ymax - v.ymin}`;
   }
 
   geometrie() {
@@ -36,9 +46,11 @@ export class Scene {
 
   ecouteSouris() {
     const c = this.canvas;
+    const souris = this.modele.souris;
     c.classList.add('saisissable');
     c.addEventListener('pointerdown', (ev) => {
       this.saisi = true;
+      this.prise = souris.saisit ? souris.saisit(this.versMonde(ev), this.sim.x, this.sim.p) : null;
       c.setPointerCapture(ev.pointerId);
       c.classList.add('saisi');
       this.rappels.saisie();
@@ -58,7 +70,7 @@ export class Scene {
   }
 
   suit(ev) {
-    const x = this.modele.souris.deplace(this.versMonde(ev), this.sim.x, this.sim.p);
+    const x = this.modele.souris.deplace(this.versMonde(ev), this.sim.x, this.sim.p, this.prise);
     this.sim.x = x;
     this.geste.push({ t: ev.timeStamp / 1000, x });
     while (this.geste.length > 2 && this.geste[0].t < ev.timeStamp / 1000 - 0.5) this.geste.shift();
@@ -84,6 +96,72 @@ export class Scene {
     return x;
   }
 
+  outils(px, col, fantome) {
+    const ctx = this.ctx;
+    const d = this.sim.perturbationEn(this.sim.t);
+    // Pointe de flèche en (ex, ey), dans la direction unitaire (tx, ty).
+    const pointe = (ex, ey, tx, ty) => {
+      const L = 10 * px;
+      ctx.beginPath();
+      ctx.moveTo(ex + tx * L, ey + ty * L);
+      ctx.lineTo(ex - ty * L * 0.6, ey + tx * L * 0.6);
+      ctx.lineTo(ex + ty * L * 0.6, ey - tx * L * 0.6);
+      ctx.closePath();
+      ctx.fill();
+    };
+    return {
+      px,
+      couleurs: col,
+      fantome,
+      d,
+      pointilles(x0, y0, x1, y1) {
+        ctx.save();
+        ctx.setLineDash([6 * px, 6 * px]);
+        ctx.strokeStyle = col.discret;
+        ctx.lineWidth = 1 * px;
+        ctx.beginPath();
+        ctx.moveTo(x0, y0);
+        ctx.lineTo(x1, y1);
+        ctx.stroke();
+        ctx.restore();
+      },
+      // Flèche de (x, y) à (x + dx, y + dy) ; rien pour le fantôme.
+      fleche(x, y, dx, dy, couleur = col.accent) {
+        const L = Math.hypot(dx, dy);
+        if (fantome || L < 4 * px) return;
+        ctx.save();
+        ctx.strokeStyle = couleur;
+        ctx.fillStyle = couleur;
+        ctx.lineWidth = 3 * px;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        ctx.lineTo(x + dx, y + dy);
+        ctx.stroke();
+        pointe(x + dx, y + dy, dx / L, dy / L);
+        ctx.restore();
+      },
+      // Arc fléché centré à l'origine : un quart de tour pour |valeur| = echelle,
+      // borné à 1,6 π ; valeur > 0 : sens horaire à l'écran. Rien pour le fantôme.
+      arcCouple(valeur, echelle, rayon, couleur = col.accent) {
+        const ouverture = Math.min((Math.abs(valeur) / echelle) * (Math.PI / 2), 1.6 * Math.PI);
+        if (fantome || ouverture < 0.05) return;
+        const sens = Math.sign(valeur);
+        const debut = Math.PI / 2;
+        const fin = debut - sens * ouverture;
+        ctx.save();
+        ctx.strokeStyle = couleur;
+        ctx.fillStyle = couleur;
+        ctx.lineWidth = 3 * px;
+        ctx.beginPath();
+        ctx.arc(0, 0, rayon, debut, fin, sens > 0);
+        ctx.stroke();
+        // Pointe tangente à l'arc.
+        pointe(rayon * Math.cos(fin), rayon * Math.sin(fin), sens * Math.sin(fin), -sens * Math.cos(fin));
+        ctx.restore();
+      },
+    };
+  }
+
   dessine() {
     const { rect, s, cx, cy } = this.geometrie();
     const dpr = window.devicePixelRatio || 1;
@@ -99,39 +177,15 @@ export class Scene {
     ctx.clearRect(0, 0, w, h);
     ctx.setTransform(dpr * s, 0, 0, -dpr * s, dpr * (rect.width / 2 - s * cx), dpr * (rect.height / 2 + s * cy));
     const px = 1 / s;
-    const outils = {
-      px,
-      couleurs: col,
-      // Arc fléché centré à l'origine : un quart de tour pour |valeur| = echelle,
-      // borné à 1,6 π ; valeur > 0 : sens horaire à l'écran.
-      arcCouple(valeur, echelle, rayon) {
-        const ouverture = Math.min((Math.abs(valeur) / echelle) * (Math.PI / 2), 1.6 * Math.PI);
-        if (ouverture < 0.05) return;
-        const sens = Math.sign(valeur);
-        const debut = Math.PI / 2;
-        const fin = debut - sens * ouverture;
-        ctx.save();
-        ctx.strokeStyle = col.accent;
-        ctx.fillStyle = col.accent;
-        ctx.lineWidth = 3 * px;
-        ctx.beginPath();
-        ctx.arc(0, 0, rayon, debut, fin, sens > 0);
-        ctx.stroke();
-        // Pointe tangente à l'arc.
-        const ex = rayon * Math.cos(fin);
-        const ey = rayon * Math.sin(fin);
-        const tx = sens * Math.sin(fin);
-        const ty = -sens * Math.cos(fin);
-        const L = 10 * px;
-        ctx.beginPath();
-        ctx.moveTo(ex + tx * L, ey + ty * L);
-        ctx.lineTo(ex - ty * L * 0.6, ey + tx * L * 0.6);
-        ctx.lineTo(ex + ty * L * 0.6, ey - tx * L * 0.6);
-        ctx.closePath();
-        ctx.fill();
-        ctx.restore();
-      },
-    };
-    this.modele.draw(ctx, this.sim.x, this.sim.commande(this.sim.x), this.sim.p, outils);
+    const sim = this.sim;
+    // Fantôme du linéarisé bouclé, en transparence et sans flèches.
+    const xf = sim.xFantome;
+    if (this.avecFantome && !this.saisi && xf.every(Number.isFinite)) {
+      ctx.save();
+      ctx.globalAlpha = OPACITE_FANTOME;
+      this.modele.draw(ctx, xf, sim.commande(), sim.p, this.outils(px, col, true));
+      ctx.restore();
+    }
+    this.modele.draw(ctx, sim.x, sim.commande(), sim.p, this.outils(px, col, false));
   }
 }

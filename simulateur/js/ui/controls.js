@@ -47,8 +47,8 @@ export function champ(parent, { latex, min, max, pas, valeur, unite = '' }, chan
   };
 }
 
-// Saisie numérique seule (condition initiale).
-export function saisieNombre(parent, latex, valeur, unite = '') {
+// Saisie numérique seule ; `change(valeur)` est appelé à chaque saisie valide.
+export function saisieNombre(parent, latex, valeur, unite = '', change = null) {
   const ligne = document.createElement('div');
   ligne.className = 'champ champ-court';
   const etiquette = document.createElement('label');
@@ -68,5 +68,11 @@ export function saisieNombre(parent, latex, valeur, unite = '') {
     },
   };
   api.fixe(valeur);
+  if (change) {
+    saisie.addEventListener('change', () => {
+      const v = api.lit();
+      if (Number.isFinite(v)) change(v);
+    });
+  }
   return api;
 }

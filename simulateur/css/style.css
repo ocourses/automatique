@@ -8,6 +8,7 @@
   --accent: #1f5fbf;
   --zone-stable: rgba(31, 95, 191, 0.07);
   --alerte: #a33a1a;
+  --perturbation: #c25e0c;
   --police: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
   --police-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
@@ -24,6 +25,7 @@
     --accent: #6ea2f2;
     --zone-stable: rgba(110, 162, 242, 0.1);
     --alerte: #f08a6a;
+    --perturbation: #f0a050;
     color-scheme: dark;
   }
 }
@@ -194,6 +196,73 @@ input[type='range'] {
   margin-top: 0.4em;
 }
 
+.onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  margin-bottom: 0.4em;
+}
+
+.champ-poles,
+.ligne-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.5em 0;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+}
+
+.champ-poles input {
+  flex: 1 1 8em;
+  min-width: 0;
+}
+
+.ligne-options input[type='text'] {
+  width: 5em;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9rem;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 0.3em 0.4em;
+  resize: vertical;
+}
+
+.erreur {
+  color: var(--alerte);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  margin: 0.3em 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+button.lien {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+.invariant {
+  flex-basis: 100%;
+  color: var(--discret);
+}
+
 /* ---- Scène et lecture -------------------------------------------------- */
 
 #scene {
@@ -202,6 +271,13 @@ input[type='range'] {
   aspect-ratio: 1 / 1;
   max-height: 70vh;
   touch-action: none;
+}
+
+#portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  cursor: crosshair;
 }
 
 #scene.saisissable {

@@ -9,6 +9,7 @@ export function couleurs() {
     discret: v('--discret'),
     grille: v('--grille'),
     accent: v('--accent'),
+    perturbation: v('--perturbation'),
     zone: v('--zone-stable'),
   };
 }

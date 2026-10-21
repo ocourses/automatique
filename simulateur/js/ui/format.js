@@ -29,3 +29,11 @@ export function latexMatrice(M, chiffres = 3) {
   const lignes = M.map((ligne) => ligne.map((v) => latexNombre(v, chiffres)).join(' & '));
   return `\\begin{pmatrix} ${lignes.join(' \\\\ ')} \\end{pmatrix}`;
 }
+
+// Espaces insécables de la typographie française : avant « : », « ; », « ! »,
+// « ? » et à l'intérieur des guillemets.
+export function typographie(t) {
+  return t
+    .replace(/ ([:;!?»])/g, '\u00a0$1')
+    .replace(/« /g, '«\u00a0');
+}

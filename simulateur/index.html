@@ -18,6 +18,7 @@
     <main id="catalogue" class="catalogue"></main>
     <script type="module">
       import { catalogue } from './js/exemples/catalogue.js';
+      import { typographie } from './js/ui/format.js';
 
       const racine = document.getElementById('catalogue');
       for (const e of catalogue) {
@@ -25,7 +26,7 @@
         carte.className = 'carte exemple' + (e.disponible ? '' : ' a-venir');
         if (e.disponible) carte.href = `exemple.html?id=${e.id}`;
         const titre = document.createElement('h2');
-        titre.textContent = e.titre;
+        titre.textContent = typographie(e.titre);
         if (!e.disponible) {
           const badge = document.createElement('span');
           badge.className = 'badge';
@@ -34,12 +35,12 @@
         }
         const sousTitre = document.createElement('p');
         sousTitre.className = 'sous-titre';
-        sousTitre.textContent = e.sous_titre;
+        sousTitre.textContent = typographie(e.sous_titre);
         const montre = document.createElement('p');
-        montre.textContent = e.montre;
+        montre.textContent = typographie(e.montre);
         const source = document.createElement('p');
         source.className = 'source';
-        source.textContent = e.source;
+        source.textContent = typographie(e.source);
         carte.append(titre, sousTitre, montre, source);
         racine.appendChild(carte);
       }

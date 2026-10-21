@@ -28,7 +28,7 @@
         <div class="carte">
           <h2>Modèle</h2>
           <div id="modele"></div>
-          <p class="note">États : <span id="etats"></span></p>
+          <p class="note">États : <span id="etats"></span>. Sortie mesurée : <span id="sortie"></span>.</p>
           <div id="equilibre"></div>
           <p class="note">Linéarisé en $(x_e, u_e)$ :</p>
           <div id="lineaire"></div>
@@ -39,9 +39,49 @@
         </div>
         <div class="carte">
           <h2>Contrôleur</h2>
-          <div id="loi"></div>
-          <div id="gains"></div>
+          <div class="onglets" role="radiogroup" aria-label="Type de contrôleur">
+            <label><input type="radio" name="mode" value="gains" checked /> Retour d'état</label>
+            <label id="choix-loi"><input type="radio" name="mode" value="loi" /> Loi libre</label>
+          </div>
+          <div id="bloc-gains">
+            <div id="loi-gains"></div>
+            <div id="gains"></div>
+            <div class="champ-poles">
+              <label for="poles">Pôles voulus</label>
+              <input id="poles" type="text" placeholder="-1, -2±3i" spellcheck="false" />
+              <button id="placer" type="button">Placer</button>
+            </div>
+            <p id="erreur-poles" class="erreur" hidden></p>
+          </div>
+          <div id="bloc-loi" hidden>
+            <label for="loi" class="note">$u =$</label>
+            <textarea id="loi" rows="2" spellcheck="false"></textarea>
+            <p id="erreur-loi" class="erreur" hidden></p>
+            <p class="note" id="aide-loi"></p>
+          </div>
           <div id="boucle"></div>
+          <div class="ligne-options">
+            <label><input id="saturation" type="checkbox" /> Saturation $|u| \le u_{\max}$</label>
+            <input id="umax" type="text" inputmode="decimal" aria-label="u max" />
+          </div>
+        </div>
+        <div class="carte">
+          <h2>Perturbation et bruit</h2>
+          <div class="ligne-options">
+            <label for="perturbation">$d(t)$</label>
+            <select id="perturbation">
+              <option value="aucune">aucune</option>
+              <option value="constante">constante</option>
+              <option value="creneau">créneau</option>
+            </select>
+          </div>
+          <div id="reglages-perturbation"></div>
+          <div id="reglage-bruit"></div>
+          <p class="note">
+            La perturbation s'ajoute à la commande : le système reçoit
+            $\operatorname{sat}(u) + d(t)$. Le bruit, gaussien d'écart-type
+            $\sigma$, s'ajoute à chaque mesure de l'état.
+          </p>
         </div>
         <div class="carte">
           <h2>Condition initiale</h2>
@@ -61,6 +101,7 @@
         <div class="carte lecture">
           <button id="lecture" type="button">Pause</button>
           <button id="reinitialiser" type="button">Réinitialiser</button>
+          <button id="choc" type="button">Choc</button>
           <label>
             Vitesse
             <select id="vitesse">
@@ -72,6 +113,21 @@
             </select>
           </label>
           <span id="temps" class="temps"></span>
+          <span id="invariant" class="invariant" hidden></span>
+        </div>
+        <div class="carte lecture">
+          <label><input id="fantome" type="checkbox" /> Fantôme du linéarisé</label>
+          <label><input id="historique" type="checkbox" /> Historique complet</label>
+          <button id="copier" type="button">Copier le lien</button>
+        </div>
+        <div id="carte-portrait" class="carte" hidden>
+          <h2>Portrait de phase</h2>
+          <canvas id="portrait" aria-label="Portrait de phase"></canvas>
+          <p class="note">
+            Cliquez pour lancer une trajectoire depuis ce point ; les précédentes
+            restent en gris.
+            <button id="effacer" type="button" class="lien">Effacer</button>
+          </p>
         </div>
       </section>
 
@@ -85,7 +141,7 @@
           <canvas id="plan" aria-label="Plan complexe"></canvas>
           <p class="note legende">
             <span class="symbole-a">○</span> valeurs propres de $A$
-            <span class="symbole-abk">×</span> valeurs propres de $A + BK$
+            <span class="symbole-abk">×</span> valeurs propres du bouclé
             <span class="symbole-zone">■</span> demi-plan $\operatorname{Re} &lt; 0$
           </p>
           <p id="aide-plan" class="note">

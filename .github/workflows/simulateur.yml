@@ -1,0 +1,50 @@
+# Tests du simulateur de stabilisation, puis publication du dossier
+# simulateur/ sur GitHub Pages (pushs sur main uniquement).
+name: Simulateur
+
+on:
+  push:
+    branches: [main]
+    paths: ['simulateur/**', '.github/workflows/simulateur.yml']
+  pull_request:
+    paths: ['simulateur/**', '.github/workflows/simulateur.yml']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: simulateur
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - run: npm test
+
+  publication:
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deploiement.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: simulateur
+      - id: deploiement
+        uses: actions/deploy-pages@v4

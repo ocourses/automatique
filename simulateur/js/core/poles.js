@@ -122,3 +122,39 @@ function autrePlusProche(vp, i, cible, filtre = () => true) {
 export function nettoieSpectre(vp) {
   return vp.map((v) => (Math.abs(v.im) < 1e-6 * (1 + Math.abs(v.re)) ? { re: v.re, im: 0 } : { ...v }));
 }
+
+// Lit une liste de pôles saisie au clavier, par exemple « -1, -2+3i, -2-3i »
+// ou « -1, -2±3i » (paire conjuguée). Vérifie qu'il y en a n et que la liste
+// est stable par conjugaison. Lève une Error en cas de problème.
+export function litPoles(texte, n) {
+  const propre = texte.replace(/−/g, '-').replace(/\s+/g, '').replace(/j/g, 'i');
+  if (!propre) throw new Error('aucun pôle saisi');
+  const poles = [];
+  for (const morceau of propre.split(/[;,]/).filter(Boolean)) {
+    const m = /^([+-]?\d*\.?\d+(?:e[+-]?\d+)?)?(?:([+-]|±|\+-)(\d*\.?\d*)i)?$/i.exec(morceau);
+    const imPur = /^([+-]?)(\d*\.?\d*)i$/i.exec(morceau);
+    if (imPur) {
+      const v = Number(imPur[2] || 1) * (imPur[1] === '-' ? -1 : 1);
+      poles.push({ re: 0, im: v });
+      continue;
+    }
+    if (!m || (m[1] === undefined && m[2] === undefined)) throw new Error(`pôle illisible « ${morceau} »`);
+    const re = Number(m[1] ?? 0);
+    if (m[2] === undefined) {
+      poles.push({ re, im: 0 });
+      continue;
+    }
+    const im = Number(m[3] || 1);
+    if (m[2] === '±' || m[2] === '+-') poles.push({ re, im }, { re, im: -im });
+    else poles.push({ re, im: m[2] === '-' ? -im : im });
+  }
+  if (poles.length !== n) throw new Error(`il faut ${n} pôles, ${poles.length} saisi${poles.length > 1 ? 's' : ''}`);
+  const restants = poles.filter((z) => z.im !== 0);
+  while (restants.length) {
+    const z = restants.shift();
+    const k = restants.findIndex((w) => Math.abs(w.re - z.re) < 1e-12 && Math.abs(w.im + z.im) < 1e-12);
+    if (k < 0) throw new Error('les pôles complexes doivent venir par paires conjuguées');
+    restants.splice(k, 1);
+  }
+  return poles;
+}

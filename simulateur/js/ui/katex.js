@@ -1,6 +1,8 @@
 // Rendu KaTeX : `rend` pour une formule en mode display, `rendTexte` pour un
 // texte contenant des formules entre $…$.
 
+import { typographie } from './format.js';
+
 const options = { throwOnError: false };
 
 export function rend(element, latex, display = true) {
@@ -15,7 +17,7 @@ export function rendTexte(element, texte) {
       window.katex.render(morceau.slice(1, -1), span, { ...options, displayMode: false });
       element.appendChild(span);
     } else if (morceau) {
-      element.appendChild(document.createTextNode(morceau));
+      element.appendChild(document.createTextNode(typographie(morceau)));
     }
   });
 }

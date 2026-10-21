@@ -97,6 +97,21 @@ function horner(c, z) {
   return p;
 }
 
+// Coefficients (degré décroissant) de la dérivée, et évaluation de Horner
+// pour des coefficients réels quelconques.
+function derivee(c) {
+  const n = c.length - 1;
+  return c.slice(0, n).map((ck, k) => ck * (n - k));
+}
+function hornerGeneral(c, z) {
+  let p = { re: 0, im: 0 };
+  for (const ck of c) {
+    const pz = cmul(p, z);
+    p = { re: pz.re + ck, im: pz.im };
+  }
+  return p;
+}
+
 function durandKerner(c) {
   const n = c.length - 1;
   const R = 1 + Math.max(...c.slice(1).map(Math.abs));
@@ -117,6 +132,38 @@ function durandKerner(c) {
     });
     if (delta < 1e-14 * R) break;
   }
+  // Une racine de multiplicité k n'est obtenue qu'à ε^{1/k} près. C'est une
+  // racine simple de la dérivée (k−1)-ième de p : on l'affine par Newton sur
+  // cette dérivée, à partir de la moyenne du paquet de racines voisines.
+  const paquet = 1e-3 * R;
+  const vues = new Array(n).fill(false);
+  for (let i = 0; i < n; i++) {
+    if (vues[i]) continue;
+    const membres = [i];
+    for (let j = i + 1; j < n; j++) {
+      if (!vues[j] && Math.hypot(z[i].re - z[j].re, z[i].im - z[j].im) < paquet) membres.push(j);
+    }
+    if (membres.length > 1) {
+      let r = {
+        re: membres.reduce((s, k) => s + z[k].re, 0) / membres.length,
+        im: membres.reduce((s, k) => s + z[k].im, 0) / membres.length,
+      };
+      let q = c;
+      for (let k = 1; k < membres.length; k++) q = derivee(q);
+      const dq = derivee(q);
+      for (let it = 0; it < 30; it++) {
+        const d = hornerGeneral(dq, r);
+        if (d.re === 0 && d.im === 0) break;
+        const corr = cdiv(hornerGeneral(q, r), d);
+        r = { re: r.re - corr.re, im: r.im - corr.im };
+        if (Math.hypot(corr.re, corr.im) < 1e-15 * R) break;
+      }
+      membres.forEach((k) => {
+        vues[k] = true;
+        z[k] = r;
+      });
+    }
+  }
   const tol = 1e-9 * R;
   return z
     .map((r) => (Math.abs(r.im) < tol ? { re: r.re, im: 0 } : r))
@@ -127,36 +174,46 @@ export function valeursPropres(A) {
   return racines(polynomeCaracteristique(A));
 }
 
-// Jacobiennes (A, B) de f en (xe, ue) par différences centrées.
-export function linearise(f, xe, ue, p) {
-  const n = xe.length;
-  const m = ue.length;
-  const A = identite(n).map((ligne) => ligne.map(() => 0));
-  const B = Array.from({ length: n }, () => new Array(m).fill(0));
+// Jacobienne de F : R^n → R^k en w0, par différences centrées.
+export function jacobienne(F, w0) {
+  const n = w0.length;
+  const colonnes = [];
   for (let j = 0; j < n; j++) {
-    const h = 1e-6 * Math.max(1, Math.abs(xe[j]));
-    const xp = xe.slice();
-    const xm = xe.slice();
-    xp[j] += h;
-    xm[j] -= h;
-    const fp = f(xp, ue, p);
-    const fm = f(xm, ue, p);
-    for (let i = 0; i < n; i++) A[i][j] = (fp[i] - fm[i]) / (2 * h);
+    const h = 1e-6 * Math.max(1, Math.abs(w0[j]));
+    const wp = w0.slice();
+    const wm = w0.slice();
+    wp[j] += h;
+    wm[j] -= h;
+    const fp = F(wp);
+    const fm = F(wm);
+    colonnes.push(fp.map((v, i) => (v - fm[i]) / (2 * h)));
   }
-  for (let j = 0; j < m; j++) {
-    const h = 1e-6 * Math.max(1, Math.abs(ue[j]));
-    const up = ue.slice();
-    const um = ue.slice();
-    up[j] += h;
-    um[j] -= h;
-    const fp = f(xe, up, p);
-    const fm = f(xe, um, p);
-    for (let i = 0; i < n; i++) B[i][j] = (fp[i] - fm[i]) / (2 * h);
-  }
+  return colonnes[0].map((_, i) => colonnes.map((c) => c[i]));
+}
+
+// Jacobiennes (A, B) de f en (xe, ue).
+export function linearise(f, xe, ue, p) {
+  const A = jacobienne((x) => f(x, ue, p), xe);
+  const B = jacobienne((u) => f(xe, u, p), ue);
   return { A, B };
 }
 
-// Arrondit à tol près pour nettoyer le bruit des différences finies.
-export function nettoie(M, tol = 1e-7) {
-  return M.map((ligne) => ligne.map((v) => (Math.abs(v) < tol ? 0 : Math.round(v / tol) * tol)));
+// Inverse de M (null si M est singulière), par Gauss-Jordan.
+export function inverse(M, tol = 1e-12) {
+  const n = M.length;
+  const A = M.map((ligne, i) => [...ligne, ...identite(n)[i]]);
+  for (let j = 0; j < n; j++) {
+    let p = j;
+    for (let i = j + 1; i < n; i++) if (Math.abs(A[i][j]) > Math.abs(A[p][j])) p = i;
+    if (Math.abs(A[p][j]) < tol) return null;
+    [A[j], A[p]] = [A[p], A[j]];
+    const piv = A[j][j];
+    for (let k = 0; k < 2 * n; k++) A[j][k] /= piv;
+    for (let i = 0; i < n; i++) {
+      if (i === j) continue;
+      const c = A[i][j];
+      for (let k = 0; k < 2 * n; k++) A[i][k] -= c * A[j][k];
+    }
+  }
+  return A.map((ligne) => ligne.slice(n));
 }
