@@ -46,6 +46,11 @@ export class Simulation {
     this.metAJour();
   }
 
+  fixeGains(K) {
+    this.K = K.map((ligne) => ligne.slice());
+    this.metAJour();
+  }
+
   commande(x) {
     return this.ue.map((uei, i) =>
       this.K[i].reduce((s, kij, j) => s + kij * (x[j] - this.xe[j]), uei),

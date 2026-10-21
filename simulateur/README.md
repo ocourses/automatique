@@ -7,6 +7,16 @@ se stabilise.
 État actuel : **prototype V0**, avec un seul exemple, le pendule inversé
 commandé par un couple (poly, chapitre « Commande » ; TD2).
 
+Dans le plan complexe, on peut faire glisser les valeurs propres de $A + BK$.
+Le gain $K$ est alors recalculé par la formule d'Ackermann, pour une seule
+commande et un linéarisé contrôlable. Le déplacement suit trois règles :
+
+- une valeur propre complexe entraîne sa conjuguée ;
+- près de l'axe réel, la paire s'y colle et devient une racine double. Il
+  suffit ensuite de faire glisser l'une des deux le long de l'axe pour les
+  séparer ;
+- près de l'axe imaginaire, la valeur propre devient imaginaire pure.
+
 ## Lancer en local
 
 Les modules JavaScript ne se chargent pas depuis `file://`. Il faut servir le
@@ -42,6 +52,7 @@ js/
   core/ode.js         RK4 et Euler
   core/linalg.js      valeurs propres, Kalman, linéarisation numérique
   core/sim.js         boucle de simulation
+  core/poles.js       placement de pôles (Ackermann), déplacement des valeurs propres
   ui/                 scène, courbes, plan complexe, indications, champs
   exemples/
     catalogue.js      liste des exemples (disponibles ou à venir)

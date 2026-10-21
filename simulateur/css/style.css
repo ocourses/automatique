@@ -233,6 +233,15 @@ input[type='range'] {
   display: block;
   width: 100%;
   aspect-ratio: 4 / 3;
+  touch-action: none;
+}
+
+#plan.survol {
+  cursor: grab;
+}
+
+#plan.saisi {
+  cursor: grabbing;
 }
 
 .legende > span {

@@ -3,7 +3,8 @@
 import { catalogue } from './exemples/catalogue.js';
 import { Simulation } from './core/sim.js';
 import { champ, saisieNombre } from './ui/controls.js';
-import { dessinePlan } from './ui/eigen.js';
+import { placementPossible, ackermann } from './core/poles.js';
+import { PlanComplexe } from './ui/eigen.js';
 import { latexMatrice } from './ui/format.js';
 import { afficheIndications } from './ui/hints.js';
 import { rend, rendStatique } from './ui/katex.js';
@@ -55,10 +56,10 @@ function demarre(modele) {
 
   // ---- Gains ---------------------------------------------------------------
   const m = modele.commandes.length;
-  sim.K.forEach((ligne, i) =>
-    ligne.forEach((k, j) => {
+  const champsGains = sim.K.map((ligne, i) =>
+    ligne.map((k, j) => {
       const indice = m === 1 ? `${j + 1}` : `${i + 1}${j + 1}`;
-      champ($('gains'), { latex: `k_{${indice}}`, valeur: k, ...modele.bornesGains[i][j] }, (v) => {
+      return champ($('gains'), { latex: `k_{${indice}}`, valeur: k, ...modele.bornesGains[i][j] }, (v) => {
         sim.fixeGain(i, j, v);
         analyse();
       });
@@ -106,15 +107,28 @@ function demarre(modele) {
   }
   const courbes = new Courbes($('courbes'), modele, sim);
 
+  // ---- Plan complexe : placement des valeurs propres à la souris ------------
+  // K est recalculé par la formule d'Ackermann à partir des valeurs propres voulues.
+  const plan = new PlanComplexe($('plan'), {
+    modifiable: () => placementPossible(sim.A, sim.B),
+    deplace: (vp) => {
+      const K = ackermann(sim.A, sim.B, vp);
+      if (!K[0].every(Number.isFinite)) return;
+      sim.fixeGains(K);
+      champsGains.forEach((ligne, i) => ligne.forEach((c, j) => c.fixe(K[i][j])));
+      analyse();
+    },
+  });
+
   // ---- Analyse : linéarisé, valeurs propres, indications -------------------
   function analyse() {
     rend($('lineaire'), `A = ${latexMatrice(sim.A)}, \\qquad B = ${latexMatrice(sim.B)}`);
     rend($('boucle'), `A + BK = ${latexMatrice(sim.ABK)}`);
-    dessinePlan($('plan'), sim.vpA, sim.vpABK);
+    plan.actualise(sim.vpA, sim.vpABK);
+    $('aide-plan').hidden = !placementPossible(sim.A, sim.B);
     afficheIndications($('indications'), sim);
   }
   analyse();
-  new ResizeObserver(() => dessinePlan($('plan'), sim.vpA, sim.vpABK)).observe($('plan'));
   surChangementTheme(() => {
     courbes.construit();
     analyse();
