@@ -193,13 +193,15 @@ test('bestiaire : chaque solution exacte vérifie l’équation (comparée à RK
 
 test('pendule amorti : lâché à l’horizontale, il revient en bas ; lancé fort, il change de puits', () => {
   assert.equal(puitsAtteint([Math.PI / 2, 0], 1, 9.81), 0);
-  assert.equal(puitsAtteint([0, 8], 1, 9.81), 1);
-  assert.equal(puitsAtteint([0, -8], 1, 9.81), -1);
+  // Lancé à 8 rad/s, il ne passe pas le sommet (l'amortissement l'en empêche) ; à 10, si.
+  assert.equal(puitsAtteint([0, 8], 1, 9.81), 0);
+  assert.equal(puitsAtteint([0, 10], 1, 9.81), 1);
+  assert.equal(puitsAtteint([0, -10], 1, 9.81), -1);
   // Sans amortissement, aucun puits n'attire.
   assert.equal(puitsAtteint([1, 0], 0, 9.81), null);
   // Le puits annoncé est bien celui où finit la trajectoire.
   const F = champPendule(1, 9.81);
-  const fin = simule((t, x) => F(x), [0, 8], 40, 1e-3).x.pop();
+  const fin = simule((t, x) => F(x), [0, 10], 40, 1e-3).x.pop();
   proche(fin[0], 2 * Math.PI, 1e-6);
 });
 

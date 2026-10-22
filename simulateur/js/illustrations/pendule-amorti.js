@@ -25,7 +25,7 @@ export function puitsAtteint(x0, a, w2, { h = 0.02, tMax = 60 } = {}) {
   let x = x0.slice();
   for (let t = 0; t < tMax; t += h) {
     const E = (x[1] * x[1]) / 2 - w2 * Math.cos(x[0]);
-    if (E < w2 * (1 - 1e-6)) return Math.round(x[0] / (2 * Math.PI));
+    if (E < w2 * (1 - 1e-6)) return Math.round(x[0] / (2 * Math.PI)) || 0;
     const k1 = F(x);
     const k2 = F([x[0] + (h / 2) * k1[0], x[1] + (h / 2) * k1[1]]);
     const k3 = F([x[0] + (h / 2) * k2[0], x[1] + (h / 2) * k2[1]]);
@@ -48,7 +48,7 @@ export default {
 
   essais: [
     { texte: 'Lâchez le pendule à l’horizontale, $x_0 = (\\pi/2, 0)$ : revient-il à la position basse ? La linéarisation ne permettait pas de le dire (poly).', etat: { x1: 1.5708, x2: 0 } },
-    { texte: 'Lancez-le assez fort pour qu’il fasse un tour : dans quel bassin arrive-t-il ?', etat: { x1: 0, x2: 7 } },
+    { texte: 'Lancez-le assez fort pour qu’il fasse un tour : dans quel bassin arrive-t-il ?', etat: { x1: 0, x2: 10 } },
     { texte: 'Augmentez l’amortissement jusqu’à $\\Delta > 0$ ($a > 2\\omega$) : le foyer devient un nœud, le pendule revient sans osciller.', etat: { a: 7, x1: 1, x2: 0 } },
     { texte: 'Comparez le pendule et son linéarisé : proches pour un petit écart à la verticale, très différents loin de $(0, 0)$.', etat: { x1: 0.3, x2: 0, lineaire: true } },
     { texte: 'Sans amortissement ($a = 0$), $J_f(0, 0)$ a des valeurs propres imaginaires pures : la linéarisation ne conclut pas, et les orbites sont fermées.', etat: { a: 0, x1: 1, x2: 0 } },
