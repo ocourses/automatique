@@ -38,8 +38,8 @@ export class Console {
       bouton.textContent = oui ? 'Déplier' : 'Replier';
     };
     bouton.addEventListener('click', () => replie(!$('console').classList.contains('replie')));
-    // Sur petit écran, la console démarre repliée : elle masquerait la scène.
-    replie(window.matchMedia('(max-width: 720px)').matches);
+    // Sur téléphone, la console est un tiroir (voir app.js) : le repli ne sert qu'au bureau.
+    replie(false);
   }
 
   // ---- Journal --------------------------------------------------------------
@@ -177,6 +177,11 @@ export class Console {
     const badge = $('console-badge');
     badge.textContent = etat;
     badge.className = `badge-etat ${niveau}`;
+    // Résumé court de la barre du bas (téléphone), pour garder l'état sous les yeux.
+    $('barre-norme').textContent = `‖x − x_e‖ = ${nombreCourt(norme, 3)}`;
+    const court = $('barre-badge');
+    court.textContent = sim.diverge ? 'divergence' : sim.dansBoule ? 'stabilisé' : 'en transition';
+    court.className = `badge-etat ${niveau}`;
   }
 
   // ---- Analyse --------------------------------------------------------------

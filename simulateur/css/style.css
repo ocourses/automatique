@@ -515,22 +515,6 @@ button.lien {
   padding: 0.35rem 0;
 }
 
-@media (max-width: 760px) {
-  .console-entete {
-    flex-wrap: nowrap;
-    gap: 8px;
-  }
-  .console-resume {
-    margin-left: 0;
-    flex: 1;
-    min-width: 0;
-    font-size: 0.75rem;
-    gap: 4px 10px;
-  }
-  #console-t {
-    display: none;
-  }
-}
 
 .mesures-tete {
   display: flex;
@@ -662,6 +646,329 @@ button.lien {
 /* La ligne « t: » de la légende n'apporte rien : on la masque. */
 .uplot .u-legend .u-series:first-child {
   display: none;
+}
+
+/* ---- Téléphone : réglages et console en feuilles ------------------------------
+   Sur petit écran (étroit, ou paysage très bas), la page garde l'essentiel dans
+   le défilement : scène, lecture, courbes, graphiques. Les réglages et la
+   console deviennent deux feuilles qui montent du bas, ouvertes depuis une barre
+   fixe qui rappelle l'état de stabilisation. La feuille ne masque pas la scène :
+   celle-ci se réduit pendant qu'elle est ouverte. */
+
+:root {
+  --barre-h: 52px;
+  --feuille-h: 46vh;
+  --feuille-grande: 84vh;
+  --bas-sur: env(safe-area-inset-bottom, 0px);
+}
+
+@supports (height: 1dvh) {
+  :root {
+    --feuille-h: 46dvh;
+    --feuille-grande: 84dvh;
+  }
+}
+
+.feuille-actions,
+.barre-mobile {
+  display: none;
+}
+
+@media (max-width: 760px), (max-height: 500px) {
+  body {
+    padding-bottom: calc(var(--barre-h) + var(--bas-sur));
+  }
+
+  body.feuille-ouverte {
+    padding-bottom: calc(var(--barre-h) + var(--feuille-h) + var(--bas-sur));
+  }
+
+  /* Page : une seule colonne ; réglages et console sortent du flux. */
+  .app,
+  .zone-graphes {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .zone-scene {
+    padding: 0.6rem;
+  }
+
+  .app {
+    padding-top: 0.3rem;
+  }
+
+  .entete {
+    padding-top: 0.6rem;
+  }
+
+  .entete-barre {
+    align-items: flex-start;
+  }
+
+  .entete h1 {
+    font-size: 1.3rem;
+  }
+
+  .source {
+    font-size: 0.85rem;
+  }
+
+  #copier {
+    flex: none;
+    font-size: 0.8rem;
+    padding: 0.3em 0.6em;
+  }
+
+  #scene {
+    max-height: 44vh;
+  }
+
+  /* Tiroir ouvert : l'en-tête et la scène se compactent pour laisser la barre de
+     lecture visible au-dessus du tiroir. */
+  body.feuille-ouverte #scene {
+    max-height: 24vh;
+  }
+
+  body.feuille-ouverte .aide,
+  body.feuille-ouverte .source {
+    display: none;
+  }
+
+  body.feuille-ouverte .entete h1 {
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body.feuille-ouverte .entete {
+    min-width: 0;
+  }
+
+  body.feuille-ouverte .entete-barre > div {
+    min-width: 0;
+  }
+
+  body.feuille-ouverte .barre {
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+  }
+
+  .barre button,
+  .barre select {
+    min-height: 38px;
+  }
+
+  .champ {
+    min-height: 40px;
+  }
+
+  /* Feuilles */
+  .feuille {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--barre-h) + var(--bas-sur));
+    height: var(--feuille-h);
+    z-index: 20;
+    margin: 0;
+    padding: 0 12px 12px;
+    border-radius: 14px 14px 0 0;
+    border-bottom: none;
+    background: var(--fond-carte);
+    box-shadow: 0 -6px 22px rgba(0, 0, 0, 0.2);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 0.2s ease, visibility 0s 0.2s;
+  }
+
+  .feuille.ouverte {
+    visibility: visible;
+    transform: none;
+    transition: transform 0.2s ease;
+  }
+
+  .feuille.grande {
+    height: var(--feuille-grande);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feuille,
+    .feuille.ouverte {
+      transition: none;
+    }
+  }
+
+  .feuille-entete {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 0.5rem;
+    background: var(--fond-carte);
+  }
+
+  .feuille-entete .onglets {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .feuille-actions {
+    display: flex;
+    flex: none;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  .feuille-actions button {
+    min-width: 38px;
+    min-height: 36px;
+    padding: 0.2em 0.5em;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .feuille .onglets [role='tab'] {
+    padding: 0.45em 0.6em;
+  }
+
+  /* Console en feuille : plus de repli, ni de résumé (il passe dans la barre). */
+  .console {
+    border-top: none;
+  }
+
+  .console-int {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .console-entete {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-top: 0.5rem;
+    background: var(--fond-carte);
+  }
+
+  .console .onglets {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .console-resume,
+  #console-replier {
+    display: none;
+  }
+
+  .console-corps,
+  .console.replie .console-corps {
+    display: block;
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .console.replie .onglets {
+    display: flex;
+  }
+
+  /* Mesures : on garde l'essentiel, la colonne « Équilibre » se lit dans l'onglet Système. */
+  .mesures {
+    font-size: 0.78rem;
+  }
+
+  .mesures:not(#mesures-agreg) th:nth-child(3),
+  .mesures td.eq {
+    display: none;
+  }
+
+  /* Barre du bas */
+  .barre-mobile {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    align-items: center;
+    gap: 10px;
+    height: calc(var(--barre-h) + var(--bas-sur));
+    padding: 0 12px var(--bas-sur);
+    background: var(--fond-carte);
+    border-top: 1px solid var(--bordure);
+  }
+
+  .barre-mobile button {
+    min-height: 40px;
+    padding: 0 0.9em;
+    font-weight: 600;
+  }
+
+  .barre-mobile button[aria-expanded='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .barre-resume {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: var(--police-mono);
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: var(--discret);
+    white-space: nowrap;
+  }
+}
+
+/* Paysage sur téléphone : la feuille devient un tiroir à droite. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .feuille {
+    left: auto;
+    top: 0;
+    width: min(430px, 60vw);
+    height: auto;
+    border-radius: 14px 0 0 0;
+    transform: translateX(100%);
+  }
+
+  .feuille.ouverte {
+    transform: none;
+  }
+
+  .feuille.grande {
+    height: auto;
+    width: min(640px, 85vw);
+  }
+
+  body.feuille-ouverte {
+    padding-bottom: calc(var(--barre-h) + var(--bas-sur));
+    padding-right: min(430px, 60vw);
+  }
+
+  #scene,
+  body.feuille-ouverte #scene {
+    max-height: 70vh;
+  }
+
+  body.feuille-ouverte .aide {
+    display: none;
+  }
 }
 
 /* ---- Catalogue --------------------------------------------------------- */

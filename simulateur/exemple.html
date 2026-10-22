@@ -2,7 +2,7 @@
 <html lang="fr">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Simulateur de stabilisation</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/uplot@1.6.31/dist/uPlot.min.css" />
@@ -29,11 +29,17 @@
     <div id="page">
       <main class="app">
         <!-- Réglages : trois onglets -->
-        <section class="carte zone-reglages" aria-label="Réglages">
-          <div class="onglets" role="tablist" data-groupe="reglages" aria-label="Réglages">
-            <button type="button" role="tab" data-onglet="controleur">Contrôleur</button>
-            <button type="button" role="tab" data-onglet="scenario">Scénario</button>
-            <button type="button" role="tab" data-onglet="systeme">Système</button>
+        <section class="carte zone-reglages feuille" id="feuille-reglages" aria-label="Réglages">
+          <div class="feuille-entete">
+            <div class="onglets" role="tablist" data-groupe="reglages" aria-label="Réglages">
+              <button type="button" role="tab" data-onglet="controleur">Contrôleur</button>
+              <button type="button" role="tab" data-onglet="scenario">Scénario</button>
+              <button type="button" role="tab" data-onglet="systeme">Système</button>
+            </div>
+            <div class="feuille-actions">
+              <button type="button" class="agrandir" aria-label="Agrandir ou réduire" aria-pressed="false">↕</button>
+              <button type="button" class="fermer" aria-label="Fermer">✕</button>
+            </div>
           </div>
 
           <div role="tabpanel" data-groupe="reglages" data-panneau="controleur">
@@ -172,7 +178,7 @@
       </main>
 
       <!-- Console -->
-      <section id="console" class="console" aria-label="Console">
+      <section id="console" class="console feuille" aria-label="Console">
         <div class="console-int">
           <div class="console-entete">
             <div class="onglets onglets-console" role="tablist" data-groupe="console" aria-label="Console">
@@ -186,6 +192,10 @@
               <span id="console-badge" class="badge-etat"></span>
             </div>
             <button id="console-replier" type="button" aria-expanded="true">Replier</button>
+            <div class="feuille-actions">
+              <button type="button" class="agrandir" aria-label="Agrandir ou réduire" aria-pressed="false">↕</button>
+              <button type="button" class="fermer" aria-label="Fermer">✕</button>
+            </div>
           </div>
           <div class="console-corps">
             <div role="tabpanel" data-groupe="console" data-panneau="mesures">
@@ -230,6 +240,16 @@
           </div>
         </div>
       </section>
+
+      <!-- Barre du bas, visible sur téléphone : ouvre les réglages et la console -->
+      <nav class="barre-mobile" aria-label="Réglages et console">
+        <button id="bascule-reglages" type="button" aria-expanded="false" aria-controls="feuille-reglages">Réglages</button>
+        <span class="barre-resume" aria-hidden="true">
+          <span id="barre-norme"></span>
+          <span id="barre-badge" class="badge-etat"></span>
+        </span>
+        <button id="bascule-console" type="button" aria-expanded="false" aria-controls="console">Console</button>
+      </nav>
     </div>
   </body>
 </html>

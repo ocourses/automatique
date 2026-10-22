@@ -26,6 +26,16 @@ En ligne : <https://ocourses.github.io/automatique/>.
   - *Analyse* : la matrice du bouclé, son polynôme caractéristique, son spectre, le critère de Routh–Hurwitz et les indications ;
   - *Journal* : les événements de la simulation (entrée dans la boule $\lVert x - x_e \rVert < \varepsilon$, saturation, divergence) et les réglages modifiés, horodatés par le temps simulé.
 
+### Sur téléphone
+
+Sous 760 px de large, ou en paysage très bas, la page garde dans le défilement ce qu'on regarde en continu : la scène, la barre de lecture, les courbes et les graphiques. Les réglages et la console passent dans deux **tiroirs** qui montent du bas, ouverts depuis une barre fixe :
+
+- la barre du bas porte les boutons *Réglages* et *Console*, et rappelle entre les deux $\lVert x - x_e \rVert$ et l'état de stabilisation, pour ne jamais le perdre de vue ;
+- un seul tiroir est ouvert à la fois. À l'ouverture, la page remonte et la scène se réduit, de sorte que la scène et la barre de lecture restent visibles au-dessus du tiroir : on règle un gain et on voit tout de suite l'effet ;
+- le bouton ↕ agrandit le tiroir, ✕ ou la touche Échap le ferme ;
+- en paysage, le tiroir devient un panneau à droite ;
+- dans les mesures, la colonne « Équilibre » est masquée pour tenir en largeur ; on la lit dans l'onglet *Système*.
+
 Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle admet une famille d'équilibres : l'angle du pendule, la position du chariot ou du rail. La commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$ et s'affiche, mais on ne la règle pas séparément.
 
 ## Fonctionnalités
