@@ -16,6 +16,10 @@ En ligne : <https://ocourses.github.io/automatique/>.
 - le satellite des équations d'Euler (examen 2017-2018), en « courbes seules » : retour d'état diagonal $u = K\omega$ avec $k_i < 0$, et fonction $V = \sum J_i\omega_i^2$, conservée sans contrôle. Cet exemple est volontairement épuré : seuls les inerties et les trois gains $k_i$ se règlent ;
 - le robot Lego segway (poly, introduction ; TP), un pendule inversé sur deux roues à quatre états $(\theta, \psi, \dot\theta, \dot\psi)$ et une tension de moteur. On y retrouve la condition initiale $\psi_0 = \pi/10$ du TP et ses pôles $-136{,}6$ ; $-2{,}66$ ; $-3{,}50$ ; $-5{,}99$. Seuls la masse et la hauteur du corps, et les quatre gains, se règlent.
 
+## Page d'accueil
+
+L'accueil reprend le schéma fonctionnel complet de la boucle fermée du poly (introduction) : consigne, contrôleur, actionneur, système, perturbation, capteurs et prédicteur. Un clic sur un bloc dit où il se règle dans le simulateur (la consigne est le point de fonctionnement, l'actionneur la saturation et l'échantillonnage, le prédicteur l'observateur…) et estompe les exemples qui ne le font pas intervenir. Cette correspondance est calculée à partir des descriptions des exemples (`js/accueil.js`).
+
 ## Organisation de la page
 
 - **Réglages**, à gauche, en deux onglets (un troisième pour les exemples qui ont un observateur). L'onglet *Contrôleur* est ouvert par défaut :
@@ -165,7 +169,7 @@ npm test
 ## Organisation
 
 ```
-index.html            catalogue
+index.html            accueil : schéma de la boucle fermée et galerie (js/accueil.js)
 exemple.html          page générique (?id=pendule-couple)
 css/style.css
 js/

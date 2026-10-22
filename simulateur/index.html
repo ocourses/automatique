@@ -4,7 +4,10 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Simulateur de stabilisation</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
     <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script type="module" src="js/accueil.js"></script>
   </head>
   <body>
     <header class="entete">
@@ -15,35 +18,65 @@
       Chaque exemple reprend un système du cours. On règle la condition initiale
       et le contrôleur, puis on observe si le système se stabilise.
     </p>
-    <main id="catalogue" class="catalogue"></main>
-    <script type="module">
-      import { catalogue } from './js/exemples/catalogue.js';
-      import { typographie } from './js/ui/format.js';
 
-      const racine = document.getElementById('catalogue');
-      for (const e of catalogue) {
-        const carte = document.createElement(e.disponible ? 'a' : 'div');
-        carte.className = 'carte exemple' + (e.disponible ? '' : ' a-venir');
-        if (e.disponible) carte.href = `exemple.html?id=${e.id}`;
-        const titre = document.createElement('h2');
-        titre.textContent = typographie(e.titre);
-        if (!e.disponible) {
-          const badge = document.createElement('span');
-          badge.className = 'badge';
-          badge.textContent = 'à venir';
-          titre.appendChild(badge);
-        }
-        const sousTitre = document.createElement('p');
-        sousTitre.className = 'sous-titre';
-        sousTitre.textContent = typographie(e.sous_titre);
-        const montre = document.createElement('p');
-        montre.textContent = typographie(e.montre);
-        const source = document.createElement('p');
-        source.className = 'source';
-        source.textContent = typographie(e.source);
-        carte.append(titre, sousTitre, montre, source);
-        racine.appendChild(carte);
-      }
-    </script>
+    <!-- Schéma fonctionnel complet d'un système en boucle fermée (poly, introduction).
+         Coordonnées de la figure TikZ : (x, y) ↦ (20 + 70x, 252 − 70y). -->
+    <section class="carte schema" aria-labelledby="titre-schema">
+      <h2 id="titre-schema">La boucle fermée</h2>
+      <svg id="schema" viewBox="0 0 870 300" role="group" aria-label="Schéma fonctionnel complet d'un système en boucle fermée">
+        <defs>
+          <marker id="pointe" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+            <path d="M0,0 L10,5 L0,10 z" />
+          </marker>
+        </defs>
+        <g class="liens">
+          <path d="M20,98 H116" marker-end="url(#pointe)" />
+          <path d="M272,112 H361" marker-end="url(#pointe)" />
+          <path d="M517,112 H606" marker-end="url(#pointe)" />
+          <path d="M685,7 V75" marker-end="url(#pointe)" />
+          <path d="M762,112 H846" marker-end="url(#pointe)" />
+          <path d="M797,112 V252 H659" marker-end="url(#pointe)" />
+          <path d="M503,252 H379" marker-end="url(#pointe)" />
+          <path d="M223,252 H69 V126 H116" marker-end="url(#pointe)" />
+        </g>
+        <g class="etiquettes">
+          <text x="67" y="90">w(t)</text>
+          <text x="317" y="104">u(t)</text>
+          <text x="562" y="104">c(t)</text>
+          <text x="714" y="45">d(t)</text>
+          <text x="815" y="104">x(t)</text>
+          <text x="440" y="244">y(t)</text>
+          <text x="146" y="244">x̂(t)</text>
+        </g>
+        <g class="bloc controleur" data-bloc="controleur" tabindex="0" role="button" aria-pressed="false">
+          <rect x="118" y="77" width="154" height="70" rx="14" /><text x="195" y="118">Contrôleur</text>
+        </g>
+        <g class="bloc" data-bloc="actionneur" tabindex="0" role="button" aria-pressed="false">
+          <rect x="363" y="77" width="154" height="70" rx="14" /><text x="440" y="118">Actionneur</text>
+        </g>
+        <g class="bloc" data-bloc="systeme" tabindex="0" role="button" aria-pressed="false">
+          <rect x="608" y="77" width="154" height="70" rx="14" /><text x="685" y="118">Système</text>
+        </g>
+        <g class="bloc" data-bloc="capteurs" tabindex="0" role="button" aria-pressed="false">
+          <rect x="503" y="217" width="154" height="70" rx="14" /><text x="580" y="258">Capteurs</text>
+        </g>
+        <g class="bloc" data-bloc="predicteur" tabindex="0" role="button" aria-pressed="false">
+          <rect x="223" y="217" width="154" height="70" rx="14" /><text x="300" y="258">Prédicteur</text>
+        </g>
+        <!-- Entrées sans bloc dans le poly : zones cliquables autour des étiquettes. -->
+        <g class="bloc entree" data-bloc="consigne" tabindex="0" role="button" aria-pressed="false" aria-label="Consigne w(t)">
+          <rect x="30" y="68" width="74" height="30" rx="8" />
+        </g>
+        <g class="bloc entree" data-bloc="perturbation" tabindex="0" role="button" aria-pressed="false" aria-label="Perturbation d(t)">
+          <rect x="692" y="24" width="46" height="30" rx="8" />
+        </g>
+      </svg>
+      <p id="legende-schema" class="note" aria-live="polite">
+        Le schéma du poly, avec en rouge le contrôleur, sur lequel le cours insiste. Cliquez sur un bloc,
+        ou sur w(t) et d(t), pour voir où il se règle dans le simulateur et quels exemples le font intervenir.
+      </p>
+    </section>
+
+    <main id="catalogue" class="catalogue"></main>
   </body>
 </html>

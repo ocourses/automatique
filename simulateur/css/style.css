@@ -11,6 +11,8 @@
   --perturbation: #c25e0c;
   --observateur: #0f7b6c;
   --observateur-zone: rgba(15, 123, 108, 0.07);
+  --bloc: #f0f0ec;
+  --bloc-controleur: #f6cccc;
   --police: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
   --police-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -31,6 +33,8 @@
     --perturbation: #f0a050;
     --observateur: #4fc3b0;
     --observateur-zone: rgba(79, 195, 176, 0.1);
+    --bloc: #2a2a2e;
+    --bloc-controleur: #5a2a2a;
     color-scheme: dark;
   }
 }
@@ -189,7 +193,7 @@ input[type='range'] {
 }
 
 @media (min-width: 1001px) and (min-height: 601px) {
-  body {
+  body.page-exemple {
     height: 100vh;
     height: 100dvh;
     display: flex;
@@ -1272,4 +1276,101 @@ a.exemple:hover {
   padding: 0.05em 0.6em;
   margin-left: 0.4em;
   vertical-align: middle;
+}
+
+/* ---- Schéma de la boucle fermée (accueil) ------------------------------ */
+
+.schema {
+  max-width: 1000px;
+  margin: 0.8rem 16px 0;
+}
+
+@media (min-width: 1032px) {
+  .schema {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}
+
+#schema {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--police);
+}
+
+#schema .liens path {
+  fill: none;
+  stroke: var(--texte);
+  stroke-width: 1.5;
+}
+
+#schema marker path {
+  fill: var(--texte);
+}
+
+#schema .etiquettes text {
+  fill: var(--texte);
+  font-size: 19px;
+  font-style: italic;
+  text-anchor: middle;
+}
+
+#schema .bloc {
+  cursor: pointer;
+}
+
+#schema .bloc rect {
+  fill: var(--bloc);
+  stroke: var(--texte);
+  stroke-width: 1.5;
+}
+
+#schema .bloc.controleur rect {
+  fill: var(--bloc-controleur);
+}
+
+#schema .bloc text {
+  fill: var(--texte);
+  font-size: 19px;
+  text-anchor: middle;
+}
+
+/* w(t) et d(t) n'ont pas de bloc dans le poly : zone cliquable invisible. */
+#schema .bloc.entree rect {
+  fill: transparent;
+  stroke: none;
+}
+
+#schema .bloc:hover rect,
+#schema .bloc:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+#schema .bloc.entree:hover rect,
+#schema .bloc.entree:focus-visible rect {
+  stroke: var(--accent);
+  stroke-dasharray: 4 3;
+}
+
+#schema .bloc[aria-pressed='true'] rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+#schema .bloc:focus {
+  outline: none;
+}
+
+#legende-schema {
+  min-height: 3em;
+}
+
+.exemple {
+  transition: opacity 0.15s;
+}
+
+.exemple.estompe {
+  opacity: 0.3;
 }
