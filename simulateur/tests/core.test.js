@@ -88,3 +88,29 @@ test('simulation : sans sur-correction de la gravité, le pendule tombe', () => 
   assert.ok(Math.abs(sim.x[0]) > 1);
 });
 
+
+test('valeurs propres d’un système raide : racines distinctes de tailles très différentes', () => {
+  // Matrice compagnon de racines −136,5905 ; −5,9946 ; −3,5026 ; −2,6555 (pôles du TP du segway) :
+  // les coefficients dépassent 10⁴, ce qui ne doit pas faire fusionner des racines distinctes.
+  const racines = [-136.5905, -5.9946, -3.5026, -2.6555];
+  const c = [1];
+  for (const r of racines) {
+    c.push(0);
+    for (let k = c.length - 1; k > 0; k--) c[k] -= r * c[k - 1];
+  }
+  const C = [[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [-c[4], -c[3], -c[2], -c[1]]];
+  const vp = valeursPropres(C).map((z) => z.re).sort((a, b) => a - b);
+  racines.forEach((r, i) => proche(vp[i], r, 1e-6 * Math.abs(r)));
+  valeursPropres(C).forEach((z) => proche(z.im, 0, 1e-9));
+  // Une racine nulle et une racine positive, comme pour le segway en boucle ouverte.
+  const vp2 = valeursPropres([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [0, 0, 1600, -240]]);
+  assert.equal(vp2.filter((z) => Math.abs(z.re) < 1e-6).length, 2);
+});
+
+test('une racine multiple reste exacte à côté d’une racine éloignée', () => {
+  // (λ + 1)³ (λ + 100) : le paquet des trois racines voisines de −1 est regroupé, pas la racine −100.
+  const c = [1, 103, 303, 301, 100];
+  const vp = valeursPropres([[0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1], [-c[4], -c[3], -c[2], -c[1]]]).map((z) => z.re).sort((a, b) => a - b);
+  proche(vp[0], -100, 1e-6);
+  [1, 2, 3].forEach((i) => proche(vp[i], -1, 1e-9));
+});

@@ -6,14 +6,15 @@ se stabilise.
 
 En ligne : <https://ocourses.github.io/automatique/>.
 
-État actuel : **jalon V2** et le satellite du jalon V3, avec six exemples :
+État actuel : **jalon V2**, le satellite du jalon V3 et le segway, avec sept exemples :
 
 - le double intégrateur, chariot sur rail droit (poly ; TD3) ;
 - le pendule inversé commandé par un couple (poly ; TD2) ;
 - le pendule inversé commandé en accélération, ou « balai » (TD3) ;
 - le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020) ;
 - la pharmacocinétique avec observateur de Luenberger (TD4), en « courbes seules » ;
-- le satellite des équations d'Euler (examen 2017-2018), en « courbes seules » : retour d'état diagonal $u = K\omega$ avec $k_i < 0$, et fonction $V = \sum J_i\omega_i^2$, conservée sans contrôle. Cet exemple est volontairement épuré : seuls les inerties et les trois gains $k_i$ se règlent.
+- le satellite des équations d'Euler (examen 2017-2018), en « courbes seules » : retour d'état diagonal $u = K\omega$ avec $k_i < 0$, et fonction $V = \sum J_i\omega_i^2$, conservée sans contrôle. Cet exemple est volontairement épuré : seuls les inerties et les trois gains $k_i$ se règlent ;
+- le robot Lego segway (poly, introduction ; TP), un pendule inversé sur deux roues à quatre états $(\theta, \psi, \dot\theta, \dot\psi)$ et une tension de moteur. On y retrouve la condition initiale $\psi_0 = \pi/10$ du TP et ses pôles $-136{,}6$ ; $-2{,}66$ ; $-3{,}50$ ; $-5{,}99$. Seuls la masse et la hauteur du corps, et les quatre gains, se règlent.
 
 ## Organisation de la page
 
@@ -205,6 +206,9 @@ Plusieurs champs sont facultatifs :
 - `sansSortie: true` indique que tout l'état est mesuré (pas de sortie $y$) ;
   `noteEquilibre` remplace le commentaire affiché sous le point de
   fonctionnement.
+- `planRayon` fixe la demi-largeur du plan des valeurs propres, pour un système
+  raide dont un pôle très rapide écraserait les autres ; une valeur propre hors
+  cadre est alors marquée sur le bord, avec sa vraie valeur.
 - `portrait`, de la forme `{ x1: [a, b], x2: [c, d] }`, est le cadre minimal
   du portrait de phase (exemples à deux états).
 - `invariant(x, p, K)` renvoie `{ latex, valeur }` ou `null` : une quantité
@@ -238,3 +242,20 @@ Plusieurs champs sont facultatifs :
 
 Sans `draw`, la page passe en mode « courbes seules ». Il faut enfin passer
 `disponible: true` dans `catalogue.js`.
+
+## Le segway et les fichiers du TP
+
+Le modèle est celui de `fonction.m` du TP, d'après le NXTway-GS de Yamamoto, avec
+ses constantes physiques. Deux écarts avec les fichiers archivés sont à connaître :
+
+- **Deux signes corrigés dans $\ddot\theta$.** Dans `fonction.m`, les termes $c_3$ et $c_5$ y sont comptés
+  avec le signe inverse de celui de $\ddot\psi$. Le corps oscille alors au lieu de
+  tomber : le linéarisé a $\ddot\psi = -66\,\psi$, au lieu de $+270\,\psi$ pour un pendule inversé. Avec les signes corrigés,
+  les termes de gravité du linéarisé retrouvent exactement ceux de `matrices.m` ($-409{,}7$ et $269{,}6$).
+- **`matrices.m` n'est pas le linéarisé de ce modèle.** Ses termes d'amortissement et d'entrée diffèrent
+  (par exemple $A_{33} = -104{,}6$ contre $-162{,}1$ et $B_3 = 203{,}4$ contre $315{,}2$). La page affiche le
+  linéarisé du modèle non linéaire, calculé numériquement.
+
+Le gain de la page, qui place les pôles du TP, vaut donc $K = (0{,}335 ;\ 13{,}70 ;\ 0{,}795 ;\ 1{,}046)$ et non
+celui de `place(A, B, poles)` avec la `matrices.m` du TP. Les deux stabilisent le robot depuis $\psi_0 = \pi/10$.
+Les tests comparent le linéarisé, le gain et la trajectoire à `fonction.m` corrigé, rejoué sous Octave.

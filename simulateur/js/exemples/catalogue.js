@@ -50,4 +50,12 @@ export const catalogue = [
     montre: 'Retour d’état diagonal k_i < 0 ; sans contrôle, V est conservée (stable, pas asymptotiquement).',
     disponible: true,
   },
+  {
+    id: 'segway',
+    titre: 'Robot Lego segway',
+    sous_titre: 'Pendule inversé sur deux roues',
+    source: 'Poly, introduction ; TP',
+    montre: 'Quatre états et une tension de moteur : placement de pôles sur le robot du TP.',
+    disponible: true,
+  },
 ];

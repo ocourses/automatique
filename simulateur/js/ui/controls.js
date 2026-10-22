@@ -16,7 +16,7 @@ export function champ(parent, { latex, min, max, pas, valeur, unite = '' }, chan
   const curseur = document.createElement('input');
   Object.assign(curseur, { type: 'range', min, max, step: pas, value: valeur });
   const saisie = document.createElement('input');
-  Object.assign(saisie, { type: 'text', inputMode: 'decimal', value: String(valeur).replace('.', ',') });
+  Object.assign(saisie, { type: 'text', inputMode: 'decimal', value: String(Number(Number(valeur).toPrecision(6))).replace('.', ',') });
   saisie.setAttribute('aria-label', etiquette.textContent);
   curseur.setAttribute('aria-label', etiquette.textContent);
   const u = document.createElement('span');

@@ -19,9 +19,12 @@ function pasGraduation(R) {
 
 export class PlanComplexe {
   // rappels : { modifiable(), deplace(vp), modifiableObs(), deplaceObs(vp) }
-  constructor(canvas, rappels) {
+  // rayon : demi-largeur fixe du plan, pour un système raide dont un pôle très rapide
+  // écraserait les autres ; les valeurs propres hors cadre sont ramenées au bord.
+  constructor(canvas, rappels, rayon = null) {
     this.canvas = canvas;
     this.rappels = rappels;
+    this.rayonFixe = rayon;
     this.vpA = [];
     this.vpABK = [];
     this.vpObs = null;
@@ -45,7 +48,7 @@ export class PlanComplexe {
     const rect = this.canvas.getBoundingClientRect();
     const W = rect.width;
     const H = rect.height;
-    let R = this.saisie?.R;
+    let R = this.saisie?.R ?? this.rayonFixe;
     if (!R) {
       const module = Math.max(
         1,
@@ -57,6 +60,13 @@ export class PlanComplexe {
     return { rect, W, H, R, s, X: (re) => W / 2 + re * s, Y: (im) => H / 2 - im * s };
   }
 
+  // Position affichée d'une valeur propre : ramenée au bord du cadre si elle en sort.
+  // `hors` vaut true dans ce cas ; la direction vers la vraie valeur est conservée.
+  affichee(z, R) {
+    const k = Math.max(Math.abs(z.re), Math.abs(z.im)) / (0.94 * R);
+    return k > 1 ? { re: z.re / k, im: z.im / k, hors: true } : { re: z.re, im: z.im, hors: false };
+  }
+
   versComplexe(ev) {
     const { rect, W, H, s } = this.geometrie();
     return { re: (ev.clientX - rect.left - W / 2) / s, im: -(ev.clientY - rect.top - H / 2) / s };
@@ -65,13 +75,14 @@ export class PlanComplexe {
   // Valeur propre modifiable sous la souris : { jeu: 'bf' | 'obs', i } ou null.
   // Si deux sont confondues, on en prend une, l'autre se déplace ensuite.
   sousLaSouris(ev) {
-    const { rect, X, Y } = this.geometrie();
+    const { rect, X, Y, R } = this.geometrie();
     const px = ev.clientX - rect.left;
     const py = ev.clientY - rect.top;
     let meilleur = null;
     let d = RAYON_SAISIE;
     const cherche = (jeu, vp) => {
-      vp.forEach((z, i) => {
+      vp.forEach((v, i) => {
+        const z = this.affichee(v, R);
         const dk = Math.hypot(X(z.re) - px, Y(z.im) - py);
         if (dk <= d) {
           d = dk;
@@ -188,16 +199,31 @@ export class PlanComplexe {
     // Valeurs propres de A : cercles creux ; du bouclé : croix pleines.
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = col.discret;
-    for (const z of this.vpA) {
+    // Une valeur propre hors cadre est marquée sur le bord, avec sa vraie valeur.
+    const etiquette = (z, v, couleur) => {
+      if (!z.hors) return;
+      ctx.save();
+      ctx.fillStyle = couleur;
+      ctx.font = '11px system-ui, sans-serif';
+      const valeur = String(Number(v.re.toPrecision(4))).replace('.', ',').replace('-', '−');
+      ctx.textAlign = z.re < 0 ? 'left' : 'right';
+      ctx.fillText(z.re < 0 ? `◂ ${valeur}` : `${valeur} ▸`, X(z.re) + (z.re < 0 ? 9 : -9), Y(z.im) - 9);
+      ctx.restore();
+    };
+    for (const v of this.vpA) {
+      const z = this.affichee(v, R);
       ctx.beginPath();
       ctx.arc(X(z.re), Y(z.im), 6, 0, 2 * Math.PI);
       ctx.stroke();
+      etiquette(z, v, col.discret);
     }
     ctx.lineWidth = 2.5;
     ctx.strokeStyle = col.accent;
-    for (const z of this.vpABK) {
+    for (const v of this.vpABK) {
+      const z = this.affichee(v, R);
       const x = X(z.re);
       const y = Y(z.im);
+      etiquette(z, v, col.accent);
       ctx.beginPath();
       ctx.moveTo(x - 6, y - 6);
       ctx.lineTo(x + 6, y + 6);
@@ -209,9 +235,11 @@ export class PlanComplexe {
     if (this.vpObs) {
       ctx.lineWidth = 2.5;
       ctx.strokeStyle = col.observateur;
-      for (const z of this.vpObs) {
+      for (const v of this.vpObs) {
+        const z = this.affichee(v, R);
         const x = X(z.re);
         const y = Y(z.im);
+        etiquette(z, v, col.observateur);
         ctx.beginPath();
         ctx.moveTo(x, y - 7);
         ctx.lineTo(x + 7, y);

@@ -134,15 +134,24 @@ function durandKerner(c) {
       delta = Math.max(delta, Math.hypot(corr.re, corr.im));
       return { re: zi.re - corr.re, im: zi.im - corr.im };
     });
-    if (delta < 1e-14 * R) break;
+    if (delta < 1e-14 * Math.max(1, ...z.map((w) => Math.hypot(w.re, w.im)))) break;
   }
   // Une racine de multiplicité k n'est obtenue qu'à ε^{1/k} près. C'est une
   // racine simple de la dérivée (k−1)-ième de p : on l'affine par Newton sur
   // cette dérivée, à partir de la moyenne du paquet de racines voisines.
-  const paquet = 1e-3 * R;
+  // « Voisines » se mesure à l'échelle de la racine elle-même, et non à celle des
+  // coefficients : pour un système raide (racines −136 et −3, coefficients de
+  // l'ordre de 10⁶), une tolérance fondée sur les coefficients fusionnerait des
+  // racines pourtant distinctes.
+  const module = (w) => Math.hypot(w.re, w.im);
   const vues = new Array(n).fill(false);
   for (let i = 0; i < n; i++) {
     if (vues[i]) continue;
+    // 1 % de la taille de la racine : une racine multiple de la jacobienne d'un
+    // bouclé non linéaire (différences finies, erreur ~10⁻⁷) s'étale de (10⁻⁷)^{1/4} ≈ 0,02.
+    // Deux racines réellement distinctes à moins de 1 % l'une de l'autre sont
+    // confondues, ce que les exemples du simulateur ne rencontrent pas.
+    const paquet = 1e-2 * Math.max(1, module(z[i]));
     const membres = [i];
     for (let j = i + 1; j < n; j++) {
       if (!vues[j] && Math.hypot(z[i].re - z[j].re, z[i].im - z[j].im) < paquet) membres.push(j);
@@ -160,17 +169,20 @@ function durandKerner(c) {
         if (d.re === 0 && d.im === 0) break;
         const corr = cdiv(hornerGeneral(q, r), d);
         r = { re: r.re - corr.re, im: r.im - corr.im };
-        if (Math.hypot(corr.re, corr.im) < 1e-15 * R) break;
+        if (Math.hypot(corr.re, corr.im) < 1e-15 * Math.max(1, module(r))) break;
       }
-      membres.forEach((k) => {
-        vues[k] = true;
-        z[k] = r;
-      });
+      // Le raffinement doit rester dans le paquet : sinon ces racines n'étaient
+      // pas une racine multiple, et on garde les valeurs de Durand-Kerner.
+      if (Number.isFinite(r.re) && Number.isFinite(r.im) && membres.every((k) => module({ re: z[k].re - r.re, im: z[k].im - r.im }) < 10 * paquet)) {
+        membres.forEach((k) => {
+          vues[k] = true;
+          z[k] = r;
+        });
+      }
     }
   }
-  const tol = 1e-9 * R;
   return z
-    .map((r) => (Math.abs(r.im) < tol ? { re: r.re, im: 0 } : r))
+    .map((r) => (Math.abs(r.im) < 1e-9 * Math.max(1, module(r)) ? { re: r.re, im: 0 } : r))
     .sort((a, b) => a.re - b.re || a.im - b.im);
 }
 

@@ -34,7 +34,7 @@ async function charge() {
 
 // Pôles au format de la saisie (point décimal), paires conjuguées regroupées.
 function formatePoles(vp) {
-  const f = (v) => String(Number(v.toPrecision(4)));
+  const f = (v) => (Math.abs(v) < 1e-9 ? '0' : String(Number(v.toPrecision(4))));
   const res = [];
   const restants = vp.slice();
   while (restants.length) {
@@ -451,7 +451,7 @@ function demarre(modele) {
     modifiableObs: () => Boolean(sim.obs) && sim.observable,
     deplaceObs: (vp) =>
       appliqueL(placementObservateur(sim.A, sim.C, vp), 'Valeurs propres de A − LC déplacées', 'glisseObs'),
-  });
+  }, modele.planRayon ?? null);
 
   // ---- Analyse : linéarisé, valeurs propres, console ------------------------
   function analyse() {
