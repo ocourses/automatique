@@ -142,3 +142,74 @@ test('liens : un réglage traverse l’URL sans perte', () => {
   assert.equal(b.sigma, 0.01);
   assert.deepEqual(b.saturation, { active: true, umax: 7 });
 });
+
+test('événements du journal : entrée dans la boule ε, puis sortie sous perturbation', () => {
+  const sim = new Simulation(pendule);
+  sim.evenements = [];
+  sim.reinitialise([0.3, 0]);
+  sim.avance(10);
+  const entree = sim.evenements.find((e) => e.texte.startsWith('Entrée'));
+  assert.ok(entree && entree.t > 0.5 && entree.t < 5, 'entrée dans la boule');
+  assert.equal(sim.dansBoule, true);
+  proche(sim.entreeBoule, entree.t, 1e-9);
+  // Un choc violent fait sortir l'état de la boule 2ε.
+  sim.choc();
+  sim.avance(0.2);
+  assert.ok(sim.evenements.some((e) => e.texte.startsWith('Sortie')));
+  assert.equal(sim.dansBoule, false);
+});
+
+test('un seuil ε plus grand est franchi plus tôt', () => {
+  const instant = (seuil) => {
+    const sim = new Simulation(pendule);
+    sim.fixeSeuil(seuil);
+    sim.evenements = [];
+    sim.reinitialise([0.3, 0]);
+    sim.avance(10);
+    return sim.evenements.find((e) => e.texte.startsWith('Entrée')).t;
+  };
+  assert.ok(instant(0.1) < instant(0.001));
+});
+
+test('événements du journal : saturation signalée une fois, puis fin de saturation', () => {
+  const sim = new Simulation(pendule);
+  // Départ à u = 6 > 5, puis retour sous la borne ; la tenue de l'angle exige moins de 5 N·m.
+  sim.saturation = { active: true, umax: 5 };
+  sim.evenements = [];
+  sim.reinitialise([0.3, 0]);
+  sim.avance(10);
+  const textes = sim.evenements.map((e) => e.texte);
+  assert.equal(textes.filter((t) => t.startsWith('Saturation atteinte')).length, 1);
+  assert.ok(textes.includes('Fin de saturation'));
+});
+
+test('événements du journal : divergence', () => {
+  const sim = new Simulation(pendule);
+  sim.evenements = [];
+  sim.reinitialise([1e7, 0]);
+  sim.avance(0.1);
+  assert.equal(sim.diverge, true);
+  assert.ok(sim.evenements.some((e) => e.niveau === 'alerte' && e.texte.startsWith('Divergence')));
+});
+
+test('pendule : le point de fonctionnement est réglable, u_e = mgl sin x_e,1', () => {
+  const sim = new Simulation(pendule);
+  sim.fixeParametre('xe', 0.8);
+  proche(sim.xe[0], 0.8);
+  proche(sim.ue[0], 9.81 * Math.sin(0.8));
+  // A = [[0, 1], [(g/l) cos x_e, 0]] ; la condition du poly devient k₁ > mgl cos x_e.
+  proche(sim.A[1][0], 9.81 * Math.cos(0.8), 1e-5);
+  sim.fixeGains([[9.81 * Math.cos(0.8) + 10, 4]]);
+  sim.reinitialise([1, 0]);
+  sim.avance(15);
+  proche(sim.x[0], 0.8, 1e-4);
+  sim.fixeGains([[9.81 * Math.cos(0.8) - 1, 3]]);
+  assert.ok(sim.vpBF.some((z) => z.re > 0));
+});
+
+test('chaque paramètre de famille d’équilibre est déclaré par les exemples concernés', () => {
+  for (const m of [doubleIntegrateur, pendule, balai, rail]) {
+    const libres = m.parametres.filter((q) => q.famille === 'equilibre');
+    assert.equal(libres.length, 1, m.id);
+  }
+});

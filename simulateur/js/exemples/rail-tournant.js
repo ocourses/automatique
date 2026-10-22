@@ -26,7 +26,7 @@ export default {
     { nom: 'm', latex: 'm', valeur: 1, min: 0.1, max: 5, pas: 0.1, unite: 'kg' },
     { nom: 'J', latex: 'J', valeur: 1, min: 0.1, max: 5, pas: 0.1, unite: 'kg·m²' },
     { nom: 'g', latex: 'g', valeur: 9.81, min: 0, max: 20, pas: 0.01, unite: 'm/s²' },
-    { nom: 'xe', latex: 'x_e', valeur: 0, min: -1, max: 1, pas: 0.05, unite: 'm' },
+    { nom: 'xe', latex: 'x_e', valeur: 0, min: -1, max: 1, pas: 0.05, unite: 'm', famille: 'equilibre' },
   ],
 
   f(z, u, p) {

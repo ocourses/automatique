@@ -37,3 +37,33 @@ export function typographie(t) {
     .replace(/ ([:;!?»])/g, '\u00a0$1')
     .replace(/« /g, '«\u00a0');
 }
+
+// Nombre pour la console : 4 chiffres significatifs, notation scientifique
+// pour les très petites ou très grandes valeurs (2,3e-5).
+export function nombreCourt(v, chiffres = 4) {
+  if (!Number.isFinite(v)) return '—';
+  if (v === 0) return '0';
+  const a = Math.abs(v);
+  const s = a < 1e-3 || a >= 1e5 ? Number(v.toPrecision(chiffres)).toExponential().replace('e+', 'e') : String(Number(v.toPrecision(chiffres)));
+  return s.replace('.', ',').replace(/^-/, '−');
+}
+
+export function latexVecteur(v, chiffres = 3) {
+  return v.length === 1 ? latexNombre(v[0], chiffres) : `\\left(${v.map((x) => latexNombre(x, chiffres)).join('\\ ;\\ ')}\\right)`;
+}
+
+// Polynôme unitaire de coefficients c (degré décroissant), en LaTeX, en λ.
+export function polynomeLatex(c) {
+  const n = c.length - 1;
+  let s = '';
+  c.forEach((ck, k) => {
+    const p = n - k;
+    if (Math.abs(ck) < 1e-12) return;
+    const a = Math.abs(ck);
+    const signe = ck < 0 ? '-' : s ? '+' : '';
+    const coef = p > 0 && Math.abs(a - 1) < 1e-12 ? '' : latexNombre(a);
+    const puissance = p === 0 ? '' : p === 1 ? '\\lambda' : `\\lambda^{${p}}`;
+    s += ` ${signe} ${coef}${puissance}`;
+  });
+  return s.trim() || '0';
+}

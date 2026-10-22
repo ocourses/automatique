@@ -23,24 +23,27 @@ export default {
     { nom: 'm', latex: 'm', valeur: 1, min: 0.1, max: 5, pas: 0.1, unite: 'kg' },
     { nom: 'l', latex: 'l', valeur: 1, min: 0.2, max: 2, pas: 0.05, unite: 'm' },
     { nom: 'g', latex: 'g', valeur: 9.81, min: 0, max: 20, pas: 0.01, unite: 'm/s²' },
+    // Famille de points de fonctionnement : le pendule est tenu à l'angle x_{e,1}
+    // par le couple u_e = mgl sin x_{e,1} ; la position haute est x_{e,1} = 0.
+    { nom: 'xe', latex: 'x_{e,1}', valeur: 0, min: -3.14, max: 3.14, pas: 0.01, unite: 'rad', famille: 'equilibre' },
   ],
 
   f(x, u, p) {
     return [x[1], (p.g / p.l) * Math.sin(x[0]) - u[0] / (p.m * p.l * p.l)];
   },
 
-  equilibre() {
-    return { xe: [0, 0], ue: [0] };
+  equilibre(p) {
+    return { xe: [p.xe, 0], ue: [p.m * p.g * p.l * Math.sin(p.xe)] };
   },
 
   latex: {
     modele: '\\dot x_1 = x_2, \\qquad \\dot x_2 = \\frac{g}{l}\\sin x_1 - \\frac{u}{ml^2}',
-    equilibre: 'x_e = (0, 0), \\quad u_e = 0 \\quad \\text{(position haute)}',
+    equilibre: 'x_e = (x_{e,1}, 0), \\quad u_e = m g l \\sin x_{e,1}',
   },
 
   gains: [[20, 5]],
   bornesGains: [[{ min: -10, max: 60, pas: 0.1 }, { min: -10, max: 30, pas: 0.1 }]],
-  loi: '20*x1 + 5*x2',
+  loi: 'ue + 20*(x1 - xe1) + 5*(x2 - xe2)',
   x0: [0.3, 0],
   choc: [0, 1.5],
   perturbation: 2,
@@ -49,14 +52,14 @@ export default {
 
   // Indication propre à l'exemple : la condition du poly sur les gains.
   indications(p, K) {
-    const mgl = p.m * p.g * p.l;
+    const seuil = p.m * p.g * p.l * Math.cos(p.xe);
     const [k1, k2] = K[0];
-    const ok = k1 > mgl && k2 > 0;
+    const ok = k1 > seuil && k2 > 0;
     return [
       {
         niveau: ok ? 'ok' : 'alerte',
         texte:
-          `Pour ce pendule, $A + BK$ est Hurwitz si et seulement si $k_1 > mgl \\approx ${mgl.toFixed(2).replace('.', '{,}')}$ ` +
+          `Pour ce pendule, $A + BK$ est Hurwitz si et seulement si $k_1 > mgl\\cos x_{e,1} \\approx ${seuil.toFixed(2).replace('.', '{,}')}$ ` +
           `et $k_2 > 0$ : il faut « sur-corriger » la gravité et amortir (poly, exemple « Pendule inversé »).`,
       },
     ];
@@ -76,7 +79,7 @@ export default {
 
     if (!o.fantome) {
       // Verticale haute en pointillés : l'équilibre visé.
-      o.pointilles(0, 0, 0, 1.25 * p.l);
+      o.pointilles(0, 0, 1.25 * p.l * Math.sin(p.xe), 1.25 * p.l * Math.cos(p.xe));
 
       // Support du moteur.
       ctx.fillStyle = o.couleurs.discret;

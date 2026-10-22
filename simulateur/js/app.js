@@ -3,11 +3,12 @@
 import { catalogue } from './exemples/catalogue.js';
 import { Simulation } from './core/sim.js';
 import { ackermann, litPoles, placementPossible } from './core/poles.js';
+import { Console } from './ui/console.js';
 import { champ, saisieNombre } from './ui/controls.js';
 import { PlanComplexe } from './ui/eigen.js';
-import { latexMatrice, latexNombre, typographie } from './ui/format.js';
-import { afficheIndications, nomBoucle } from './ui/hints.js';
+import { latexMatrice, latexVecteur, texte, typographie } from './ui/format.js';
 import { rend, rendStatique, rendTexte } from './ui/katex.js';
+import { initOnglets } from './ui/onglets.js';
 import { Portrait } from './ui/phase.js';
 import { Courbes } from './ui/plots.js';
 import { Scene } from './ui/scene.js';
@@ -16,6 +17,7 @@ import { depuisURL, versURL } from './ui/url.js';
 
 const $ = (id) => document.getElementById(id);
 const PERIODE_COURBES = 50; // ms entre deux rafraîchissements des courbes
+const PERIODE_MESURES = 200; // ms entre deux rafraîchissements des nombres
 
 async function charge() {
   const id = new URLSearchParams(location.search).get('id');
@@ -48,6 +50,8 @@ function formatePoles(vp) {
   return res.join(', ');
 }
 
+const vecteur = (v) => `(${v.map((x) => texte(x)).join(' ; ')})`;
+
 function demarre(modele) {
   document.title = `${modele.titre} · Simulateur de stabilisation`;
   $('titre').textContent = modele.titre;
@@ -56,12 +60,22 @@ function demarre(modele) {
   const sim = new Simulation(modele);
   const reglages = depuisURL(new URLSearchParams(location.search), sim);
   let ci = reglages.ci;
+  sim.evenements = [];
   sim.reinitialise(ci);
   let enLecture = true;
   let saisi = false;
+  let trajectoire = 1;
   const affichage = { fantome: reglages.affichage.fantome, historique: false, vitesse: reglages.affichage.vitesse };
 
   rendStatique($('page'));
+
+  // ---- Console : mesures, analyse, journal ----------------------------------
+  const cons = new Console(modele, sim, { affichage });
+  const note = (message, options) => cons.ecrit(message, options);
+  const videEvenements = () => {
+    for (const e of sim.evenements.splice(0)) cons.ecrit(e.texte, { niveau: e.niveau, t: e.t });
+  };
+  cons.separateur(`Trajectoire n° 1 : x₀ = ${vecteur(ci)}`);
 
   // ---- Lien : les réglages suivent dans l'URL -------------------------------
   let minuterie = null;
@@ -69,25 +83,49 @@ function demarre(modele) {
     clearTimeout(minuterie);
     minuterie = setTimeout(() => history.replaceState(null, '', `?${versURL(sim, ci, affichage)}`), 200);
   };
+  $('copier').addEventListener('click', async () => {
+    history.replaceState(null, '', `?${versURL(sim, ci, affichage)}`);
+    try {
+      await navigator.clipboard.writeText(location.href);
+      $('copier').textContent = 'Lien copié';
+    } catch {
+      $('copier').textContent = 'Copie impossible : utilisez la barre d’adresse';
+    }
+    setTimeout(() => ($('copier').textContent = 'Copier le lien'), 2000);
+  });
 
-  // ---- Modèle --------------------------------------------------------------
+  // ---- Onglet Système : équations, paramètres, point de fonctionnement ------
   rend($('modele'), modele.latex.modele);
   rend($('etats'), modele.etats.map((e) => e.latex).join(', \\quad '), false);
   rend($('sortie'), `y = x_${sim.sortie + 1}`, false);
   rend($('equilibre'), modele.latex.equilibre);
 
-  // ---- Paramètres ----------------------------------------------------------
+  const libres = modele.parametres.filter((q) => q.famille === 'equilibre');
   for (const q of modele.parametres) {
-    champ($('parametres'), { ...q, valeur: sim.p[q.nom] }, (v) => {
+    const zone = q.famille === 'equilibre' ? $('parametres-eq') : $('parametres');
+    champ(zone, { ...q, valeur: sim.p[q.nom] }, (v) => {
       sim.fixeParametre(q.nom, v);
       scene?.ajusteProportions();
       analyse();
       scene?.dessine();
+      note(`Paramètre ${q.nom} = ${texte(v)} ${q.unite}`, { cle: `p_${q.nom}` });
       memorise();
     });
   }
+  rendTexte(
+    $('aide-eq'),
+    libres.length
+      ? `On règle ici ${libres.length > 1 ? 'les coordonnées libres' : 'la coordonnée libre'} de $x_e$ ; la commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$, on ne la règle pas séparément.`
+      : `Ce modèle n'a qu'un point de fonctionnement : $x_e$ et $u_e$ sont imposés, il n'y a rien à régler.`,
+  );
+  const affichePointDeFonctionnement = () => {
+    rend($('equilibre-num'), `x_e = ${latexVecteur(sim.xe)}, \\qquad u_e = ${latexVecteur(sim.ue)}`);
+    // Au-delà de deux états, A et B ne tiennent plus sur une ligne.
+    const sep = sim.n > 2 ? ', \\\\[0.4em] ' : ', \\qquad ';
+    rend($('lineaire'), `\\begin{gathered} A = ${latexMatrice(sim.A)}${sep}B = ${latexMatrice(sim.B)} \\end{gathered}`);
+  };
 
-  // ---- Contrôleur : retour d'état ------------------------------------------
+  // ---- Onglet Contrôleur : retour d'état ------------------------------------
   rend($('loi-gains'), 'u = u_e + K(x - x_e)');
   const m = modele.commandes.length;
   const champsGains = sim.K.map((ligne, i) =>
@@ -96,22 +134,24 @@ function demarre(modele) {
       return champ($('gains'), { latex: `k_{${indice}}`, valeur: k, ...modele.bornesGains[i][j] }, (v) => {
         sim.fixeGain(i, j, v);
         analyse();
+        note(`Gain k${indice} = ${texte(v)}`, { cle: `k_${indice}` });
         memorise();
       });
     }),
   );
-  const appliqueGains = (K) => {
+  const appliqueGains = (K, message, cle = null) => {
     if (!K[0].every(Number.isFinite)) return;
     sim.fixeGains(K);
     champsGains.forEach((ligne, i) => ligne.forEach((c, j) => c.fixe(K[i][j])));
     analyse();
+    note(`${message} → K = ${vecteur(K.flat())}`, { cle });
     memorise();
   };
   const placePoles = () => {
     const erreur = $('erreur-poles');
     try {
       if (!placementPossible(sim.A, sim.B)) throw new Error('placement impossible : le linéarisé n’est pas contrôlable');
-      appliqueGains(ackermann(sim.A, sim.B, litPoles($('poles').value, sim.n)));
+      appliqueGains(ackermann(sim.A, sim.B, litPoles($('poles').value, sim.n)), `Pôles voulus ${$('poles').value}`);
       erreur.hidden = true;
     } catch (e) {
       erreur.textContent = e.message;
@@ -123,7 +163,7 @@ function demarre(modele) {
     if (ev.key === 'Enter') placePoles();
   });
 
-  // ---- Contrôleur : loi libre ----------------------------------------------
+  // ---- Onglet Contrôleur : loi libre ----------------------------------------
   if (m !== 1) $('choix-loi').hidden = true;
   const n = sim.n;
   const params = Object.keys(sim.p).join(', ');
@@ -143,6 +183,8 @@ function demarre(modele) {
       $('erreur-loi').textContent = erreur ?? '';
       $('erreur-loi').hidden = !erreur;
       analyse();
+      if (erreur) note(`Loi libre refusée : ${erreur}`, { niveau: 'alerte', cle: 'loi' });
+      else note(`Loi libre : u = ${sim.loiTexte}`, { cle: 'loi' });
       memorise();
     }, 300);
   });
@@ -156,17 +198,19 @@ function demarre(modele) {
       sim.fixeMode(radio.value);
       montreMode();
       analyse();
+      note(radio.value === 'loi' ? 'Contrôleur : loi libre' : 'Contrôleur : retour d’état');
       memorise();
     });
   }
   montreMode();
 
-  // ---- Saturation ----------------------------------------------------------
+  // ---- Onglet Contrôleur : saturation ---------------------------------------
   $('saturation').checked = sim.saturation.active;
   $('umax').value = String(sim.saturation.umax).replace('.', ',');
   $('saturation').addEventListener('change', () => {
     sim.saturation.active = $('saturation').checked;
     analyse();
+    note(sim.saturation.active ? `Saturation activée : |u| ≤ ${texte(sim.saturation.umax)}` : 'Saturation désactivée');
     memorise();
   });
   $('umax').addEventListener('change', () => {
@@ -174,24 +218,28 @@ function demarre(modele) {
     if (Number.isFinite(v) && v > 0) sim.saturation.umax = v;
     $('umax').value = String(sim.saturation.umax).replace('.', ',');
     analyse();
+    if (sim.saturation.active) note(`Saturation : |u| ≤ ${texte(sim.saturation.umax)}`, { cle: 'umax' });
     memorise();
   });
 
-  // ---- Perturbation et bruit -----------------------------------------------
+  // ---- Onglet Scénario : perturbation et bruit ------------------------------
   const P = sim.perturbation;
   const unite = modele.commandes[0].unite;
   const zoneP = $('reglages-perturbation');
   saisieNombre(zoneP, 'e', P.e, unite, (v) => {
     P.e = v;
     analyse();
+    note(`Perturbation : e = ${texte(v)} ${unite}`, { cle: 'pert_e' });
     memorise();
   });
   saisieNombre(zoneP, 't_1', P.debut, 's', (v) => {
     P.debut = v;
+    note(`Perturbation : début t₁ = ${texte(v)} s`, { cle: 'pert_t1' });
     memorise();
   });
   saisieNombre(zoneP, '\\Delta t', P.duree, 's', (v) => {
     P.duree = Math.max(0, v);
+    note(`Perturbation : durée Δt = ${texte(P.duree)} s`, { cle: 'pert_dt' });
     memorise();
   });
   const lignes = zoneP.querySelectorAll('.champ');
@@ -206,20 +254,28 @@ function demarre(modele) {
     P.type = $('perturbation').value;
     montrePerturbation();
     analyse();
+    note(
+      P.type === 'aucune'
+        ? 'Perturbation supprimée'
+        : `Perturbation ${P.type === 'constante' ? 'constante' : 'en créneau'} : e = ${texte(P.e)} ${unite}`,
+    );
     memorise();
   });
   saisieNombre($('reglage-bruit'), '\\sigma', sim.sigma, '', (v) => {
     sim.sigma = Math.max(0, v);
     analyse();
+    note(`Bruit de mesure : σ = ${texte(sim.sigma)}`, { cle: 'sigma' });
     memorise();
   });
 
-  // ---- Condition initiale --------------------------------------------------
+  // ---- Onglet Scénario : condition initiale ---------------------------------
   const saisiesCI = modele.etats.map((e, i) => saisieNombre($('ci'), `${e.latex}(0)`, ci[i], e.unite));
   const lance = (x0) => {
+    videEvenements();
     portrait?.archive();
     ci = x0.slice();
     saisiesCI.forEach((s, i) => s.fixe(ci[i]));
+    cons.separateur(`Trajectoire n° ${++trajectoire} : x₀ = ${vecteur(ci)}`);
     sim.reinitialise(ci);
     analyse();
     joue(true);
@@ -230,21 +286,28 @@ function demarre(modele) {
     if (x0.every(Number.isFinite)) lance(x0);
   });
 
-  // ---- Lecture -------------------------------------------------------------
+  // ---- Lecture --------------------------------------------------------------
   const joue = (oui) => {
     enLecture = oui;
     $('lecture').textContent = oui ? 'Pause' : 'Lecture';
   };
-  $('lecture').addEventListener('click', () => joue(!enLecture));
+  $('lecture').addEventListener('click', () => {
+    joue(!enLecture);
+    note(enLecture ? 'Reprise' : 'Pause');
+  });
   $('reinitialiser').addEventListener('click', () => lance(ci));
-  $('choc').addEventListener('click', () => sim.choc());
+  $('choc').addEventListener('click', () => {
+    const signe = sim.signeChoc;
+    sim.choc();
+    note(`Choc : ${vecteur((modele.choc ?? []).map((v) => signe * v))} ajouté à l’état`, { niveau: 'alerte' });
+  });
   $('vitesse').value = String(affichage.vitesse);
   $('vitesse').addEventListener('change', () => {
     affichage.vitesse = Number($('vitesse').value);
     memorise();
   });
 
-  // ---- Scène, courbes, portrait de phase -----------------------------------
+  // ---- Scène, courbes, portrait de phase ------------------------------------
   let scene = null;
   if (modele.draw) {
     scene = new Scene($('scene'), modele, sim, {
@@ -258,18 +321,19 @@ function demarre(modele) {
       vitesseLecture: () => affichage.vitesse,
     });
   } else {
-    $('carte-scene').hidden = true;
+    $('bloc-scene').hidden = true;
   }
   const courbes = new Courbes($('courbes'), modele, sim);
   let portrait = null;
   if (sim.n === 2 && modele.portrait) {
-    $('carte-portrait').hidden = false;
     portrait = new Portrait($('portrait'), modele, sim, { lance });
     $('effacer').addEventListener('click', () => portrait.efface());
+  } else {
+    $('onglet-portrait').hidden = true;
   }
   montrePerturbation();
 
-  // ---- Affichage -----------------------------------------------------------
+  // ---- Affichage ------------------------------------------------------------
   const appliqueAffichage = () => {
     if (scene) scene.avecFantome = affichage.fantome;
     if (portrait) portrait.avecFantome = affichage.fantome;
@@ -286,35 +350,22 @@ function demarre(modele) {
     appliqueAffichage();
   });
   appliqueAffichage();
-  $('copier').addEventListener('click', async () => {
-    history.replaceState(null, '', `?${versURL(sim, ci, affichage)}`);
-    try {
-      await navigator.clipboard.writeText(location.href);
-      $('copier').textContent = 'Lien copié';
-    } catch {
-      $('copier').textContent = 'Copie impossible : utilisez la barre d’adresse';
-    }
-    setTimeout(() => ($('copier').textContent = 'Copier le lien'), 2000);
-  });
 
-  // ---- Plan complexe : placement des valeurs propres à la souris ------------
+  // ---- Plan complexe : placement des valeurs propres à la souris -------------
   // K est recalculé par la formule d'Ackermann à partir des valeurs propres voulues.
   const glissable = () => sim.mode === 'gains' && placementPossible(sim.A, sim.B);
   const plan = new PlanComplexe($('plan'), {
     modifiable: glissable,
-    deplace: (vp) => appliqueGains(ackermann(sim.A, sim.B, vp)),
+    deplace: (vp) => appliqueGains(ackermann(sim.A, sim.B, vp), 'Valeurs propres déplacées', 'glisse'),
   });
 
-  // ---- Analyse : linéarisé, valeurs propres, indications -------------------
+  // ---- Analyse : linéarisé, valeurs propres, console ------------------------
   function analyse() {
-    // Au-delà de deux états, A et B ne tiennent plus sur une ligne.
-    const sep = sim.n > 2 ? ', \\\\[0.4em] ' : ', \\qquad ';
-    rend($('lineaire'), `\\begin{gathered} A = ${latexMatrice(sim.A)}${sep}B = ${latexMatrice(sim.B)} \\end{gathered}`);
-    rend($('boucle'), `${nomBoucle(sim)} = ${latexMatrice(sim.Jbf)}`);
+    affichePointDeFonctionnement();
     plan.actualise(sim.vpA, sim.vpBF);
     $('aide-plan').hidden = !glissable();
     if (document.activeElement !== $('poles') && sim.mode === 'gains') $('poles').value = formatePoles(sim.vpBF);
-    afficheIndications($('indications'), sim);
+    cons.analyse();
   }
   analyse();
   surChangementTheme(() => {
@@ -323,14 +374,21 @@ function demarre(modele) {
     scene?.dessine();
   });
 
-  // ---- Boucle d'animation --------------------------------------------------
+  // ---- Onglets (après les masquages ci-dessus) -------------------------------
+  initOnglets('reglages', 'controleur');
+  initOnglets('graphes', 'valeurs-propres');
+  initOnglets('console', 'mesures');
+
+  // ---- Boucle d'animation ---------------------------------------------------
   let avant = performance.now();
   let derniereCourbe = 0;
+  let dernieresMesures = 0;
   let divergeait = false;
   function image(maintenant) {
     const dt = Math.min((maintenant - avant) / 1000, 0.05);
     avant = maintenant;
     if (enLecture && !saisi) sim.avance(dt * affichage.vitesse);
+    videEvenements();
     if (sim.diverge !== divergeait) {
       divergeait = sim.diverge;
       analyse();
@@ -341,11 +399,11 @@ function demarre(modele) {
       courbes.actualise();
       portrait?.dessine();
       derniereCourbe = maintenant;
-      const inv = modele.invariant?.(sim.x, sim.p, sim.K);
-      $('invariant').hidden = !inv || sim.mode !== 'gains';
-      if (inv) rend($('invariant'), `${inv.latex} = ${latexNombre(inv.valeur, 5)}`, false);
     }
-    $('temps').textContent = `t = ${sim.t.toFixed(2).replace('.', ',')} s`;
+    if (maintenant - dernieresMesures > PERIODE_MESURES) {
+      cons.actualiseMesures(enLecture);
+      dernieresMesures = maintenant;
+    }
     requestAnimationFrame(image);
   }
   requestAnimationFrame(image);

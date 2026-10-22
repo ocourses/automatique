@@ -63,6 +63,7 @@ export class Portrait {
 
   dessine() {
     const { rect, X, Y, a1, b1, a2, b2 } = this.geometrie();
+    if (rect.width < 2 || rect.height < 2) return; // onglet masqué
     const dpr = window.devicePixelRatio || 1;
     const w = Math.round(rect.width * dpr);
     const h = Math.round(rect.height * dpr);

@@ -15,7 +15,7 @@ export default {
   commandes: [{ latex: 'u', texte: 'u', unite: 'm/s²' }],
   sortie: 0,
 
-  parametres: [{ nom: 'xe', latex: 'x_{e,1}', valeur: 0, min: -2, max: 2, pas: 0.1, unite: 'm' }],
+  parametres: [{ nom: 'xe', latex: 'x_{e,1}', valeur: 0, min: -2, max: 2, pas: 0.1, unite: 'm', famille: 'equilibre' }],
 
   f(x, u) {
     return [x[1], u[0]];

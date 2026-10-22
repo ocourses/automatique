@@ -105,6 +105,8 @@ export class PlanComplexe {
   dessine() {
     const canvas = this.canvas;
     const { W, H, R, s, X, Y } = this.geometrie();
+    // Onglet masqué : rien à dessiner (et la boucle de graduation ne finirait pas).
+    if (W < 2 || H < 2) return;
     const dpr = window.devicePixelRatio || 1;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);

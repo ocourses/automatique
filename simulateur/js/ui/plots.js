@@ -4,7 +4,7 @@
 import { couleurs } from './theme.js';
 
 const FENETRE = 10; // s
-const HAUTEUR = 170; // px
+const HAUTEUR = 140; // px
 
 export class Courbes {
   constructor(conteneur, modele, sim) {

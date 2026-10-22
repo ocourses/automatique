@@ -12,10 +12,13 @@
     <script type="module" src="js/app.js"></script>
   </head>
   <body>
-    <header class="entete">
-      <a href="index.html" class="retour">← Catalogue</a>
-      <h1 id="titre">Chargement…</h1>
-      <p id="source" class="source"></p>
+    <header class="entete entete-barre">
+      <div>
+        <a href="index.html" class="retour">← Catalogue</a>
+        <h1 id="titre">Chargement…</h1>
+        <p id="source" class="source"></p>
+      </div>
+      <button id="copier" type="button">Copier le lien</button>
     </header>
 
     <p id="introuvable" class="carte" hidden>
@@ -23,138 +26,210 @@
       <a href="index.html">Retour au catalogue</a>.
     </p>
 
-    <main id="page" class="grille">
-      <section class="colonne">
-        <div class="carte">
-          <h2>Modèle</h2>
-          <div id="modele"></div>
-          <p class="note">États : <span id="etats"></span>. Sortie mesurée : <span id="sortie"></span>.</p>
-          <div id="equilibre"></div>
-          <p class="note">Linéarisé en $(x_e, u_e)$ :</p>
-          <div id="lineaire"></div>
-        </div>
-        <div class="carte">
-          <h2>Paramètres</h2>
-          <div id="parametres"></div>
-        </div>
-        <div class="carte">
-          <h2>Contrôleur</h2>
-          <div class="onglets" role="radiogroup" aria-label="Type de contrôleur">
-            <label><input type="radio" name="mode" value="gains" checked /> Retour d'état</label>
-            <label id="choix-loi"><input type="radio" name="mode" value="loi" /> Loi libre</label>
+    <div id="page">
+      <main class="app">
+        <!-- Réglages : trois onglets -->
+        <section class="carte zone-reglages" aria-label="Réglages">
+          <div class="onglets" role="tablist" data-groupe="reglages" aria-label="Réglages">
+            <button type="button" role="tab" data-onglet="controleur">Contrôleur</button>
+            <button type="button" role="tab" data-onglet="scenario">Scénario</button>
+            <button type="button" role="tab" data-onglet="systeme">Système</button>
           </div>
-          <div id="bloc-gains">
-            <div id="loi-gains"></div>
-            <div id="gains"></div>
-            <div class="champ-poles">
-              <label for="poles">Pôles voulus</label>
-              <input id="poles" type="text" placeholder="-1, -2±3i" spellcheck="false" />
-              <button id="placer" type="button">Placer</button>
+
+          <div role="tabpanel" data-groupe="reglages" data-panneau="controleur">
+            <div class="choix" role="radiogroup" aria-label="Type de contrôleur">
+              <label><input type="radio" name="mode" value="gains" checked /> Retour d'état</label>
+              <label id="choix-loi"><input type="radio" name="mode" value="loi" /> Loi libre</label>
             </div>
-            <p id="erreur-poles" class="erreur" hidden></p>
+            <div id="bloc-gains">
+              <div id="loi-gains"></div>
+              <div id="gains"></div>
+              <div class="champ-poles">
+                <label for="poles">Pôles voulus</label>
+                <input id="poles" type="text" placeholder="-1, -2±3i" spellcheck="false" />
+                <button id="placer" type="button">Placer</button>
+              </div>
+              <p id="erreur-poles" class="erreur" hidden></p>
+            </div>
+            <div id="bloc-loi" hidden>
+              <label for="loi" class="note">$u =$</label>
+              <textarea id="loi" rows="3" spellcheck="false"></textarea>
+              <p id="erreur-loi" class="erreur" hidden></p>
+              <p class="note" id="aide-loi"></p>
+            </div>
+            <h3>Saturation</h3>
+            <div class="ligne-options">
+              <label><input id="saturation" type="checkbox" /> $|u| \le u_{\max}$</label>
+              <input id="umax" type="text" inputmode="decimal" aria-label="u max" />
+            </div>
           </div>
-          <div id="bloc-loi" hidden>
-            <label for="loi" class="note">$u =$</label>
-            <textarea id="loi" rows="2" spellcheck="false"></textarea>
-            <p id="erreur-loi" class="erreur" hidden></p>
-            <p class="note" id="aide-loi"></p>
-          </div>
-          <div id="boucle"></div>
-          <div class="ligne-options">
-            <label><input id="saturation" type="checkbox" /> Saturation $|u| \le u_{\max}$</label>
-            <input id="umax" type="text" inputmode="decimal" aria-label="u max" />
-          </div>
-        </div>
-        <div class="carte">
-          <h2>Perturbation et bruit</h2>
-          <div class="ligne-options">
-            <label for="perturbation">$d(t)$</label>
-            <select id="perturbation">
-              <option value="aucune">aucune</option>
-              <option value="constante">constante</option>
-              <option value="creneau">créneau</option>
-            </select>
-          </div>
-          <div id="reglages-perturbation"></div>
-          <div id="reglage-bruit"></div>
-          <p class="note">
-            La perturbation s'ajoute à la commande : le système reçoit
-            $\operatorname{sat}(u) + d(t)$. Le bruit, gaussien d'écart-type
-            $\sigma$, s'ajoute à chaque mesure de l'état.
-          </p>
-        </div>
-        <div class="carte">
-          <h2>Condition initiale</h2>
-          <div id="ci"></div>
-          <button id="lancer" type="button">Lancer depuis $x_0$</button>
-        </div>
-      </section>
 
-      <section class="colonne colonne-scene">
-        <div id="carte-scene" class="carte">
-          <canvas id="scene" aria-label="Scène de la simulation"></canvas>
-          <p class="note aide">
-            Faites glisser l'objet pour régler la position initiale. Lâchez-le
-            en mouvement pour lui donner une vitesse initiale.
-          </p>
-        </div>
-        <div class="carte lecture">
-          <button id="lecture" type="button">Pause</button>
-          <button id="reinitialiser" type="button">Réinitialiser</button>
-          <button id="choc" type="button">Choc</button>
-          <label>
-            Vitesse
-            <select id="vitesse">
-              <option value="0.25">×0,25</option>
-              <option value="0.5">×0,5</option>
-              <option value="1" selected>×1</option>
-              <option value="2">×2</option>
-              <option value="4">×4</option>
-            </select>
-          </label>
-          <span id="temps" class="temps"></span>
-          <span id="invariant" class="invariant" hidden></span>
-        </div>
-        <div class="carte lecture">
-          <label><input id="fantome" type="checkbox" /> Fantôme du linéarisé</label>
-          <label><input id="historique" type="checkbox" /> Historique complet</label>
-          <button id="copier" type="button">Copier le lien</button>
-        </div>
-        <div id="carte-portrait" class="carte" hidden>
-          <h2>Portrait de phase</h2>
-          <canvas id="portrait" aria-label="Portrait de phase"></canvas>
-          <p class="note">
-            Cliquez pour lancer une trajectoire depuis ce point ; les précédentes
-            restent en gris.
-            <button id="effacer" type="button" class="lien">Effacer</button>
-          </p>
-        </div>
-      </section>
+          <div role="tabpanel" data-groupe="reglages" data-panneau="scenario" hidden>
+            <h3>Condition initiale</h3>
+            <div id="ci"></div>
+            <button id="lancer" type="button">Lancer depuis $x_0$</button>
+            <p class="note">On peut aussi déplacer l'objet à la souris, ou cliquer dans le portrait de phase.</p>
+            <h3>Perturbation</h3>
+            <div class="ligne-options">
+              <label for="perturbation">$d(t)$</label>
+              <select id="perturbation">
+                <option value="aucune">aucune</option>
+                <option value="constante">constante</option>
+                <option value="creneau">créneau</option>
+              </select>
+            </div>
+            <div id="reglages-perturbation"></div>
+            <p class="note">
+              Elle s'ajoute à la commande : le système reçoit $\operatorname{sat}(u) + d(t)$. Le bouton
+              « Choc », sous la scène, ajoute une impulsion de vitesse.
+            </p>
+            <h3>Bruit de mesure</h3>
+            <div id="reglage-bruit"></div>
+            <p class="note">
+              Bruit gaussien d'écart-type $\sigma$ sur chaque composante mesurée : le contrôleur ne voit
+              que la mesure bruitée.
+            </p>
+          </div>
 
-      <section class="colonne">
-        <div class="carte">
-          <h2>Courbes</h2>
-          <div id="courbes"></div>
-        </div>
-        <div class="carte">
-          <h2>Valeurs propres</h2>
-          <canvas id="plan" aria-label="Plan complexe"></canvas>
-          <p class="note legende">
-            <span class="symbole-a">○</span> valeurs propres de $A$
-            <span class="symbole-abk">×</span> valeurs propres du bouclé
-            <span class="symbole-zone">■</span> demi-plan $\operatorname{Re} &lt; 0$
-          </p>
-          <p id="aide-plan" class="note">
-            Faites glisser une croix pour placer les valeurs propres de $A + BK$ :
-            le gain $K$ est recalculé par la formule d'Ackermann. Près des axes,
-            la valeur propre s'y colle (réelle ou imaginaire pure).
-          </p>
-        </div>
-        <div class="carte">
-          <h2>Indications</h2>
-          <ul id="indications" class="indications"></ul>
+          <div role="tabpanel" data-groupe="reglages" data-panneau="systeme" hidden>
+            <h3>Équations</h3>
+            <div id="modele"></div>
+            <p class="note">États : <span id="etats"></span>. Sortie mesurée : <span id="sortie"></span></p>
+            <h3>Paramètres</h3>
+            <div id="parametres"></div>
+            <h3>Point de fonctionnement</h3>
+            <div id="equilibre"></div>
+            <div id="parametres-eq"></div>
+            <div id="equilibre-num"></div>
+            <p class="note" id="aide-eq"></p>
+            <h3>Linéarisé en $(x_e, u_e)$</h3>
+            <div id="lineaire"></div>
+          </div>
+        </section>
+
+        <!-- Scène et lecture -->
+        <section class="carte zone-scene" aria-label="Simulation">
+          <div id="bloc-scene">
+            <canvas id="scene" aria-label="Scène de la simulation"></canvas>
+            <p class="note aide">
+              Faites glisser l'objet pour régler la position initiale ; lâchez-le en mouvement pour lui
+              donner une vitesse initiale.
+            </p>
+          </div>
+          <div class="barre">
+            <button id="lecture" type="button">Pause</button>
+            <button id="reinitialiser" type="button">Réinitialiser</button>
+            <button id="choc" type="button">Choc</button>
+            <label>
+              Vitesse
+              <select id="vitesse">
+                <option value="0.25">×0,25</option>
+                <option value="0.5">×0,5</option>
+                <option value="1" selected>×1</option>
+                <option value="2">×2</option>
+                <option value="4">×4</option>
+              </select>
+            </label>
+            <label><input id="fantome" type="checkbox" /> Fantôme du linéarisé</label>
+          </div>
+        </section>
+
+        <!-- Graphiques -->
+        <section class="zone-graphes" aria-label="Graphiques">
+          <div class="carte">
+            <div class="carte-entete">
+              <h2>Courbes</h2>
+              <label class="petit"><input id="historique" type="checkbox" /> Historique complet</label>
+            </div>
+            <div id="courbes"></div>
+          </div>
+          <div class="carte">
+            <div class="onglets" role="tablist" data-groupe="graphes" aria-label="Graphiques">
+              <button type="button" role="tab" data-onglet="valeurs-propres">Valeurs propres</button>
+              <button type="button" role="tab" data-onglet="portrait" id="onglet-portrait">Portrait de phase</button>
+            </div>
+            <div role="tabpanel" data-groupe="graphes" data-panneau="valeurs-propres">
+              <canvas id="plan" aria-label="Plan complexe"></canvas>
+              <p class="note legende">
+                <span class="symbole-a">○</span> valeurs propres de $A$
+                <span class="symbole-abk">×</span> valeurs propres du bouclé
+                <span class="symbole-zone">■</span> demi-plan $\operatorname{Re} &lt; 0$
+              </p>
+              <p id="aide-plan" class="note">
+                Faites glisser une croix pour placer les valeurs propres de $A + BK$ : le gain $K$ est
+                recalculé par la formule d'Ackermann. Près des axes, la valeur propre s'y colle.
+              </p>
+            </div>
+            <div role="tabpanel" data-groupe="graphes" data-panneau="portrait" hidden>
+              <canvas id="portrait" aria-label="Portrait de phase"></canvas>
+              <p class="note">
+                Cliquez pour lancer une trajectoire depuis ce point ; les précédentes restent en gris.
+                <button id="effacer" type="button" class="lien">Effacer</button>
+              </p>
+            </div>
+          </div>
+        </section>
+      </main>
+
+      <!-- Console -->
+      <section id="console" class="console" aria-label="Console">
+        <div class="console-int">
+          <div class="console-entete">
+            <div class="onglets onglets-console" role="tablist" data-groupe="console" aria-label="Console">
+              <button type="button" role="tab" data-onglet="mesures">Mesures</button>
+              <button type="button" role="tab" data-onglet="analyse">Analyse</button>
+              <button type="button" role="tab" data-onglet="journal">Journal</button>
+            </div>
+            <div class="console-resume" aria-live="off">
+              <span id="console-t"></span>
+              <span id="console-norme"></span>
+              <span id="console-badge" class="badge-etat"></span>
+            </div>
+            <button id="console-replier" type="button" aria-expanded="true">Replier</button>
+          </div>
+          <div class="console-corps">
+            <div role="tabpanel" data-groupe="console" data-panneau="mesures">
+              <div class="mesures-tete">
+                <label class="petit" title="Une grandeur est « ≈ 0 » quand son écart à l'équilibre passe sous ε ; l'état est stabilisé quand ‖x − x_e‖ < ε.">
+                  seuil ε <input id="console-seuil" type="text" inputmode="decimal" aria-label="Seuil epsilon" />
+                  pour « ≈ 0 » et pour la stabilisation
+                </label>
+              </div>
+              <div class="mesures-grille">
+                <table id="mesures" class="mesures">
+                  <thead>
+                    <tr><th>Grandeur</th><th>Valeur</th><th>Équilibre</th><th>Écart</th><th></th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+                <table id="mesures-agreg" class="mesures">
+                  <thead>
+                    <tr><th>Normes</th><th>Valeur</th><th></th></tr>
+                  </thead>
+                  <tbody></tbody>
+                </table>
+              </div>
+            </div>
+            <div role="tabpanel" data-groupe="console" data-panneau="analyse" hidden>
+              <div class="analyse">
+                <div>
+                  <div id="analyse-matrice"></div>
+                  <div id="analyse-chi"></div>
+                  <div id="analyse-spectre"></div>
+                  <p id="analyse-hurwitz" class="note"></p>
+                </div>
+                <ul id="indications" class="indications"></ul>
+              </div>
+            </div>
+            <div role="tabpanel" data-groupe="console" data-panneau="journal" hidden>
+              <div class="journal-barre">
+                <button id="journal-effacer" type="button" class="lien">Effacer le journal</button>
+              </div>
+              <div id="journal" class="journal" role="log"></div>
+            </div>
+          </div>
         </div>
       </section>
-    </main>
+    </div>
   </body>
 </html>

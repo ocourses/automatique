@@ -13,11 +13,25 @@ En ligne : <https://ocourses.github.io/automatique/>.
 - le pendule inversé commandé en accélération, ou « balai » (TD3) ;
 - le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020).
 
+## Organisation de la page
+
+- **Réglages**, à gauche, en trois onglets :
+  - *Contrôleur* : retour d'état (gains, pôles voulus) ou loi libre, et saturation ;
+  - *Scénario* : condition initiale, perturbation et bruit de mesure ;
+  - *Système* : équations, paramètres, point de fonctionnement $(x_e, u_e)$ et linéarisé $(A, B)$.
+- **Scène**, au centre, avec la barre de lecture (pause, réinitialisation, choc, vitesse, fantôme).
+- **Graphiques**, à droite : les courbes, toujours visibles, et deux onglets, valeurs propres (que l'on peut faire glisser) et portrait de phase.
+- **Console**, en bas, repliable et toujours visible quand on fait défiler la page. Son en-tête rappelle en permanence le temps, $\lVert x - x_e \rVert$ et l'état de stabilisation. Trois onglets :
+  - *Mesures* : les nombres en direct, avec la valeur de chaque grandeur, sa valeur à l'équilibre et son écart. Un « ≈ 0 » apparaît quand l'écart passe sous le seuil $\varepsilon$ (réglable, 0,01 par défaut) ;
+  - *Analyse* : la matrice du bouclé, son polynôme caractéristique, son spectre, le critère de Routh–Hurwitz et les indications ;
+  - *Journal* : les événements de la simulation (entrée dans la boule $\lVert x - x_e \rVert < \varepsilon$, saturation, divergence) et les réglages modifiés, horodatés par le temps simulé.
+
+Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle admet une famille d'équilibres : l'angle du pendule, la position du chariot ou du rail. La commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$ et s'affiche, mais on ne la règle pas séparément.
+
 ## Fonctionnalités
 
-- **Modèle** : les équations, l'équilibre et le linéarisé $(A, B)$ en KaTeX,
-  recalculés quand on change un paramètre. Le point de fonctionnement fait
-  partie des paramètres lorsqu'il en existe une famille.
+- **Modèle** : les équations, le point de fonctionnement et le linéarisé
+  $(A, B)$ en KaTeX, recalculés quand on change un paramètre.
 - **Condition initiale** : on peut la saisir au clavier, déplacer l'objet à la
   souris (la vitesse du geste au lâcher donne la vitesse initiale) ou cliquer
   dans le portrait de phase pour les exemples à deux états.
@@ -45,7 +59,7 @@ En ligne : <https://ocourses.github.io/automatique/>.
   au plus).
 - **Indications** : critère de Kalman, stabilité par linéarisation,
   vitesse $e^{\alpha t}$ et résultats propres à chaque exemple. Pour le
-  balai, la fonction $V$ du TD3 est affichée en direct.
+  balai, la fonction $V$ du TD3 est affichée en direct dans les mesures.
 - **Liens** : tous les réglages sont encodés dans l'URL. Un lien reproduit
   une expérience, ce qui est pratique pour un énoncé de TD ou pour l'amphi.
 
@@ -111,7 +125,8 @@ js/
   core/sim.js         boucle de simulation
   core/poles.js       placement de pôles (Ackermann), déplacement des valeurs propres
   core/expr.js        parseur de la loi libre
-  ui/                 scène, courbes, plan complexe, indications, champs
+  ui/                 scène, courbes, plan complexe, portrait de phase, champs,
+                      onglets, console, indications, format, URL
   exemples/
     catalogue.js      liste des exemples (disponibles ou à venir)
     <id>.js           un module par exemple
@@ -139,7 +154,7 @@ sont les suivants :
 |---|---|
 | `id`, `titre`, `source` | identification et référence au poly, au TD ou à l'examen |
 | `etats`, `commandes` | `{ latex, texte, unite }` pour chaque composante |
-| `parametres` | `{ nom, latex, valeur, min, max, pas, unite }` |
+| `parametres` | `{ nom, latex, valeur, min, max, pas, unite }` ; ajouter `famille: 'equilibre'` pour un paramètre qui fixe le point de fonctionnement, réglé alors dans l'encadré dédié |
 | `f(x, u, p)` | second membre de $\dot x = f(x, u)$ |
 | `equilibre(p)` | `{ xe, ue }` |
 | `latex.modele`, `latex.equilibre` | équations affichées |

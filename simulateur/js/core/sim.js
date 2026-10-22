@@ -20,6 +20,10 @@ const PAS_MAX = 1e-3; // s
 const PERIODE_ECHANTILLON = 0.02; // s, pour l'historique et les courbes
 const PERIODE_BRUIT = 0.01; // s, le bruit de mesure est tenu constant sur cette durée
 const DUREE_HISTORIQUE = 60; // s
+const SEUIL_DEFAUT = 0.01; // rayon ε de la boule autour de x_e
+const DELAI_FIN_SATURATION = 0.5; // s sans saturer avant de signaler la fin
+
+const fr = (v) => String(Number(v.toPrecision(3))).replace('.', ',');
 
 function gaussienne() {
   let u = 0;
@@ -42,6 +46,9 @@ export class Simulation {
     this.perturbation = { type: 'aucune', e: modele.perturbation ?? 1, debut: 1, duree: 1 };
     this.sigma = 0;
     this.signeChoc = 1;
+    // Événements à destination du journal : { t, niveau, texte }, vidés par l'interface.
+    this.evenements = [];
+    this.seuil = SEUIL_DEFAUT;
     this.compileLoi();
     this.metAJour();
     if (modele.polesParDefaut) {
@@ -211,8 +218,23 @@ export class Simulation {
 
   // Commande effectivement appliquée (hors perturbation) pour l'état courant.
   commande(x = this.x) {
+    return this.sature(this.commandeNonSaturee(x));
+  }
+
+  commandeNonSaturee(x = this.x) {
     const xm = x.map((v, i) => v + this.bruit[i]);
-    return this.sature(this.commandeBrute(this.t, xm, this.I));
+    return this.commandeBrute(this.t, xm, this.I);
+  }
+
+  // Distance euclidienne de l'état à l'équilibre.
+  normeEcart() {
+    return Math.hypot(...this.x.map((v, i) => v - this.xe[i]));
+  }
+
+  fixeSeuil(seuil) {
+    this.seuil = seuil;
+    this.dansBoule = false;
+    this.entreeBoule = null;
   }
 
   perturbationEn(t) {
@@ -230,6 +252,10 @@ export class Simulation {
     this.I = new Array(this.n + 1).fill(0);
     this.fantome = [...x0.map((v, i) => v - this.xe[i]), ...this.integrales.map(() => 0)];
     this.diverge = false;
+    this.dansBoule = false;
+    this.entreeBoule = null;
+    this.satEtat = false;
+    this.satDerniere = -Infinity;
     this.bruit = new Array(this.n).fill(0);
     this.tireBruit();
     this.historique = {
@@ -274,6 +300,38 @@ export class Simulation {
       for (const serie of [...h.x, ...h.u, ...h.d, ...h.fantome]) serie.shift();
     }
     this.prochainEchantillon += PERIODE_ECHANTILLON;
+    this.surveille();
+  }
+
+  // Détecte, à chaque échantillon, les événements à signaler : entrée et sortie
+  // de la boule ‖x − x_e‖ < ε (avec hystérésis pour ne pas bégayer sous bruit),
+  // début et fin de saturation.
+  surveille() {
+    const norme = this.normeEcart();
+    if (!this.dansBoule && norme < this.seuil) {
+      this.dansBoule = true;
+      this.entreeBoule = this.t;
+      this.evenements.push({ t: this.t, niveau: 'ok', texte: `Entrée dans la boule ‖x − x_e‖ < ε = ${fr(this.seuil)}` });
+    } else if (this.dansBoule && norme > 2 * this.seuil) {
+      this.dansBoule = false;
+      this.entreeBoule = null;
+      this.evenements.push({ t: this.t, niveau: 'info', texte: `Sortie de la boule ‖x − x_e‖ < 2ε = ${fr(2 * this.seuil)}` });
+    }
+    if (!this.saturation.active) {
+      this.satEtat = false;
+      return;
+    }
+    const M = this.saturation.umax;
+    if (this.commandeNonSaturee().some((v) => Math.abs(v) > M)) {
+      if (!this.satEtat) {
+        this.satEtat = true;
+        this.evenements.push({ t: this.t, niveau: 'alerte', texte: `Saturation atteinte : |u| > ${fr(M)}` });
+      }
+      this.satDerniere = this.t;
+    } else if (this.satEtat && this.t - this.satDerniere > DELAI_FIN_SATURATION) {
+      this.satEtat = false;
+      this.evenements.push({ t: this.t, niveau: 'info', texte: 'Fin de saturation' });
+    }
   }
 
   // Avance la simulation de `duree` secondes de temps simulé.
@@ -309,6 +367,7 @@ export class Simulation {
       this.t += h;
       if (!this.x.every((xi) => Number.isFinite(xi) && Math.abs(xi) < 1e6)) {
         this.diverge = true;
+        this.evenements.push({ t: this.t, niveau: 'alerte', texte: 'Divergence : |x| dépasse 10⁶, simulation arrêtée' });
         return;
       }
       // Le fantôme peut diverger (bouclé linéaire instable) : on le borne.

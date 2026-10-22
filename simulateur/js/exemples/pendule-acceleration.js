@@ -23,7 +23,7 @@ export default {
   parametres: [
     { nom: 'l', latex: 'l', valeur: 1, min: 0.2, max: 2, pas: 0.05, unite: 'm' },
     { nom: 'g', latex: 'g', valeur: 9.81, min: 0, max: 20, pas: 0.01, unite: 'm/s²' },
-    { nom: 'ae', latex: 'x_{e,1}', valeur: 0, min: -1.2, max: 1.2, pas: 0.01, unite: 'rad' },
+    { nom: 'ae', latex: 'x_{e,1}', valeur: 0, min: -1.2, max: 1.2, pas: 0.01, unite: 'rad', famille: 'equilibre' },
   ],
 
   f(x, u, p) {
