@@ -23,10 +23,12 @@ export class Scene {
     if (modele.souris) this.ecouteSouris();
   }
 
-  // Le canevas prend les proportions de la vue de l'exemple.
+  // Proportions de la vue de l'exemple, lues par la feuille de style quand la
+  // scène suit le flux de la page ; sur grand écran, elle remplit sa case et
+  // le dessin est centré.
   ajusteProportions() {
     const v = this.modele.vue(this.sim.p);
-    this.canvas.style.aspectRatio = `${v.xmax - v.xmin} / ${v.ymax - v.ymin}`;
+    this.canvas.style.setProperty('--proportions', `${v.xmax - v.xmin} / ${v.ymax - v.ymin}`);
   }
 
   geometrie() {

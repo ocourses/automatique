@@ -62,6 +62,7 @@ export function saisieNombre(parent, latex, valeur, unite = '', change = null) {
   ligne.append(etiquette, saisie, u);
   parent.appendChild(ligne);
   const api = {
+    ligne,
     lit: () => nombre(saisie.value),
     fixe: (v) => {
       saisie.value = String(Number(v.toPrecision(4))).replace('.', ',');

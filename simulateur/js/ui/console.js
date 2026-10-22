@@ -12,7 +12,9 @@ const FUSION_MS = 900; // des réglages successifs d'un même curseur ne forment
 const $ = (id) => document.getElementById(id);
 
 export class Console {
-  constructor(modele, sim, { affichage }) {
+  // affichage : état d'affichage de la page (fantôme, console repliée…) ;
+  // change() est appelé quand on replie ou déplie la console.
+  constructor(modele, sim, { affichage, change = () => {} }) {
     this.modele = modele;
     this.sim = sim;
     this.affichage = affichage;
@@ -33,13 +35,17 @@ export class Console {
     });
     const bouton = $('console-replier');
     const replie = (oui) => {
+      affichage.consoleRepliee = oui;
       $('console').classList.toggle('replie', oui);
       bouton.setAttribute('aria-expanded', String(!oui));
       bouton.textContent = oui ? 'Déplier' : 'Replier';
     };
-    bouton.addEventListener('click', () => replie(!$('console').classList.contains('replie')));
-    // Sur téléphone, la console est un tiroir (voir app.js) : le repli ne sert qu'au bureau.
-    replie(false);
+    bouton.addEventListener('click', () => {
+      replie(!affichage.consoleRepliee);
+      change();
+    });
+    // Sur téléphone, la console est un tiroir (voir tiroirs.js) : le repli ne sert qu'au bureau.
+    replie(affichage.consoleRepliee);
   }
 
   // ---- Journal --------------------------------------------------------------

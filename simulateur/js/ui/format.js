@@ -48,6 +48,27 @@ export function nombreCourt(v, chiffres = 4) {
   return s.replace('.', ',').replace(/^-/, '−');
 }
 
+// Étiquettes d'un axe de graduations régulières : même nombre de décimales
+// pour toutes, et l'ordre de grandeur en notation scientifique (5e-3) quand les
+// valeurs sont très petites ou très grandes, pour ne jamais lire « 0 » partout.
+export function etiquettesAxe(valeurs) {
+  const finies = valeurs.filter(Number.isFinite);
+  const max = Math.max(0, ...finies.map(Math.abs));
+  if (max === 0) return valeurs.map((v) => (Number.isFinite(v) ? '0' : ''));
+  const ecarts = finies.slice(1).map((v, i) => Math.abs(v - finies[i])).filter((d) => d > 0);
+  const pas = ecarts.length ? Math.min(...ecarts) : max;
+  const e = Math.floor(Math.log10(max) + 1e-9);
+  const scientifique = e <= -3 || e >= 5;
+  const echelle = scientifique ? 10 ** e : 1;
+  const decimales = Math.min(12, Math.max(0, Math.ceil(-Math.log10(pas / echelle) - 1e-9)));
+  return valeurs.map((v) => {
+    if (!Number.isFinite(v)) return '';
+    if (Math.abs(v) < pas * 1e-6) return '0';
+    const s = (v / echelle).toFixed(decimales).replace('.', ',').replace('-', '−');
+    return scientifique ? `${s}e${e}`.replace('e-', 'e−') : s;
+  });
+}
+
 export function latexVecteur(v, chiffres = 3) {
   return v.length === 1 ? latexNombre(v[0], chiffres) : `\\left(${v.map((x) => latexNombre(x, chiffres)).join('\\ ;\\ ')}\\right)`;
 }

@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { Simulation } from '../js/core/sim.js';
+import { applique, capture } from '../js/core/reglages.js';
 import { depuisURL, versURL } from '../js/ui/url.js';
 import doubleIntegrateur from '../js/exemples/double-integrateur.js';
 import pendule from '../js/exemples/pendule-couple.js';
@@ -129,9 +130,10 @@ test('liens : un réglage traverse l’URL sans perte', () => {
   a.perturbation = { type: 'creneau', e: 1.5, debut: 2, duree: 0.5 };
   a.sigma = 0.01;
   a.saturation = { active: true, umax: 7 };
-  const q = versURL(a, [0.2, -1], { fantome: true, vitesse: 0.5 });
+  const q = versURL(a.modele.id, capture(a, [0.2, -1]), { fantome: true, vitesse: 0.5 });
   const b = new Simulation(pendule);
-  const { ci, affichage } = depuisURL(new URLSearchParams(q.toString()), b);
+  const { reglages, affichage } = depuisURL(new URLSearchParams(q.toString()), b.n, b.m);
+  const ci = applique(b, reglages);
   assert.deepEqual(ci, [0.2, -1]);
   assert.deepEqual(affichage, { fantome: true, vitesse: 0.5 });
   assert.equal(b.p.m, 1.5);

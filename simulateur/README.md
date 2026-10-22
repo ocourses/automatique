@@ -18,17 +18,24 @@ En ligne : <https://ocourses.github.io/automatique/>.
 
 ## Organisation de la page
 
-- **Réglages**, à gauche, en trois onglets, et un quatrième pour les exemples qui ont un observateur :
-  - *Contrôleur* : retour d'état (gains, pôles voulus) ou loi libre, saturation et échantillonnage de la commande ;
-  - *Scénario* : condition initiale, perturbation et bruit de mesure ;
-  - *Système* : équations, paramètres, point de fonctionnement $(x_e, u_e)$ et linéarisé $(A, B)$ ;
+- **Réglages**, à gauche, en deux onglets (un troisième pour les exemples qui ont un observateur). L'onglet *Contrôleur* est ouvert par défaut :
+  - *Système* : la dynamique et ses paramètres, puis le scénario de la simulation, c'est-à-dire la condition initiale, la perturbation $d(t)$ et le bruit de mesure ;
+  - *Contrôleur* : le point de fonctionnement $(x_e, u_e)$ et le linéarisé $(A, B)$ en ce point, puis la loi de commande (retour d'état $u = u_e + K(x - x_e)$, par les gains ou les pôles voulus, ou loi libre), la saturation et l'échantillonnage de la commande ;
   - *Observateur* : gain $L$ (par ses coefficients ou par les pôles de $A - LC$), pas $h$, estimée initiale et retour d'état sur $\hat x$.
-- **Scène**, au centre, avec la barre de lecture (pause, réinitialisation, choc, vitesse, fantôme).
-- **Graphiques**, à droite : les courbes, toujours visibles, et deux onglets, valeurs propres (que l'on peut faire glisser) et portrait de phase. Les exemples sans scène passent les courbes au centre.
-- **Console**, en bas, repliable et toujours visible quand on fait défiler la page. Son en-tête rappelle en permanence le temps, $\lVert x - x_e \rVert$ et l'état de stabilisation. Trois onglets :
+- **Scène**, avec la barre de lecture (pause, réinitialisation, choc, vitesse, fantôme).
+- **Courbes** et **graphiques** : valeurs propres (que l'on peut faire glisser) et portrait de phase.
+- **Console**, en bas. Son en-tête rappelle en permanence le temps, $\lVert x - x_e \rVert$ et l'état de stabilisation, avec des largeurs fixes pour que rien ne bouge quand les nombres changent. Trois onglets :
   - *Mesures* : les nombres en direct, avec la valeur de chaque grandeur, sa valeur à l'équilibre et son écart. Un « ≈ 0 » apparaît quand l'écart passe sous le seuil $\varepsilon$ (réglable, 0,01 par défaut) ;
   - *Analyse* : la matrice du bouclé, son polynôme caractéristique, son spectre, le critère de Routh–Hurwitz et les indications ;
   - *Journal* : les événements de la simulation (entrée dans la boule $\lVert x - x_e \rVert < \varepsilon$, saturation, divergence) et les réglages modifiés, horodatés par le temps simulé.
+
+### Sur grand écran
+
+Au-delà de 1000 × 600 px, la page tient dans la fenêtre, sans défilement : chaque zone remplit sa case, les réglages défilent à l'intérieur de la leur, et la console reste collée au bas de l'écran. Quand on la replie, elle laisse la place aux graphiques. Chaque exemple choisit sa **disposition** (champ `disposition`) :
+
+- `colonnes`, par défaut avec une scène : réglages, scène sur toute la hauteur, puis courbes et graphiques empilés (pendules, rail tournant) ;
+- `large` : réglages à gauche ; à droite, la scène en haut sur toute la largeur, courbes et graphiques côte à côte dessous (double intégrateur, segway) ;
+- `courbes`, sans scène : la barre de lecture et les courbes au centre (pharmacocinétique, satellite).
 
 ### Sur téléphone
 
@@ -38,9 +45,9 @@ Sous 760 px de large, ou en paysage très bas, la page garde dans le défilement
 - un seul tiroir est ouvert à la fois. À l'ouverture, la page remonte et la scène se réduit, de sorte que la scène et la barre de lecture restent visibles au-dessus du tiroir : on règle un gain et on voit tout de suite l'effet ;
 - le bouton ↕ agrandit le tiroir, ✕ ou la touche Échap le ferme ;
 - en paysage, le tiroir devient un panneau à droite ;
-- dans les mesures, la colonne « Équilibre » est masquée pour tenir en largeur ; on la lit dans l'onglet *Système*.
+- dans les mesures, la colonne « Équilibre » est masquée pour tenir en largeur ; on la lit dans l'onglet *Contrôleur*.
 
-Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle admet une famille d'équilibres : l'angle du pendule, la position du chariot ou du rail. La commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$ et s'affiche, mais on ne la règle pas séparément.
+Le point de fonctionnement se règle dans l'onglet *Contrôleur* quand le modèle admet une famille d'équilibres : l'angle du pendule, la position du chariot ou du rail. La commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$ et s'affiche, mais on ne la règle pas séparément.
 
 ## Fonctionnalités
 
@@ -65,18 +72,30 @@ Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle a
 - **Commande échantillonnée** : avec une période $T_e > 0$, la commande n'est recalculée que tous les $T_e$ secondes et tenue constante entre deux mises à jour. Sur le pendule commandé par un couple, avec les gains par défaut, le bouclé reste stable jusqu'à $T_e \approx 0{,}4$ s et ne l'est plus à $0{,}5$ s. Cette option n'est accompagnée d'aucune théorie des systèmes échantillonnés.
 - **Perturbation** $d(t)$ ajoutée à la commande, constante ou en créneau
   (TD2). L'indication donne l'erreur statique du retour d'état.
-- **Choc** : une impulsion de vitesse, de signe alterné.
+- **Choc** : une impulsion de vitesse, tirée au hasard (`js/core/chocs.js`). Le plus souvent, le choc est voisin du précédent : même sens, intensité proche (écart-type 15 % de l'intensité maximale). Avec une probabilité 1/7, il est complètement nouveau : sens au hasard, intensité uniforme entre 0 et deux fois le choc de l'exemple. Un choc nouveau arrive ainsi en moyenne tous les 7 clics, et avec une probabilité d'environ 2/3 sur 7 clics. Le journal précise chaque fois s'il est nouveau ou voisin.
 - **Bruit de mesure** : un bruit gaussien d'écart-type $\sigma$ sur chaque
   composante de l'état mesuré, tenu constant par paliers de 10 ms.
 - **Fantôme du linéarisé** : la trajectoire du linéarisé bouclé, en
-  transparence dans la scène et en tirets sur les courbes.
+  transparence dans la scène et en tirets sur les courbes. Il n'est pas proposé
+  pour un système linéaire, qui coïncide avec son linéarisé : la linéarité est
+  détectée numériquement (`js/core/modele.js`).
+- **Courbes** : les graduations gardent l'ordre de grandeur près de 0
+  (`3e−7`), et l'échelle verticale suit la courbe quand elle tend vers 0. Les
+  estimées $\hat x$ de l'observateur sont tracées en marqueurs (ronds évidés),
+  pour les distinguer des états.
 - **Courbes** en fenêtre glissante de 10 s, ou sur tout l'historique (60 s
   au plus).
 - **Indications** : critère de Kalman, stabilité par linéarisation,
   vitesse $e^{\alpha t}$ et résultats propres à chaque exemple. Pour le
   balai, la fonction $V$ du TD3 est affichée en direct dans les mesures.
-- **Liens** : tous les réglages sont encodés dans l'URL. Un lien reproduit
-  une expérience, ce qui est pratique pour un énoncé de TD ou pour l'amphi.
+- **Mémoire** : les réglages et l'affichage (vitesse, fantôme, historique,
+  console repliée, onglets ouverts) sont gardés dans le navigateur, un jeu par
+  exemple, et retrouvés au prochain chargement. Le bouton **Valeurs par
+  défaut** remet tout à zéro pour l'exemple courant.
+- **Liens** : « Copier le lien » encode les réglages dans l'URL. Un lien
+  reproduit une expérience, ce qui est pratique pour un énoncé de TD ou pour
+  l'amphi : à l'ouverture, il l'emporte sur la mémoire du navigateur, puis la
+  barre d'adresse est ramenée à `?id=…` et la mémoire suit les modifications.
 
 ### Observateur de Luenberger
 
@@ -151,17 +170,25 @@ exemple.html          page générique (?id=pendule-couple)
 css/style.css
 js/
   app.js              assemblage de la page d'un exemple
-  core/ode.js         RK4 et Euler
-  core/linalg.js      valeurs propres, Kalman, linéarisation numérique
-  core/sim.js         boucle de simulation
-  core/poles.js       placement de pôles (Ackermann), déplacement des valeurs propres
-  core/expr.js        parseur de la loi libre
-  ui/                 scène, courbes, plan complexe, portrait de phase, champs,
-                      onglets, console, indications, format, URL
-  exemples/
+  core/               moteur, sans DOM (testé sous Node)
+    modele.js         classe Modele : vérification d'un exemple, linéarité, disposition
+    sim.js            boucle de simulation
+    reglages.js       réglages sérialisables (mémoire du navigateur et liens)
+    chocs.js          tirage des chocs
+    ode.js            RK4 et Euler
+    linalg.js         valeurs propres, Kalman, linéarisation numérique
+    poles.js          placement de pôles (Ackermann), déplacement des valeurs propres
+    expr.js           parseur de la loi libre
+  ui/                 interface
+    panneaux/         onglets Système, Contrôleur et Observateur
+    etat.js           affichage et mémoire du navigateur (localStorage)
+    url.js            liens
+    …                 scène, courbes, plan complexe, portrait de phase, champs,
+                      onglets, tiroirs, console, indications, format
+  exemples/           descriptions des exemples, sans dépendance au moteur ni à l'interface
     catalogue.js      liste des exemples (disponibles ou à venir)
     <id>.js           un module par exemple
-tests/                tests Node de core/
+tests/                tests Node du moteur et des exemples
 ```
 
 Le système réel est intégré par RK4 avec un pas fin fixe d'au plus 1 ms. Ce pas
@@ -240,8 +267,16 @@ Plusieurs champs sont facultatifs :
   indique que $x_j$ est la dérivée de $x_i$ : la vitesse du geste au lâcher
   donne alors $x_j$.
 
-Sans `draw`, la page passe en mode « courbes seules ». Il faut enfin passer
-`disponible: true` dans `catalogue.js`.
+- `disposition` (`'colonnes'`, `'large'` ou `'courbes'`) choisit la mise en
+  page sur grand écran ; sans elle, c'est `'colonnes'` avec une scène et
+  `'courbes'` sans.
+- `lineaire` force le verdict de linéarité, détecté sinon numériquement.
+
+Sans `draw`, la page passe en mode « courbes seules ». La description est
+vérifiée au chargement par la classe `Modele` (dimensions, bornes, équilibre),
+qui refuse un exemple incohérent avec un message lisible ; un test vérifie tous
+les exemples du catalogue. Il faut enfin passer `disponible: true` dans
+`catalogue.js`.
 
 ## Le segway et les fichiers du TP
 

@@ -21,6 +21,7 @@
 
 import { rk4 } from './ode.js';
 import { compile } from './expr.js';
+import { Modele } from './modele.js';
 import { ackermann, facteurEuler, ligneSortie, matriceObservateur, observable, pasEulerMax } from './poles.js';
 import { inverse, jacobienne, linearise, matadd, matmul, valeursPropres } from './linalg.js';
 
@@ -42,10 +43,12 @@ function gaussienne() {
 }
 
 export class Simulation {
+  // `modele` : une description d'exemple ou un Modele (core/modele.js).
   constructor(modele) {
+    modele = Modele.de(modele);
     this.modele = modele;
-    this.n = modele.etats.length;
-    this.m = modele.commandes.length;
+    this.n = modele.n;
+    this.m = modele.m;
     this.p = Object.fromEntries(modele.parametres.map((q) => [q.nom, q.valeur]));
     this.K = modele.gains.map((ligne) => ligne.slice());
     this.mode = 'gains';
@@ -55,7 +58,6 @@ export class Simulation {
     this.saturation = { active: false, umax: modele.umax ?? 10 };
     this.perturbation = { type: 'aucune', e: modele.perturbation ?? 1, debut: 1, duree: 1 };
     this.sigma = 0;
-    this.signeChoc = 1;
     // Événements à destination du journal : { t, niveau, texte }, vidés par l'interface.
     this.evenements = [];
     this.seuil = SEUIL_DEFAUT;
@@ -78,7 +80,7 @@ export class Simulation {
 
   // Indice de la sortie mesurée y = x_i.
   get sortie() {
-    return this.modele.sortie ?? 0;
+    return this.modele.sortie;
   }
 
   variablesLoi() {
@@ -405,12 +407,13 @@ export class Simulation {
     return this.xe.map((xei, i) => xei + this.fantome[i]);
   }
 
-  // Choc : impulsion de vitesse, de signe alterné, sur le système et le fantôme.
-  choc() {
-    const dv = this.modele.choc ?? new Array(this.n).fill(0);
-    this.x = this.x.map((v, i) => v + this.signeChoc * dv[i]);
-    this.fantome = this.fantome.map((v, i) => (i < this.n ? v + this.signeChoc * dv[i] : v));
-    this.signeChoc = -this.signeChoc;
+  // Choc : on ajoute facteur × choc de l'exemple à l'état du système et du
+  // fantôme (core/chocs.js tire le facteur). Renvoie l'impulsion ajoutée.
+  choc(facteur = 1) {
+    const dv = this.modele.choc.map((v) => facteur * v);
+    this.x = this.x.map((v, i) => v + dv[i]);
+    this.fantome = this.fantome.map((v, i) => (i < this.n ? v + dv[i] : v));
+    return dv;
   }
 
   enregistre() {

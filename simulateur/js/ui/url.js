@@ -1,4 +1,8 @@
-// Réglages encodés dans l'URL : un lien reproduit une expérience.
+// Réglages encodés dans l'URL : un lien reproduit une expérience. On passe
+// par l'objet de réglages de core/reglages.js, le même que celui gardé dans
+// le navigateur.
+
+import { VITESSES } from './etat.js';
 
 function nombre(v) {
   return String(Number(v.toPrecision(6)));
@@ -9,16 +13,22 @@ function liste(texte) {
   return v.every(Number.isFinite) ? v : null;
 }
 
-// Paramètres de l'URL décrivant l'état courant de la simulation.
-export function versURL(sim, ci, affichage) {
+function lit(q, cle) {
+  if (!q.has(cle)) return undefined;
+  const v = Number(q.get(cle));
+  return Number.isFinite(v) ? v : undefined;
+}
+
+// Paramètres de l'URL pour l'exemple `id`, les réglages `r` et l'affichage.
+export function versURL(id, r, affichage) {
   const q = new URLSearchParams();
-  q.set('id', sim.modele.id);
-  for (const [nom, v] of Object.entries(sim.p)) q.set(`p_${nom}`, nombre(v));
-  q.set('mode', sim.mode);
-  q.set('K', sim.K.flat().map(nombre).join(','));
-  if (sim.mode === 'loi') q.set('loi', sim.loiTexte);
-  q.set('x0', ci.map(nombre).join(','));
-  const P = sim.perturbation;
+  q.set('id', id);
+  for (const [nom, v] of Object.entries(r.p)) q.set(`p_${nom}`, nombre(v));
+  q.set('mode', r.mode);
+  q.set('K', r.K.flat().map(nombre).join(','));
+  if (r.mode === 'loi') q.set('loi', r.loi);
+  q.set('x0', r.x0.map(nombre).join(','));
+  const P = r.perturbation;
   if (P.type !== 'aucune') {
     q.set('pert', P.type);
     q.set('e', nombre(P.e));
@@ -27,69 +37,53 @@ export function versURL(sim, ci, affichage) {
       q.set('dt', nombre(P.duree));
     }
   }
-  if (sim.sigma > 0) q.set('sigma', nombre(sim.sigma));
-  if (sim.saturation.active) q.set('umax', nombre(sim.saturation.umax));
-  if (sim.Te > 0) q.set('Te', nombre(sim.Te));
-  if (sim.obs) {
-    q.set('L', sim.obs.L.map(nombre).join(','));
-    q.set('h', nombre(sim.obs.h));
-    q.set('xh0', sim.obs.xh0.map(nombre).join(','));
-    if (!sim.retourEstime) q.set('retour', 'x');
+  if (r.sigma > 0) q.set('sigma', nombre(r.sigma));
+  if (r.saturation.active) q.set('umax', nombre(r.saturation.umax));
+  if (r.Te > 0) q.set('Te', nombre(r.Te));
+  if (r.obs) {
+    q.set('L', r.obs.L.map(nombre).join(','));
+    q.set('h', nombre(r.obs.h));
+    q.set('xh0', r.obs.xh0.map(nombre).join(','));
+    if (!r.obs.retourEstime) q.set('retour', 'x');
   }
   if (affichage.fantome) q.set('fantome', '1');
   if (affichage.vitesse !== 1) q.set('vitesse', nombre(affichage.vitesse));
   return q;
 }
 
-// Applique les réglages de l'URL à la simulation ; renvoie { ci, affichage }.
-// Les valeurs illisibles sont ignorées.
-export function depuisURL(q, sim) {
-  for (const nom of Object.keys(sim.p)) {
-    const v = Number(q.get(`p_${nom}`));
-    if (q.has(`p_${nom}`) && Number.isFinite(v)) sim.p[nom] = v;
-  }
-  sim.metAJour();
+// Le lien porte-t-il des réglages, en plus de l'identifiant de l'exemple ?
+export function porteReglages(q) {
+  return [...q.keys()].some((cle) => cle !== 'id');
+}
+
+// Réglages (partiels) et affichage décrits par l'URL, pour un modèle à n états
+// et m commandes. Les valeurs illisibles sont laissées de côté : `applique`
+// garde alors la valeur courante.
+export function depuisURL(q, n, m) {
+  const r = { p: {} };
+  for (const [cle, v] of q) if (cle.startsWith('p_') && Number.isFinite(Number(v))) r.p[cle.slice(2)] = Number(v);
   const K = q.has('K') ? liste(q.get('K')) : null;
-  if (K && K.length === sim.n * sim.m) sim.K = sim.K.map((ligne, i) => K.slice(i * sim.n, (i + 1) * sim.n));
-  if (q.has('loi')) sim.loiTexte = q.get('loi');
-  sim.compileLoi();
-  sim.mode = q.get('mode') === 'loi' ? 'loi' : 'gains';
-  const pert = q.get('pert');
-  if (pert === 'constante' || pert === 'creneau') {
-    sim.perturbation.type = pert;
-    for (const [cle, champ] of [
-      ['e', 'e'],
-      ['t1', 'debut'],
-      ['dt', 'duree'],
-    ]) {
-      const v = Number(q.get(cle));
-      if (q.has(cle) && Number.isFinite(v)) sim.perturbation[champ] = v;
-    }
+  if (K && K.length === n * m) r.K = Array.from({ length: m }, (_, i) => K.slice(i * n, (i + 1) * n));
+  if (q.has('loi')) r.loi = q.get('loi');
+  r.mode = q.get('mode') === 'loi' ? 'loi' : 'gains';
+  if (q.has('x0')) r.x0 = liste(q.get('x0')) ?? undefined;
+  const type = q.get('pert');
+  r.perturbation = { type: type === 'constante' || type === 'creneau' ? type : 'aucune', e: lit(q, 'e'), debut: lit(q, 't1'), duree: lit(q, 'dt') };
+  r.sigma = lit(q, 'sigma') ?? 0;
+  const umax = lit(q, 'umax');
+  r.saturation = umax > 0 ? { active: true, umax } : { active: false };
+  r.Te = lit(q, 'Te') ?? 0;
+  if (q.has('L') || q.has('h') || q.has('xh0') || q.has('retour')) {
+    r.obs = {
+      L: q.has('L') ? liste(q.get('L')) : undefined,
+      h: lit(q, 'h'),
+      xh0: q.has('xh0') ? liste(q.get('xh0')) : undefined,
+      retourEstime: q.get('retour') !== 'x',
+    };
   }
-  const sigma = Number(q.get('sigma'));
-  if (q.has('sigma') && Number.isFinite(sigma) && sigma >= 0) sim.sigma = sigma;
-  const umax = Number(q.get('umax'));
-  if (q.has('umax') && Number.isFinite(umax) && umax > 0) sim.saturation = { active: true, umax };
-  const Te = Number(q.get('Te'));
-  if (q.has('Te') && Number.isFinite(Te) && Te >= 0) sim.Te = Te;
-  if (sim.obs) {
-    const L = q.has('L') ? liste(q.get('L')) : null;
-    if (L && L.length === sim.n) sim.obs.L = L;
-    const h = Number(q.get('h'));
-    if (q.has('h') && Number.isFinite(h) && h > 0) sim.obs.h = h;
-    const xh0 = q.has('xh0') ? liste(q.get('xh0')) : null;
-    if (xh0 && xh0.length === sim.n) sim.obs.xh0 = xh0;
-    sim.retourEstime = q.get('retour') !== 'x';
-  }
-  sim.metAJour();
-  const x0 = q.has('x0') ? liste(q.get('x0')) : null;
-  const ci = x0 && x0.length === sim.n ? x0 : sim.modele.x0.slice();
-  const vitesse = Number(q.get('vitesse'));
+  const vitesse = lit(q, 'vitesse');
   return {
-    ci,
-    affichage: {
-      fantome: q.get('fantome') === '1',
-      vitesse: [0.25, 0.5, 1, 2, 4].includes(vitesse) ? vitesse : 1,
-    },
+    reglages: r,
+    affichage: { fantome: q.get('fantome') === '1', vitesse: VITESSES.includes(vitesse) ? vitesse : 1 },
   };
 }

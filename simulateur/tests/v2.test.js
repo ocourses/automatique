@@ -15,6 +15,7 @@ import {
 } from '../js/core/poles.js';
 import { Simulation } from '../js/core/sim.js';
 import { indications } from '../js/ui/hints.js';
+import { applique, capture } from '../js/core/reglages.js';
 import { depuisURL, versURL } from '../js/ui/url.js';
 import pharma from '../js/exemples/pharmacocinetique.js';
 import pendule from '../js/exemples/pendule-couple.js';
@@ -211,9 +212,9 @@ test('liens : L, h, x̂₀, Te et le retour sur x̂ traversent l’URL', () => {
   a.obs.xh0 = [0.5, 0.2];
   a.Te = 0.25;
   a.fixeRetourEstime(false);
-  const q = versURL(a, [1, 0], { fantome: false, vitesse: 1 });
+  const q = versURL(a.modele.id, capture(a, [1, 0]), { fantome: false, vitesse: 1 });
   const b = new Simulation(pharma);
-  depuisURL(new URLSearchParams(q.toString()), b);
+  applique(b, depuisURL(new URLSearchParams(q.toString()), b.n, b.m).reglages);
   assert.deepEqual(b.obs.L, [12, 8]);
   assert.equal(b.obs.h, 0.1);
   assert.deepEqual(b.obs.xh0, [0.5, 0.2]);
@@ -221,5 +222,5 @@ test('liens : L, h, x̂₀, Te et le retour sur x̂ traversent l’URL', () => {
   assert.equal(b.retourEstime, false);
   // Un exemple sans observateur ne produit aucun paramètre d'observateur.
   const c = new Simulation(pendule);
-  assert.ok(!versURL(c, [0.3, 0], { fantome: false, vitesse: 1 }).has('L'));
+  assert.ok(!versURL(c.modele.id, capture(c, [0.3, 0]), { fantome: false, vitesse: 1 }).has('L'));
 });

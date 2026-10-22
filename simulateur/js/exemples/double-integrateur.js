@@ -14,6 +14,8 @@ export default {
   ],
   commandes: [{ latex: 'u', texte: 'u', unite: 'm/s²' }],
   sortie: 0,
+  // Scène très large (rail) : en haut sur toute la largeur, courbes et graphiques dessous.
+  disposition: 'large',
 
   parametres: [{ nom: 'xe', latex: 'x_{e,1}', valeur: 0, min: -2, max: 2, pas: 0.1, unite: 'm', famille: 'equilibre' }],
 
@@ -65,7 +67,7 @@ export default {
   // ---- Scène ---------------------------------------------------------------
 
   vue() {
-    return { xmin: -3.2, xmax: 3.2, ymin: -0.9, ymax: 1.1 };
+    return { xmin: -3.2, xmax: 3.2, ymin: -0.25, ymax: 0.85 };
   },
 
   draw(ctx, x, u, p, o) {
@@ -79,7 +81,7 @@ export default {
       ctx.moveTo(-10, 0);
       ctx.lineTo(10, 0);
       ctx.stroke();
-      o.pointilles(p.xe, -0.15, p.xe, 0.9);
+      o.pointilles(p.xe, -0.15, p.xe, 0.8);
     }
     // Chariot.
     ctx.fillStyle = o.couleurs.trait;

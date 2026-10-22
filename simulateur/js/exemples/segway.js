@@ -47,6 +47,8 @@ export default {
   commandes: [{ latex: 'u', texte: 'u', unite: 'V' }],
   // Tout l'état est mesuré dans cet exemple (les capteurs viennent plus tard dans le TP).
   sansSortie: true,
+  // Scène plus large que haute : en haut sur toute la largeur.
+  disposition: 'large',
 
   parametres: [
     { nom: 'M', latex: 'M', valeur: 0.6, min: 0.2, max: 1.5, pas: 0.05, unite: 'kg' },
