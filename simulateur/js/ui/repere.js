@@ -279,6 +279,53 @@ export class Repere {
     ctx.restore();
   }
 
+  // Ligne de niveau { f = c } par carrés marchants sur une grille n × n.
+  isoligne(f, c, { n = 90, couleur = this.col.accent, largeur = 1.5, tirets = [] } = {}) {
+    const { x: [a, b], y: [y0, y1] } = this.cadre;
+    const dx = (b - a) / n;
+    const dy = (y1 - y0) / n;
+    const v = [];
+    for (let i = 0; i <= n; i++) {
+      v.push([]);
+      for (let j = 0; j <= n; j++) v[i].push(f(a + i * dx, y0 + j * dy) - c);
+    }
+    const ctx = this.ctx;
+    ctx.save();
+    this.decoupe();
+    ctx.strokeStyle = couleur;
+    ctx.lineWidth = largeur;
+    ctx.setLineDash(tirets);
+    ctx.beginPath();
+    // Point de passage sur l'arête entre deux sommets de valeurs de signes opposés.
+    const coupe = (xa, ya, va, xb, yb, vb) => {
+      const s = va / (va - vb);
+      return [this.X(xa + s * (xb - xa)), this.Y(ya + s * (yb - ya))];
+    };
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        const [xa, xb, ya, yb] = [a + i * dx, a + (i + 1) * dx, y0 + j * dy, y0 + (j + 1) * dy];
+        const s = [v[i][j], v[i + 1][j], v[i + 1][j + 1], v[i][j + 1]];
+        const coins = [
+          [xa, ya],
+          [xb, ya],
+          [xb, yb],
+          [xa, yb],
+        ];
+        const pts = [];
+        for (let k = 0; k < 4; k++) {
+          const l = (k + 1) % 4;
+          if (s[k] < 0 !== s[l] < 0) pts.push(coupe(...coins[k], s[k], ...coins[l], s[l]));
+        }
+        for (let k = 0; k + 1 < pts.length; k += 2) {
+          ctx.moveTo(...pts[k]);
+          ctx.lineTo(...pts[k + 1]);
+        }
+      }
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+
   // Remplit la région { (x, y) : test(x, y) } échantillonnée sur une grille.
   region(test, { couleur, pas = 4 } = {}) {
     const ctx = this.ctx;

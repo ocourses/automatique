@@ -229,3 +229,49 @@ test('contre-exemple : ρ̇ = ∓2ρ², ρ exact contre RK4, explosion de g en 1
     proche(J[1][1], 0);
   }
 });
+
+// ---- Lyapunov ----------------------------------------------------------------------------
+
+import { lyapunov2, sandwich, systeme } from '../js/illustrations/lyapunov.js';
+
+test('Lyapunov, cas linéaire : AᵀP + PA = −I et L(x) = ∫‖e^{sA}x‖² ds (poly)', () => {
+  const A = matrice(-1, 2, 'compagnon');
+  const P = lyapunov2(A);
+  const M = [0, 1].map((i) => [0, 1].map((j) => A[0][i] * P[0][j] + A[1][i] * P[1][j] + P[i][0] * A[0][j] + P[i][1] * A[1][j]));
+  proche(M[0][0], -1, 1e-12);
+  proche(M[0][1], 0, 1e-12);
+  proche(M[1][1], -1, 1e-12);
+  // L(x) = xᵀPx coïncide avec l'intégrale du poly, calculée numériquement.
+  const x = [0.7, -0.4];
+  let integrale = 0;
+  const h = 1e-3;
+  for (let s = 0; s < 40; s += h) {
+    const y = applique(exponentielle(A, s + h / 2), x);
+    integrale += h * (y[0] ** 2 + y[1] ** 2);
+  }
+  const L = P[0][0] * x[0] ** 2 + 2 * P[0][1] * x[0] * x[1] + P[1][1] * x[1] ** 2;
+  proche(integrale, L, 1e-6);
+});
+
+test('Lyapunov : dérivée le long des trajectoires (pendule : −a x₂², linéaire : −‖x‖²)', () => {
+  for (const r of [{ sys: 'pendule', a: 0.7, w2: 4 }, { sys: 'pendule', a: 0, w2: 4 }, { sys: 'lineaire', tr: -1, det: 2 }]) {
+    const s = systeme(r);
+    const x = [0.9, -1.3];
+    const f = s.F(x);
+    const h = 1e-6;
+    const grad = [(s.L(x[0] + h, x[1]) - s.L(x[0] - h, x[1])) / (2 * h), (s.L(x[0], x[1] + h) - s.L(x[0], x[1] - h)) / (2 * h)];
+    proche(grad[0] * f[0] + grad[1] * f[1], s.dL(...x), 1e-6);
+  }
+});
+
+test('Lyapunov : argument de la preuve, B(0, η) ⊂ {L < c} ⊂ B(0, ε)', () => {
+  const { L } = systeme({ sys: 'lineaire', tr: -1, det: 2 });
+  const eps = 1.5;
+  const { c, eta } = sandwich(L, eps);
+  assert.ok(eta > 0 && eta < eps);
+  for (let k = 0; k < 360; k++) {
+    const a = (2 * Math.PI * k) / 360;
+    assert.ok(L(eta * 0.999 * Math.cos(a), eta * 0.999 * Math.sin(a)) < c);
+    assert.ok(L(eps * Math.cos(a), eps * Math.sin(a)) >= c - 1e-12);
+  }
+});

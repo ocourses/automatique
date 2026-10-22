@@ -77,7 +77,7 @@ export const themes = [
         titre: 'Fonction de Lyapunov',
         resume: 'La surface z = L(x) en 3D, une bille qui suit la trajectoire, et les lignes de niveau dans le plan.',
         source: 'Poly, théorie de Lyapunov',
-        disponible: false,
+        disponible: true,
       },
     ],
   },
