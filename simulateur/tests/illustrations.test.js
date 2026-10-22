@@ -275,3 +275,34 @@ test('Lyapunov : argument de la preuve, B(0, η) ⊂ {L < c} ⊂ B(0, ε)', () =
     assert.ok(L(eps * Math.cos(a), eps * Math.sin(a)) >= c - 1e-12);
   }
 });
+
+// ---- Intégration numérique (TD4) -----------------------------------------------------------
+
+import { SCHEMAS, erreurs, pente, trajectoire } from '../js/illustrations/euler.js';
+
+test('TD4 : ‖x₁‖² = (1 + h²)‖x₀‖² (explicite), ‖x₀‖²/(1 + h²) (implicite), Q conservée (symplectique)', () => {
+  const x0 = [0.8, -0.6];
+  const V = ([q, p]) => q * q + p * p;
+  for (const h of [0.05, 0.3, 1.2]) {
+    proche(V(SCHEMAS.explicite(x0, h)), (1 + h * h) * V(x0), 1e-12);
+    proche(V(SCHEMAS.implicite(x0, h)), V(x0) / (1 + h * h), 1e-12);
+    // L'implicite vérifie bien x₁ = x₀ + h φ(x₁).
+    const [q1, p1] = SCHEMAS.implicite(x0, h);
+    proche(q1, x0[0] + h * p1, 1e-12);
+    proche(p1, x0[1] - h * q1, 1e-12);
+    const Q = ([q, p]) => q * q + p * p - h * p * q;
+    const xs = trajectoire('symplectique', x0, h, 500);
+    for (const x of xs) proche(Q(x), Q(x0), 1e-10);
+  }
+  // Après n pas : (1 + h²)ⁿ.
+  const xs = trajectoire('explicite', [1, 0], 0.2, 150);
+  proche(V(xs[150]) / 1.04 ** 150, 1, 1e-10);
+});
+
+test('TD4 : ordres de convergence, 1 pour les trois Euler, 4 pour RK4', () => {
+  const pas = [0.1, 0.05, 0.02, 0.01, 0.005, 0.002, 0.001];
+  proche(pente(erreurs('explicite', [1, 0], 2 * Math.PI, pas)), 1, 0.05);
+  proche(pente(erreurs('implicite', [1, 0], 2 * Math.PI, pas)), 1, 0.05);
+  proche(pente(erreurs('symplectique', [1, 0], 2 * Math.PI, pas)), 1, 0.05);
+  proche(pente(erreurs('rk4', [1, 0], 2 * Math.PI, [0.1, 0.05, 0.02, 0.01])), 4, 0.05);
+});

@@ -113,7 +113,7 @@ export const themes = [
         titre: 'Euler explicite, implicite et symplectique',
         resume: 'Sur un système conservatif : la quantité conservée, le pas h et l’ordre de convergence.',
         source: 'TD4',
-        disponible: false,
+        disponible: true,
       },
     ],
   },
