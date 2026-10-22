@@ -1,6 +1,9 @@
-// Plan complexe : valeurs propres de A et de A + BK, demi-plan Re < 0 grisé.
-// Les valeurs propres de A + BK se déplacent à la souris lorsque le placement
-// de pôles est possible.
+// Plan complexe : valeurs propres de A (○), du bouclé (×) et, s'il y a un
+// observateur, de A − LC (◇), demi-plan Re < 0 grisé. Les valeurs propres du
+// bouclé et de l'observateur se déplacent à la souris lorsque le placement de
+// pôles est possible. Pour l'observateur, on dessine aussi le disque
+// |λ + 1/h| < 1/h : une valeur propre qui s'y trouve est stable pour Euler
+// explicite de pas h (|1 + hλ| < 1).
 
 import { deplaceValeurPropre, nettoieSpectre } from '../core/poles.js';
 import { couleurs } from './theme.js';
@@ -15,20 +18,25 @@ function pasGraduation(R) {
 }
 
 export class PlanComplexe {
-  // rappels : { modifiable(), deplace(vp) }
+  // rappels : { modifiable(), deplace(vp), modifiableObs(), deplaceObs(vp) }
   constructor(canvas, rappels) {
     this.canvas = canvas;
     this.rappels = rappels;
     this.vpA = [];
     this.vpABK = [];
-    this.saisie = null; // { i, vp0, R } pendant un déplacement
+    this.vpObs = null;
+    this.h = null;
+    this.saisie = null; // { jeu, i, vp0, R } pendant un déplacement
     new ResizeObserver(() => this.dessine()).observe(canvas);
     this.ecouteSouris();
   }
 
-  actualise(vpA, vpABK) {
+  // vpObs et h : valeurs propres de A − LC et pas d'Euler, ou null sans observateur.
+  actualise(vpA, vpABK, vpObs = null, h = null) {
     this.vpA = vpA;
     this.vpABK = vpABK;
+    this.vpObs = vpObs;
+    this.h = h;
     this.dessine();
   }
 
@@ -41,7 +49,7 @@ export class PlanComplexe {
     if (!R) {
       const module = Math.max(
         1,
-        ...[...this.vpA, ...this.vpABK].map((z) => Math.max(Math.abs(z.re), Math.abs(z.im))),
+        ...[...this.vpA, ...this.vpABK, ...(this.vpObs ?? [])].map((z) => Math.max(Math.abs(z.re), Math.abs(z.im))),
       );
       R = 1.25 * module;
     }
@@ -54,43 +62,49 @@ export class PlanComplexe {
     return { re: (ev.clientX - rect.left - W / 2) / s, im: -(ev.clientY - rect.top - H / 2) / s };
   }
 
-  // Indice de la valeur propre de A + BK sous la souris (−1 si aucune) ; si
-  // deux sont confondues, on en prend une, l'autre se déplace ensuite.
+  // Valeur propre modifiable sous la souris : { jeu: 'bf' | 'obs', i } ou null.
+  // Si deux sont confondues, on en prend une, l'autre se déplace ensuite.
   sousLaSouris(ev) {
-    if (!this.rappels.modifiable()) return -1;
     const { rect, X, Y } = this.geometrie();
     const px = ev.clientX - rect.left;
     const py = ev.clientY - rect.top;
-    let i = -1;
+    let meilleur = null;
     let d = RAYON_SAISIE;
-    this.vpABK.forEach((z, k) => {
-      const dk = Math.hypot(X(z.re) - px, Y(z.im) - py);
-      if (dk <= d) {
-        d = dk;
-        i = k;
-      }
-    });
-    return i;
+    const cherche = (jeu, vp) => {
+      vp.forEach((z, i) => {
+        const dk = Math.hypot(X(z.re) - px, Y(z.im) - py);
+        if (dk <= d) {
+          d = dk;
+          meilleur = { jeu, i };
+        }
+      });
+    };
+    if (this.rappels.modifiable()) cherche('bf', this.vpABK);
+    if (this.vpObs && this.rappels.modifiableObs?.()) cherche('obs', this.vpObs);
+    return meilleur;
   }
 
   ecouteSouris() {
     const c = this.canvas;
     c.addEventListener('pointerdown', (ev) => {
-      const i = this.sousLaSouris(ev);
-      if (i < 0) return;
-      this.saisie = { i, vp0: nettoieSpectre(this.vpABK), R: this.geometrie().R };
+      const prise = this.sousLaSouris(ev);
+      if (!prise) return;
+      const vp = prise.jeu === 'bf' ? this.vpABK : this.vpObs;
+      this.saisie = { ...prise, vp0: nettoieSpectre(vp), R: this.geometrie().R };
       c.setPointerCapture(ev.pointerId);
       c.classList.add('saisi');
       ev.preventDefault();
     });
     c.addEventListener('pointermove', (ev) => {
       if (!this.saisie) {
-        c.classList.toggle('survol', this.sousLaSouris(ev) >= 0);
+        c.classList.toggle('survol', this.sousLaSouris(ev) !== null);
         return;
       }
       const { s } = this.geometrie();
-      const { i, vp0 } = this.saisie;
-      this.rappels.deplace(deplaceValeurPropre(vp0, i, this.versComplexe(ev), AIMANTATION / s));
+      const { jeu, i, vp0 } = this.saisie;
+      const vp = deplaceValeurPropre(vp0, i, this.versComplexe(ev), AIMANTATION / s);
+      if (jeu === 'bf') this.rappels.deplace(vp);
+      else this.rappels.deplaceObs(vp);
     });
     const fin = () => {
       if (!this.saisie) return;
@@ -117,6 +131,23 @@ export class PlanComplexe {
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = col.zone;
     ctx.fillRect(0, 0, W / 2, H);
+
+    // Disque d'Euler explicite de pas h, centré en −1/h, de rayon 1/h.
+    if (this.vpObs && this.h > 0) {
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(0, 0, W, H);
+      ctx.clip();
+      ctx.beginPath();
+      ctx.arc(X(-1 / this.h), Y(0), s / this.h, 0, 2 * Math.PI);
+      ctx.fillStyle = col.observateurZone;
+      ctx.fill();
+      ctx.setLineDash([5, 4]);
+      ctx.strokeStyle = col.observateur;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      ctx.restore();
+    }
 
     // Grille et axes.
     const pas = pasGraduation(R);
@@ -154,7 +185,7 @@ export class PlanComplexe {
     ctx.textAlign = 'left';
     ctx.fillText('Im', W / 2 + 6, 12);
 
-    // Valeurs propres de A : cercles creux ; de A + BK : croix pleines.
+    // Valeurs propres de A : cercles creux ; du bouclé : croix pleines.
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = col.discret;
     for (const z of this.vpA) {
@@ -173,6 +204,22 @@ export class PlanComplexe {
       ctx.moveTo(x - 6, y + 6);
       ctx.lineTo(x + 6, y - 6);
       ctx.stroke();
+    }
+    // Valeurs propres de A − LC : losanges.
+    if (this.vpObs) {
+      ctx.lineWidth = 2.5;
+      ctx.strokeStyle = col.observateur;
+      for (const z of this.vpObs) {
+        const x = X(z.re);
+        const y = Y(z.im);
+        ctx.beginPath();
+        ctx.moveTo(x, y - 7);
+        ctx.lineTo(x + 7, y);
+        ctx.lineTo(x, y + 7);
+        ctx.lineTo(x - 7, y);
+        ctx.closePath();
+        ctx.stroke();
+      }
     }
   }
 }

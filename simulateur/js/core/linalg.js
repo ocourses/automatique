@@ -14,6 +14,10 @@ export function identite(n) {
   return Array.from({ length: n }, (_, i) => Array.from({ length: n }, (_, j) => (i === j ? 1 : 0)));
 }
 
+export function transpose(A) {
+  return A[0].map((_, j) => A.map((ligne) => ligne[j]));
+}
+
 export function trace(A) {
   return A.reduce((s, ligne, i) => s + ligne[i], 0);
 }

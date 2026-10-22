@@ -10,11 +10,21 @@
 //               primitives ix1…ixn de x_i − x_{e,i} et iy de y − y_e, les
 //               composantes de x_e, u_e et les paramètres du modèle.
 // La commande appliquée au système est sat(u) + d(t).
+//
+// Trois options, pour les exemples qui le prévoient ou pour tous :
+//   - Te > 0 : la commande n'est recalculée que tous les Te secondes et gardée
+//              constante entre deux mises à jour (bloqueur d'ordre zéro) ;
+//   - observateur (modele.observateur) : x̂' = f(x̂, u) + L (y − C x̂) intégré par
+//              Euler explicite de pas h, avec la commande connue et la sortie
+//              mesurée (bruit compris), x̂ restant constant entre deux instants ;
+//   - retourEstime : la commande est calculée sur x̂ au lieu de l'état mesuré.
 
 import { rk4 } from './ode.js';
 import { compile } from './expr.js';
-import { ackermann } from './poles.js';
+import { ackermann, facteurEuler, ligneSortie, matriceObservateur, observable, pasEulerMax } from './poles.js';
 import { inverse, jacobienne, linearise, matadd, matmul, valeursPropres } from './linalg.js';
+
+const BORNE_OBSERVATEUR = 1e3;
 
 const PAS_MAX = 1e-3; // s
 const PERIODE_ECHANTILLON = 0.02; // s, pour l'historique et les courbes
@@ -49,6 +59,12 @@ export class Simulation {
     // Événements à destination du journal : { t, niveau, texte }, vidés par l'interface.
     this.evenements = [];
     this.seuil = SEUIL_DEFAUT;
+    // Commande échantillonnée : période Te en secondes, 0 pour une commande continue.
+    this.Te = 0;
+    // Observateur : { L, h, xh0 } si le modèle en prévoit un, sinon null.
+    const mo = modele.observateur;
+    this.obs = mo ? { L: mo.L.slice(), h: mo.h, xh0: (mo.xh0 ?? new Array(this.n).fill(0)).slice() } : null;
+    this.retourEstime = Boolean(mo);
     this.compileLoi();
     this.metAJour();
     if (modele.polesParDefaut) {
@@ -117,6 +133,37 @@ export class Simulation {
     this.metAJour();
   }
 
+  fixeL(L) {
+    this.obs.L = L.slice();
+    this.metAJour();
+  }
+
+  fixePasObservateur(h) {
+    this.obs.h = h;
+    this.metAJour();
+    if (this.xh) {
+      // On repart de l'estimée courante avec le nouveau pas.
+      this.xhSuivant = null;
+      this.prochainObs = this.t;
+      this.tickObservateur();
+    }
+  }
+
+  fixeRetourEstime(oui) {
+    this.retourEstime = oui;
+  }
+
+  // Période de la commande ; 0 pour la commande continue.
+  fixeTe(Te) {
+    this.Te = Te;
+    if (Te > 0) {
+      this.majCommande();
+      this.prochaineCommande = this.t + Te;
+    } else {
+      this.uBrute = null;
+    }
+  }
+
   // Le mode loi libre ne s'applique qu'aux systèmes à une commande.
   get loiActive() {
     return this.mode === 'loi' && this.loi !== null && this.m === 1;
@@ -172,6 +219,16 @@ export class Simulation {
       this.fantome = [...this.x.map((v, i) => v - xe[i]), ...this.integrales.map(() => 0)];
     }
 
+    // Observateur : A − LC, observabilité et critère d'Euler pour le pas h.
+    if (this.obs) {
+      this.C = ligneSortie(this.n, this.sortie);
+      this.ALC = matriceObservateur(A, this.C, this.obs.L);
+      this.vpObs = valeursPropres(this.ALC);
+      this.observable = observable(A, this.C);
+      this.hMax = pasEulerMax(this.vpObs);
+      this.rhoEuler = facteurEuler(this.vpObs, this.obs.h);
+    }
+
     // Pas fin : au plus 1 ms et assez petit devant le spectre du bouclé
     // pour que RK4 reste stable même pour des gains extrêmes.
     const rayon = Math.max(1, ...this.vpBF.map((z) => Math.hypot(z.re, z.im)));
@@ -196,12 +253,13 @@ export class Simulation {
     return x[i] - this.xe[i];
   }
 
-  // Commande avant saturation, à partir de la mesure xm et des primitives I.
-  commandeBrute(t, xm, I) {
+  // Commande avant saturation, à partir de l'état xm vu par le contrôleur, des
+  // primitives I et de la sortie mesurée ym.
+  commandeBrute(t, xm, I, ym = xm[this.sortie]) {
     if (!this.loiActive) {
       return this.ue.map((uei, i) => this.K[i].reduce((s, kij, j) => s + kij * (xm[j] - this.xe[j]), uei));
     }
-    const env = { ...this.p, t, y: xm[this.sortie], ue: this.ue[0], iy: I[this.n] };
+    const env = { ...this.p, t, y: ym, ue: this.ue[0], iy: I[this.n] };
     xm.forEach((v, i) => {
       env[`x${i + 1}`] = v;
       env[`ix${i + 1}`] = I[i];
@@ -216,14 +274,65 @@ export class Simulation {
     return u.map((v) => Math.min(Math.max(v, -M), M));
   }
 
+  // État vu par le contrôleur : l'état estimé si le retour se fait sur x̂, sinon
+  // l'état mesuré (bruit compris).
+  etatControleur(xm) {
+    return this.obs && this.retourEstime ? this.xh : xm;
+  }
+
+  // Commande avant saturation calculée à l'instant t pour l'état x et les primitives I.
+  calculeBrute(t, x, I) {
+    const xm = x.map((v, i) => v + this.bruit[i]);
+    return this.commandeBrute(t, this.etatControleur(xm), I, xm[this.sortie]);
+  }
+
+  // Met à jour la commande tenue (Te > 0) à partir de l'état courant.
+  majCommande() {
+    this.uBrute = this.calculeBrute(this.t, this.x, this.I);
+  }
+
   // Commande effectivement appliquée (hors perturbation) pour l'état courant.
   commande(x = this.x) {
     return this.sature(this.commandeNonSaturee(x));
   }
 
   commandeNonSaturee(x = this.x) {
-    const xm = x.map((v, i) => v + this.bruit[i]);
-    return this.commandeBrute(this.t, xm, this.I);
+    if (this.Te > 0 && this.uBrute) return this.uBrute;
+    return this.calculeBrute(this.t, x, this.I);
+  }
+
+  // ---- Observateur ---------------------------------------------------------
+
+  // Instant t_k : l'estimée calculée au pas précédent devient effective, puis on
+  // calcule la suivante, x̂_{k+1} = x̂_k + h [ f(x̂_k, u_k) + L (y_k − C x̂_k) ], à
+  // partir de la commande connue et de la sortie mesurée à cet instant.
+  tickObservateur() {
+    const { L, h } = this.obs;
+    if (this.xhSuivant) this.xh = this.xhSuivant;
+    const u = this.commande();
+    const y = this.x[this.sortie] + this.bruit[this.sortie];
+    const f = this.modele.f(this.xh, u, this.p);
+    const innovation = y - this.xh[this.sortie];
+    const suivant = this.xh.map((v, i) => v + h * (f[i] + L[i] * innovation));
+    if (!suivant.every((v) => Number.isFinite(v) && Math.abs(v) < BORNE_OBSERVATEUR)) {
+      if (!this.obsDiverge) {
+        this.obsDiverge = true;
+        this.evenements.push({ t: this.t, niveau: 'alerte', texte: `L’observateur diverge (pas h = ${fr(h)} s trop grand ?)` });
+      }
+      this.xhSuivant = suivant.map((v) => (Number.isFinite(v) ? Math.max(-BORNE_OBSERVATEUR, Math.min(BORNE_OBSERVATEUR, v)) : 0));
+    } else {
+      this.xhSuivant = suivant;
+    }
+    this.prochainObs += h;
+  }
+
+  // Erreur d'estimation e = x − x̂ et sa norme.
+  erreurEstimation() {
+    return this.x.map((v, i) => v - this.xh[i]);
+  }
+
+  normeErreur() {
+    return Math.hypot(...this.erreurEstimation());
   }
 
   // Distance euclidienne de l'état à l'équilibre.
@@ -258,12 +367,29 @@ export class Simulation {
     this.satDerniere = -Infinity;
     this.bruit = new Array(this.n).fill(0);
     this.tireBruit();
+    // Observateur : x̂(0) donné, premier calcul à t = 0.
+    this.obsDiverge = false;
+    this.obsDansBoule = false;
+    this.xhSuivant = null;
+    if (this.obs) {
+      this.xh = this.obs.xh0.slice();
+      this.prochainObs = 0;
+    }
+    // Commande échantillonnée : première mise à jour à t = 0.
+    this.uBrute = null;
+    if (this.Te > 0) {
+      this.majCommande();
+      this.prochaineCommande = this.Te;
+    }
+    if (this.obs) this.tickObservateur();
     this.historique = {
       t: [],
       x: this.x.map(() => []),
       u: this.ue.map(() => []),
       d: this.ue.map(() => []),
       fantome: this.x.map(() => []),
+      xh: this.x.map(() => []),
+      e: this.x.map(() => []),
     };
     this.prochainEchantillon = 0;
     this.enregistre();
@@ -294,10 +420,14 @@ export class Simulation {
     this.commande().forEach((ui, i) => h.u[i].push(ui));
     this.perturbationEn(this.t).forEach((di, i) => h.d[i].push(di));
     this.xFantome.forEach((xi, i) => h.fantome[i].push(Number.isFinite(xi) ? xi : null));
+    if (this.obs) {
+      this.xh.forEach((v, i) => h.xh[i].push(v));
+      this.erreurEstimation().forEach((v, i) => h.e[i].push(v));
+    }
     const nMax = Math.round(DUREE_HISTORIQUE / PERIODE_ECHANTILLON);
     if (h.t.length > nMax) {
       h.t.shift();
-      for (const serie of [...h.x, ...h.u, ...h.d, ...h.fantome]) serie.shift();
+      for (const serie of [...h.x, ...h.u, ...h.d, ...h.fantome, ...h.xh, ...h.e]) serie.shift();
     }
     this.prochainEchantillon += PERIODE_ECHANTILLON;
     this.surveille();
@@ -316,6 +446,16 @@ export class Simulation {
       this.dansBoule = false;
       this.entreeBoule = null;
       this.evenements.push({ t: this.t, niveau: 'info', texte: `Sortie de la boule ‖x − x_e‖ < 2ε = ${fr(2 * this.seuil)}` });
+    }
+    if (this.obs) {
+      const eNorme = this.normeErreur();
+      if (!this.obsDansBoule && eNorme < this.seuil) {
+        this.obsDansBoule = true;
+        this.evenements.push({ t: this.t, niveau: 'ok', texte: `Observateur convergé : ‖x − x̂‖ < ε = ${fr(this.seuil)}` });
+      } else if (this.obsDansBoule && eNorme > 2 * this.seuil) {
+        this.obsDansBoule = false;
+        this.evenements.push({ t: this.t, niveau: 'info', texte: `L’erreur d’estimation dépasse 2ε = ${fr(2 * this.seuil)}` });
+      }
     }
     if (!this.saturation.active) {
       this.satEtat = false;
@@ -344,7 +484,9 @@ export class Simulation {
       const x = s.slice(0, n);
       const I = s.slice(n);
       const xm = x.map((v, i) => v + this.bruit[i]);
-      const u = this.sature(this.commandeBrute(t, xm, I));
+      const u = this.sature(
+        this.Te > 0 && this.uBrute ? this.uBrute : this.commandeBrute(t, this.etatControleur(xm), I, xm[this.sortie]),
+      );
       const d = this.perturbationEn(t);
       const dx = this.modele.f(x, u.map((ui, i) => ui + d[i]), this.p);
       const dI = Array.from({ length: nI }, (_, k) => this.ecart(xm, k));
@@ -359,7 +501,14 @@ export class Simulation {
     };
     const tFin = this.t + duree;
     while (this.t < tFin - 1e-12) {
-      const h = Math.min(this.pas, tFin - this.t, this.prochainEchantillon - this.t, this.prochainBruit - this.t);
+      const h = Math.min(
+        this.pas,
+        tFin - this.t,
+        this.prochainEchantillon - this.t,
+        this.prochainBruit - this.t,
+        this.obs ? this.prochainObs - this.t : Infinity,
+        this.Te > 0 ? this.prochaineCommande - this.t : Infinity,
+      );
       const s = rk4(F, this.t, [...this.x, ...this.I], h);
       this.x = s.slice(0, n);
       this.I = s.slice(n);
@@ -375,6 +524,12 @@ export class Simulation {
         this.fantome = this.fantome.map(() => NaN);
       }
       if (this.t >= this.prochainBruit - 1e-12) this.tireBruit();
+      // Commande puis observateur : à un instant commun, l'observateur voit la nouvelle commande.
+      if (this.Te > 0 && this.t >= this.prochaineCommande - 1e-12) {
+        this.majCommande();
+        this.prochaineCommande += this.Te;
+      }
+      if (this.obs && this.t >= this.prochainObs - 1e-12) this.tickObservateur();
       if (this.t >= this.prochainEchantillon - 1e-12) this.enregistre();
     }
   }

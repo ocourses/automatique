@@ -111,6 +111,11 @@ export class Console {
     };
 
     modele.etats.forEach((e, i) => ajoute(e.texte, e.unite, () => sim.x[i], { equilibre: () => sim.xe[i] }));
+    if (sim.obs) {
+      modele.etats.forEach((e, i) =>
+        ajoute(`${e.texte} estimé`, e.unite, () => sim.xh[i], { equilibre: () => sim.xe[i] }),
+      );
+    }
     modele.commandes.forEach((c, i) => ajoute(c.texte, c.unite, () => sim.commande()[i], { equilibre: () => sim.ue[i] }));
     const c0 = modele.commandes[0];
     ajoute('d (perturbation)', c0.unite, () => sim.perturbationEn(sim.t)[0], {
@@ -120,6 +125,11 @@ export class Console {
     const s = sim.sortie;
     ajoute('y mesurée', modele.etats[s].unite, () => sim.x[s] + sim.bruit[s], { equilibre: () => sim.xe[s] });
     ajoute('‖x − x_e‖', '', () => sim.normeEcart(), { agreg: true, zero: (v) => v < sim.seuil });
+    ajoute('‖x − x̂‖', '', () => sim.normeErreur(), {
+      agreg: true,
+      visible: () => Boolean(sim.obs),
+      zero: (v) => v < sim.seuil,
+    });
     ajoute('‖u − u_e‖', '', () => Math.hypot(...sim.commande().map((u, i) => u - sim.ue[i])), {
       agreg: true,
       zero: (v) => v < sim.seuil,
@@ -204,6 +214,12 @@ export class Console {
       n <= 2
         ? `Critère de Routh–Hurwitz (n ≤ 2) : ${positifs ? 'tous les coefficients de χ sont strictement positifs, la matrice est Hurwitz.' : 'un coefficient de χ est négatif ou nul, la matrice n’est pas Hurwitz.'}`
         : `Pour n ≥ 3, des coefficients de χ tous strictement positifs ne sont qu’une condition nécessaire (${positifs ? 'vérifiée' : 'non vérifiée ici'}) : on lit les valeurs propres.`;
+    // Observateur : A − LC, polynôme caractéristique et spectre.
+    $('analyse-obs').hidden = !sim.obs;
+    if (sim.obs) {
+      const chiO = polynomeCaracteristique(sim.ALC);
+      rend($('analyse-obs'), `A - LC = ${latexMatrice(sim.ALC)}, \\quad \\chi_{A-LC}(\\lambda) = ${polynomeLatex(chiO)}`);
+    }
     afficheIndications($('indications'), sim);
   }
 }

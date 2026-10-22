@@ -2,7 +2,7 @@
 
 import { catalogue } from './exemples/catalogue.js';
 import { Simulation } from './core/sim.js';
-import { ackermann, litPoles, placementPossible } from './core/poles.js';
+import { ackermann, litPoles, placementObservateur, placementPossible } from './core/poles.js';
 import { Console } from './ui/console.js';
 import { champ, saisieNombre } from './ui/controls.js';
 import { PlanComplexe } from './ui/eigen.js';
@@ -75,7 +75,8 @@ function demarre(modele) {
   const videEvenements = () => {
     for (const e of sim.evenements.splice(0)) cons.ecrit(e.texte, { niveau: e.niveau, t: e.t });
   };
-  cons.separateur(`Trajectoire n° 1 : x₀ = ${vecteur(ci)}`);
+  const descriptionDepart = () => `x₀ = ${vecteur(ci)}${sim.obs ? `, x̂₀ = ${vecteur(sim.obs.xh0)}` : ''}`;
+  cons.separateur(`Trajectoire n° 1 : ${descriptionDepart()}`);
 
   // ---- Lien : les réglages suivent dans l'URL -------------------------------
   let minuterie = null;
@@ -222,6 +223,80 @@ function demarre(modele) {
     memorise();
   });
 
+  // ---- Onglet Contrôleur : échantillonnage de la commande ----------------------
+  champ($('reglage-te'), { latex: 'T_e', valeur: sim.Te, min: 0, max: 1, pas: 0.01, unite: 's' }, (v) => {
+    sim.fixeTe(v);
+    courbes?.configure({ echantillonne: v > 0 });
+    analyse();
+    note(v > 0 ? `Commande échantillonnée : Tₑ = ${texte(v)} s` : 'Commande continue (Tₑ = 0)', { cle: 'Te' });
+    memorise();
+  });
+
+  // ---- Onglet Observateur ----------------------------------------------------
+  let champsL = [];
+  const appliqueL = (L, message, cle = null) => {
+    if (!L.every(Number.isFinite)) return;
+    sim.fixeL(L);
+    champsL.forEach((c, i) => c.fixe(L[i]));
+    analyse();
+    note(`${message} → L = ${vecteur(L)}`, { cle });
+    memorise();
+  };
+  if (sim.obs) {
+    const mo = modele.observateur;
+    rend($('obs-modele'), mo.latex);
+    champsL = sim.obs.L.map((l, i) =>
+      champ($('obs-gains'), { latex: `\\ell_{${i + 1}}`, valeur: l, ...mo.bornesL[i] }, (v) => {
+        const L = sim.obs.L.slice();
+        L[i] = v;
+        sim.fixeL(L);
+        analyse();
+        note(`Gain ℓ${i + 1} = ${texte(v)}`, { cle: `l_${i + 1}` });
+        memorise();
+      }),
+    );
+    const placeObs = () => {
+      const erreur = $('erreur-obs-poles');
+      try {
+        if (!sim.observable) throw new Error('placement impossible : le couple (A, C) n’est pas observable');
+        appliqueL(
+          placementObservateur(sim.A, sim.C, litPoles($('obs-poles').value, sim.n)),
+          `Pôles de A − LC voulus ${$('obs-poles').value}`,
+        );
+        erreur.hidden = true;
+      } catch (e) {
+        erreur.textContent = e.message;
+        erreur.hidden = false;
+      }
+    };
+    $('obs-placer').addEventListener('click', placeObs);
+    $('obs-poles').addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter') placeObs();
+    });
+    champ($('obs-pas'), { latex: 'h', valeur: sim.obs.h, ...mo.bornesH, unite: 's' }, (v) => {
+      sim.fixePasObservateur(v);
+      analyse();
+      note(`Observateur : pas h = ${texte(v)} s`, { cle: 'h_obs' });
+      memorise();
+    });
+    modele.etats.forEach((e, i) =>
+      saisieNombre($('obs-xh0'), `\\hat x_{${i + 1}}(0)`, sim.obs.xh0[i], e.unite, (v) => {
+        sim.obs.xh0[i] = v;
+        note(`Estimée initiale x̂${i + 1}(0) = ${texte(v)}`, { cle: `xh0_${i}` });
+        memorise();
+      }),
+    );
+    $('retour-estime').checked = sim.retourEstime;
+    $('retour-estime').addEventListener('change', () => {
+      sim.fixeRetourEstime($('retour-estime').checked);
+      analyse();
+      note(sim.retourEstime ? 'Retour d’état sur l’état estimé x̂' : 'Retour d’état sur l’état mesuré x');
+      memorise();
+    });
+  } else {
+    $('onglet-observateur').hidden = true;
+  }
+
   // ---- Onglet Scénario : perturbation et bruit ------------------------------
   const P = sim.perturbation;
   const unite = modele.commandes[0].unite;
@@ -275,7 +350,7 @@ function demarre(modele) {
     portrait?.archive();
     ci = x0.slice();
     saisiesCI.forEach((s, i) => s.fixe(ci[i]));
-    cons.separateur(`Trajectoire n° ${++trajectoire} : x₀ = ${vecteur(ci)}`);
+    cons.separateur(`Trajectoire n° ${++trajectoire} : ${descriptionDepart()}`);
     sim.reinitialise(ci);
     analyse();
     joue(true);
@@ -322,6 +397,8 @@ function demarre(modele) {
     });
   } else {
     $('bloc-scene').hidden = true;
+    document.querySelector('.zone-scene').classList.add('sans-scene');
+    document.querySelector('.app').classList.add('courbes-seules');
   }
   const courbes = new Courbes($('courbes'), modele, sim);
   let portrait = null;
@@ -337,7 +414,12 @@ function demarre(modele) {
   const appliqueAffichage = () => {
     if (scene) scene.avecFantome = affichage.fantome;
     if (portrait) portrait.avecFantome = affichage.fantome;
-    courbes.configure({ fantome: affichage.fantome, historique: affichage.historique });
+    courbes.configure({
+      fantome: affichage.fantome,
+      historique: affichage.historique,
+      observateur: Boolean(sim.obs),
+      echantillonne: sim.Te > 0,
+    });
   };
   $('fantome').checked = affichage.fantome;
   $('fantome').addEventListener('change', () => {
@@ -357,13 +439,26 @@ function demarre(modele) {
   const plan = new PlanComplexe($('plan'), {
     modifiable: glissable,
     deplace: (vp) => appliqueGains(ackermann(sim.A, sim.B, vp), 'Valeurs propres déplacées', 'glisse'),
+    modifiableObs: () => Boolean(sim.obs) && sim.observable,
+    deplaceObs: (vp) =>
+      appliqueL(placementObservateur(sim.A, sim.C, vp), 'Valeurs propres de A − LC déplacées', 'glisseObs'),
   });
 
   // ---- Analyse : linéarisé, valeurs propres, console ------------------------
   function analyse() {
     affichePointDeFonctionnement();
-    plan.actualise(sim.vpA, sim.vpBF);
-    $('aide-plan').hidden = !glissable();
+    plan.actualise(sim.vpA, sim.vpBF, sim.obs ? sim.vpObs : null, sim.obs?.h ?? null);
+    $('aide-plan').hidden = !glissable() && !(sim.obs && sim.observable);
+    $('legende-obs').hidden = !sim.obs;
+    $('aide-plan-obs').hidden = !sim.obs;
+    if (sim.obs) {
+      if (document.activeElement !== $('obs-poles')) $('obs-poles').value = formatePoles(sim.vpObs);
+      $('obs-hmax').textContent =
+        sim.hMax > 0
+          ? `Pas maximal pour Euler explicite : h < ${texte(sim.hMax)} s (ρ = ${texte(sim.rhoEuler)}${sim.rhoEuler < 1 ? ' < 1' : ' ≥ 1 : l’observateur discret diverge'}).`
+          : 'Aucun pas ne convient : A − LC a une valeur propre de partie réelle positive ou nulle.';
+      $('obs-hmax').style.color = sim.rhoEuler < 1 ? '' : 'var(--alerte)';
+    }
     if (document.activeElement !== $('poles') && sim.mode === 'gains') $('poles').value = formatePoles(sim.vpBF);
     cons.analyse();
   }

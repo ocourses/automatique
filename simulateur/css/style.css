@@ -9,6 +9,8 @@
   --zone-stable: rgba(31, 95, 191, 0.07);
   --alerte: #a33a1a;
   --perturbation: #c25e0c;
+  --observateur: #0f7b6c;
+  --observateur-zone: rgba(15, 123, 108, 0.07);
   --police: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
   --police-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
@@ -27,6 +29,8 @@
     --zone-stable: rgba(110, 162, 242, 0.1);
     --alerte: #f08a6a;
     --perturbation: #f0a050;
+    --observateur: #4fc3b0;
+    --observateur-zone: rgba(79, 195, 176, 0.1);
     color-scheme: dark;
   }
 }
@@ -132,8 +136,45 @@ input[type='range'] {
   padding: 0.6rem 16px 1rem;
   display: grid;
   gap: 14px;
-  grid-template-columns: minmax(300px, 350px) minmax(0, 1.15fr) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1.15fr) minmax(0, 1fr);
   align-items: start;
+}
+
+/* Exemple sans scène (« courbes seules ») : la colonne centrale accueille les courbes. */
+.sans-scene .barre {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+@media (min-width: 1181px) {
+  .app.courbes-seules {
+    grid-template-columns: minmax(300px, 380px) minmax(0, 1.5fr) minmax(0, 1fr);
+  }
+
+  .app.courbes-seules .zone-graphes {
+    display: contents;
+  }
+
+  .app.courbes-seules .zone-reglages {
+    grid-column: 1;
+    grid-row: 1 / span 2;
+  }
+
+  .app.courbes-seules .zone-scene {
+    grid-column: 2;
+    grid-row: 1;
+  }
+
+  .app.courbes-seules .zone-graphes > .carte:first-child {
+    grid-column: 2;
+    grid-row: 2;
+  }
+
+  .app.courbes-seules .zone-graphes > .carte:last-child {
+    grid-column: 3;
+    grid-row: 1 / span 2;
+  }
 }
 
 .zone-graphes {
@@ -240,9 +281,9 @@ h3 .katex {
   border-bottom: 2px solid transparent;
   border-radius: 0;
   margin-bottom: -1px;
-  padding: 0.45em 0.8em;
+  padding: 0.45em 0.6em;
   color: var(--discret);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
 }
 
 .onglets [role='tab']:hover {
@@ -413,6 +454,11 @@ button.lien {
 
 .symbole-abk {
   color: var(--accent);
+  font-weight: 700;
+}
+
+.symbole-obs {
+  color: var(--observateur);
   font-weight: 700;
 }
 
@@ -838,6 +884,14 @@ button.lien {
 
   .feuille .onglets [role='tab'] {
     padding: 0.45em 0.6em;
+    white-space: nowrap;
+  }
+
+  /* Quatre onglets de réglages : la liste défile horizontalement si besoin. */
+  .feuille .onglets {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
   }
 
   /* Console en feuille : plus de repli, ni de résumé (il passe dans la barre). */

@@ -10,6 +10,8 @@ export function couleurs() {
     grille: v('--grille'),
     accent: v('--accent'),
     perturbation: v('--perturbation'),
+    observateur: v('--observateur'),
+    observateurZone: v('--observateur-zone'),
     zone: v('--zone-stable'),
   };
 }

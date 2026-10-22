@@ -11,6 +11,72 @@ export function nomBoucle(sim) {
   return sim.loiActive ? 'J_g(x_e)' : 'A + BK';
 }
 
+function indicationsObservateur(sim) {
+  const liste = [];
+  const n = sim.A.length;
+  const alpha = Math.max(...sim.vpObs.map((z) => z.re));
+  const spectre = sim.vpObs.map((z) => latexComplexe(z)).join(',\\ ');
+  const h = sim.obs.h;
+
+  liste.push(
+    sim.observable
+      ? {
+          niveau: 'ok',
+          texte: `Le couple $(A, C)$ est observable (Kalman pour $(A^\\top, C^\\top)$) : on peut placer librement les valeurs propres de $A - LC$.`,
+        }
+      : {
+          niveau: 'alerte',
+          texte: `Le couple $(A, C)$ n'est pas observable (Kalman pour $(A^\\top, C^\\top)$) : certaines valeurs propres de $A - LC$ ne dépendent pas de $L$.`,
+        },
+  );
+
+  if (alpha < -TOL) {
+    liste.push({
+      niveau: 'ok',
+      texte: `$A - LC$ est Hurwitz ($\\lambda = ${spectre}$) : l'erreur $e = x - \\hat x$ vérifie $\\dot e = (A - LC)\\,e$ et tend vers $0$ quelles que soient les conditions initiales.`,
+    });
+  } else {
+    liste.push({
+      niveau: 'alerte',
+      texte: `$A - LC$ n'est pas Hurwitz ($\\lambda = ${spectre}$) : l'erreur d'estimation ne tend pas vers $0$ en général (le jumeau numérique dérive, cas $L = 0$ du TD4).`,
+    });
+  }
+
+  // Euler explicite de pas h : e_{k+1} = (I + h(A − LC)) e_k, stable si |1 + hλ| < 1.
+  const rho = sim.rhoEuler;
+  const hMax = sim.hMax;
+  if (hMax > 0 && rho < 1) {
+    liste.push({
+      niveau: 'ok',
+      texte: `Euler explicite, $h = ${latexNombre(h)}$ s : $\\rho = \\max|1 + h\\lambda| = ${latexNombre(rho)} < 1$, l'erreur discrète converge. Pas maximal $h_{\\max} = ${latexNombre(hMax)}$ s.`,
+    });
+  } else if (hMax > 0) {
+    liste.push({
+      niveau: 'alerte',
+      texte: `Euler explicite, $h = ${latexNombre(h)}$ s : $\\rho = \\max|1 + h\\lambda| = ${latexNombre(rho)} \\ge 1$, l'observateur discret ne converge pas alors que l'observateur continu converge. Il faut $h < h_{\\max} = ${latexNombre(hMax)}$ s : plus l'observateur est rapide, plus le pas doit être petit.`,
+    });
+  } else {
+    liste.push({
+      niveau: 'alerte',
+      texte: `Euler explicite : aucune valeur de $h$ ne convient, puisque $A - LC$ a une valeur propre de partie réelle positive ou nulle.`,
+    });
+  }
+
+  if (sim.retourEstime && sim.mode === 'gains') {
+    liste.push({
+      niveau: 'info',
+      texte: `Retour d'état sur $\\hat x$ : le spectre du système complet $(x, e)$ est celui de $A + BK$ réuni à celui de $A - LC$ (principe de séparation), on règle les deux séparément. Choisissez $L$ plus rapide que $K$, sans dépasser $h_{\\max}$.`,
+    });
+  }
+  if (sim.Te > 0) {
+    liste.push({
+      niveau: 'info',
+      texte: `Commande échantillonnée : $u$ est recalculée tous les $T_e = ${latexNombre(sim.Te)}$ s et tenue constante entre deux mises à jour.`,
+    });
+  }
+  return liste;
+}
+
 export function indications(sim) {
   const liste = [];
   const n = sim.A.length;
@@ -76,6 +142,9 @@ export function indications(sim) {
     }
   }
 
+  // Observateur de Luenberger : observabilité, convergence de l'erreur, critère d'Euler (TD4).
+  if (sim.obs) liste.push(...indicationsObservateur(sim));
+
   // Perturbation constante et retour d'état : erreur statique (TD2).
   const xinf = sim.equilibrePerturbe();
   if (xinf) {
@@ -98,6 +167,12 @@ export function indications(sim) {
     });
   }
 
+  if (!sim.obs && sim.Te > 0) {
+    liste.push({
+      niveau: 'info',
+      texte: `Commande échantillonnée : $u$ est recalculée tous les $T_e = ${latexNombre(sim.Te)}$ s et tenue constante entre deux mises à jour. Un échantillonnage trop lent dégrade la stabilité du bouclé.`,
+    });
+  }
   if (sim.modele.indications && !sim.loiActive) liste.push(...sim.modele.indications(sim.p, sim.K));
   if (sim.diverge) {
     liste.push({ niveau: 'alerte', texte: 'La simulation a divergé numériquement : réinitialisez la condition initiale.' });

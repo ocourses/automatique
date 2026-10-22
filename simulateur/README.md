@@ -6,21 +6,25 @@ se stabilise.
 
 En ligne : <https://ocourses.github.io/automatique/>.
 
-État actuel : **jalon V1**, avec quatre exemples :
+État actuel : **jalon V2**, avec cinq exemples :
 
 - le double intégrateur, chariot sur rail droit (poly ; TD3) ;
 - le pendule inversé commandé par un couple (poly ; TD2) ;
 - le pendule inversé commandé en accélération, ou « balai » (TD3) ;
-- le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020).
+- le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020) ;
+- la pharmacocinétique avec observateur de Luenberger (TD4), en « courbes seules ».
+
+Le satellite des équations d'Euler (examen 2017-2018) est annoncé sur la page d'accueil et reste à faire.
 
 ## Organisation de la page
 
-- **Réglages**, à gauche, en trois onglets :
-  - *Contrôleur* : retour d'état (gains, pôles voulus) ou loi libre, et saturation ;
+- **Réglages**, à gauche, en trois onglets, et un quatrième pour les exemples qui ont un observateur :
+  - *Contrôleur* : retour d'état (gains, pôles voulus) ou loi libre, saturation et échantillonnage de la commande ;
   - *Scénario* : condition initiale, perturbation et bruit de mesure ;
-  - *Système* : équations, paramètres, point de fonctionnement $(x_e, u_e)$ et linéarisé $(A, B)$.
+  - *Système* : équations, paramètres, point de fonctionnement $(x_e, u_e)$ et linéarisé $(A, B)$ ;
+  - *Observateur* : gain $L$ (par ses coefficients ou par les pôles de $A - LC$), pas $h$, estimée initiale et retour d'état sur $\hat x$.
 - **Scène**, au centre, avec la barre de lecture (pause, réinitialisation, choc, vitesse, fantôme).
-- **Graphiques**, à droite : les courbes, toujours visibles, et deux onglets, valeurs propres (que l'on peut faire glisser) et portrait de phase.
+- **Graphiques**, à droite : les courbes, toujours visibles, et deux onglets, valeurs propres (que l'on peut faire glisser) et portrait de phase. Les exemples sans scène passent les courbes au centre.
 - **Console**, en bas, repliable et toujours visible quand on fait défiler la page. Son en-tête rappelle en permanence le temps, $\lVert x - x_e \rVert$ et l'état de stabilisation. Trois onglets :
   - *Mesures* : les nombres en direct, avec la valeur de chaque grandeur, sa valeur à l'équilibre et son écart. Un « ≈ 0 » apparaît quand l'écart passe sous le seuil $\varepsilon$ (réglable, 0,01 par défaut) ;
   - *Analyse* : la matrice du bouclé, son polynôme caractéristique, son spectre, le critère de Routh–Hurwitz et les indications ;
@@ -58,6 +62,7 @@ Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle a
   sans `eval`. Les indications portent alors sur la jacobienne $J_g(x_e)$ du
   bouclé.
 - **Saturation** $|u| \le u_{\max}$, en option.
+- **Commande échantillonnée** : avec une période $T_e > 0$, la commande n'est recalculée que tous les $T_e$ secondes et tenue constante entre deux mises à jour. Sur le pendule commandé par un couple, avec les gains par défaut, le bouclé reste stable jusqu'à $T_e \approx 0{,}4$ s et ne l'est plus à $0{,}5$ s. Cette option n'est accompagnée d'aucune théorie des systèmes échantillonnés.
 - **Perturbation** $d(t)$ ajoutée à la commande, constante ou en créneau
   (TD2). L'indication donne l'erreur statique du retour d'état.
 - **Choc** : une impulsion de vitesse, de signe alterné.
@@ -72,6 +77,19 @@ Le point de fonctionnement se règle dans l'onglet *Système* quand le modèle a
   balai, la fonction $V$ du TD3 est affichée en direct dans les mesures.
 - **Liens** : tous les réglages sont encodés dans l'URL. Un lien reproduit
   une expérience, ce qui est pratique pour un énoncé de TD ou pour l'amphi.
+
+### Observateur de Luenberger
+
+Un exemple qui déclare un observateur ajoute à la page :
+
+- l'estimée $\hat x$, qui suit $\dot{\hat x} = f(\hat x, u) + L\,(y - C\hat x)$, avec la commande connue et la seule sortie mesurée $y = Cx$, bruit compris. Pour un modèle linéaire, c'est exactement l'observateur du TD4. L'observateur est intégré par **Euler explicite de pas $h$**, réglable, alors que le système réel l'est par RK4 à pas fin : l'estimée est constante entre deux instants et les courbes la tracent en escalier ;
+- l'erreur $e = x - \hat x$ en courbe et en norme, avec l'événement « observateur convergé » dans le journal ;
+- les valeurs propres de $A - LC$, dessinées en losanges dans le plan complexe. On peut les faire glisser, $L$ étant recalculé par la formule d'Ackermann appliquée au couple dual $(A^\top, C^\top)$ ;
+- le **critère d'Euler** : l'erreur discrète vérifie $e_{k+1} = (I + h(A - LC))\,e_k$ et converge si $|1 + h\lambda| < 1$ pour toutes les valeurs propres. Le plan complexe dessine le disque en tirets $|\lambda + 1/h| < 1/h$, et la page donne le pas maximal $h_{\max} = \min_\lambda \bigl(-2\operatorname{Re}\lambda / |\lambda|^2\bigr)$. Pour le pôle double en $-4$ du TD4, on trouve $h_{\max} = 1/2$ ;
+- l'observabilité de $(A, C)$, par le critère de Kalman dual ;
+- l'option du **retour d'état sur $\hat x$**, avec le rappel du principe de séparation : le spectre du système complet est celui de $A + BK$ réuni à celui de $A - LC$.
+
+Avec Euler explicite, la commande est tenue constante sur chaque pas de l'observateur : l'erreur $e$ n'est donc plus exactement indépendante de $u$, un écart d'ordre $h$ subsiste, que le gain $L$ garde petit.
 
 ### Variables de la loi libre
 
@@ -94,7 +112,10 @@ les primitives utilisées par la loi augmentent l'état.
 
 `id`, `p_<nom>` (paramètres), `mode` (`gains` ou `loi`), `K` (gains séparés
 par des virgules), `loi`, `x0`, `pert` (`constante` ou `creneau`), `e`, `t1`,
-`dt`, `sigma`, `umax` (active la saturation), `fantome=1` et `vitesse`.
+`dt`, `sigma`, `umax` (active la saturation), `Te` (commande échantillonnée),
+`fantome=1` et `vitesse`. Pour un exemple avec observateur : `L`, `h`, `xh0`
+(estimée initiale) et `retour=x` (retour d'état sur l'état mesuré plutôt que
+sur $\hat x$).
 
 ## Lancer en local
 
@@ -183,6 +204,11 @@ Plusieurs champs sont facultatifs :
   du portrait de phase (exemples à deux états).
 - `invariant(x, p, K)` renvoie `{ latex, valeur }` ou `null` : une quantité
   affichée en direct, comme la fonction $V$ du TD3.
+- `observateur`, de la forme `{ L, h, xh0, bornesL, bornesH, latex }`, ajoute un
+  observateur de Luenberger sur la sortie `sortie` : gain initial `L` (un
+  coefficient par état), pas `h`, estimée initiale `xh0`, bornes des curseurs
+  de $L$ et de $h$ et équation affichée. Le modèle peut être non linéaire :
+  l'observateur recopie alors $f$.
 
 - `indications(p, K)` renvoie des indications propres à l'exemple, sous la
   forme `{ niveau: 'ok' | 'alerte' | 'info', texte }`, où le texte peut

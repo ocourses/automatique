@@ -1,7 +1,7 @@
 // Placement de pôles : formule d'Ackermann et déplacement d'une valeur propre
 // dans le plan complexe en respectant la symétrie par conjugaison.
 
-import { identite, kalman, matadd, matmul, rang } from './linalg.js';
+import { identite, kalman, matadd, matmul, rang, transpose } from './linalg.js';
 
 // Coefficients (1, c_1, …, c_n) du polynôme unitaire de racines données
 // (complexes {re, im}, stables par conjugaison) : seule la partie réelle est gardée.
@@ -157,4 +157,42 @@ export function litPoles(texte, n) {
     restants.splice(k, 1);
   }
   return poles;
+}
+
+// ---- Observateur de Luenberger --------------------------------------------
+
+// Ligne C = e_k^T de la sortie mesurée y = x_k (k à partir de 0).
+export function ligneSortie(n, k) {
+  return Array.from({ length: n }, (_, j) => (j === k ? 1 : 0));
+}
+
+// Le couple (A, C) est observable si (A^T, C^T) est commandable (critère de Kalman dual).
+export function observable(A, c) {
+  return rang(kalman(transpose(A), transpose([c]))) === A.length;
+}
+
+// Gain L (vecteur de longueur n) tel que A − LC ait les valeurs propres demandées.
+// (A − LC)^T = A^T + C^T K avec K = −L^T : c'est un placement de pôles pour (A^T, C^T).
+export function placementObservateur(A, c, racines) {
+  const K = ackermann(transpose(A), transpose([c]), racines);
+  return K[0].map((v) => -v);
+}
+
+// A − LC pour une sortie c et un gain L.
+export function matriceObservateur(A, c, L) {
+  return A.map((ligne, i) => ligne.map((aij, j) => aij - L[i] * c[j]));
+}
+
+// Euler explicite sur ė = λ e : e_{k+1} = (1 + hλ) e_k. Facteur d'amplification
+// maximal sur le spectre : il faut ρ = max |1 + hλ| < 1 pour que l'erreur converge.
+export function facteurEuler(vp, h) {
+  return Math.max(...vp.map((z) => Math.hypot(1 + h * z.re, h * z.im)));
+}
+
+// Plus grand pas h tel que |1 + hλ| < 1 pour toutes les valeurs propres : pour
+// Re λ < 0, c'est h < −2 Re λ / |λ|². Vaut 0 si une valeur propre est de partie
+// réelle positive ou nulle (aucun pas ne convient).
+export function pasEulerMax(vp) {
+  if (vp.some((z) => z.re >= -1e-12)) return 0;
+  return Math.min(...vp.map((z) => (-2 * z.re) / (z.re * z.re + z.im * z.im)));
 }

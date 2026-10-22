@@ -35,6 +35,7 @@
               <button type="button" role="tab" data-onglet="controleur">Contrôleur</button>
               <button type="button" role="tab" data-onglet="scenario">Scénario</button>
               <button type="button" role="tab" data-onglet="systeme">Système</button>
+              <button type="button" role="tab" data-onglet="observateur" id="onglet-observateur">Observateur</button>
             </div>
             <div class="feuille-actions">
               <button type="button" class="agrandir" aria-label="Agrandir ou réduire" aria-pressed="false">↕</button>
@@ -68,6 +69,12 @@
               <label><input id="saturation" type="checkbox" /> $|u| \le u_{\max}$</label>
               <input id="umax" type="text" inputmode="decimal" aria-label="u max" />
             </div>
+            <h3>Échantillonnage de la commande</h3>
+            <div id="reglage-te"></div>
+            <p class="note">
+              0 : commande continue. Sinon, $u$ est recalculée tous les $T_e$ secondes et tenue constante
+              entre deux mises à jour.
+            </p>
           </div>
 
           <div role="tabpanel" data-groupe="reglages" data-panneau="scenario" hidden>
@@ -110,6 +117,35 @@
             <p class="note" id="aide-eq"></p>
             <h3>Linéarisé en $(x_e, u_e)$</h3>
             <div id="lineaire"></div>
+          </div>
+
+          <div role="tabpanel" data-groupe="reglages" data-panneau="observateur" hidden>
+            <h3>Observateur de Luenberger</h3>
+            <div id="obs-modele"></div>
+            <p class="note">
+              Il reçoit la commande $u$ et la seule sortie mesurée $y$ (bruit compris), et estime l'état
+              complet. L'erreur $e = x - \hat x$ ne dépend pas de $u$.
+            </p>
+            <h3>Gain $L$</h3>
+            <div id="obs-gains"></div>
+            <div class="champ-poles">
+              <label for="obs-poles">Pôles voulus</label>
+              <input id="obs-poles" type="text" placeholder="-4, -4" spellcheck="false" />
+              <button id="obs-placer" type="button">Placer</button>
+            </div>
+            <p id="erreur-obs-poles" class="erreur" hidden></p>
+            <h3>Pas d'intégration $h$</h3>
+            <div id="obs-pas"></div>
+            <p class="note" id="obs-hmax"></p>
+            <h3>Estimée initiale</h3>
+            <div id="obs-xh0"></div>
+            <p class="note">Prise en compte au prochain « Lancer » ou « Réinitialiser ».</p>
+            <h3>Utilisation</h3>
+            <div class="ligne-options">
+              <label>
+                <input id="retour-estime" type="checkbox" checked /> Retour d'état sur $\hat x$ au lieu de l'état mesuré
+              </label>
+            </div>
           </div>
         </section>
 
@@ -159,11 +195,16 @@
               <p class="note legende">
                 <span class="symbole-a">○</span> valeurs propres de $A$
                 <span class="symbole-abk">×</span> valeurs propres du bouclé
+                <span id="legende-obs" class="symbole-obs" hidden>◇ valeurs propres de $A - LC$</span>
                 <span class="symbole-zone">■</span> demi-plan $\operatorname{Re} &lt; 0$
               </p>
               <p id="aide-plan" class="note">
                 Faites glisser une croix pour placer les valeurs propres de $A + BK$ : le gain $K$ est
                 recalculé par la formule d'Ackermann. Près des axes, la valeur propre s'y colle.
+                <span id="aide-plan-obs" hidden>
+                  Les losanges se déplacent de même et recalculent $L$. Dans le disque en tirets, Euler
+                  explicite de pas $h$ est stable : $|1 + h\lambda| < 1$.
+                </span>
               </p>
             </div>
             <div role="tabpanel" data-groupe="graphes" data-panneau="portrait" hidden>
@@ -226,6 +267,7 @@
                   <div id="analyse-matrice"></div>
                   <div id="analyse-chi"></div>
                   <div id="analyse-spectre"></div>
+                  <div id="analyse-obs" hidden></div>
                   <p id="analyse-hurwitz" class="note"></p>
                 </div>
                 <ul id="indications" class="indications"></ul>

@@ -121,6 +121,7 @@ export class Portrait {
     for (const t of this.anciennes) trace(t.x1, t.x2, col.discret, 1);
     const hist = this.sim.historique;
     if (this.avecFantome) trace(hist.fantome[0], hist.fantome[1], col.accent, 1, [5, 4]);
+    if (this.sim.obs) trace(hist.xh[0], hist.xh[1], col.observateur, 1.5, [6, 3]);
     trace(hist.x[0], hist.x[1], col.accent, 2);
 
     // Équilibre visé et état courant.

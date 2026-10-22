@@ -39,8 +39,8 @@ export const catalogue = [
     titre: 'Pharmacocinétique',
     sous_titre: 'Avec observateur',
     source: 'TD4',
-    montre: 'Estimation de l’état, réglage de L, effet du pas h.',
-    disponible: false,
+    montre: 'Observateur de Luenberger : x̂ face à x, réglage de L, effet du pas h.',
+    disponible: true,
   },
   {
     id: 'satellite',

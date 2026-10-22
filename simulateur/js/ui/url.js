@@ -29,6 +29,13 @@ export function versURL(sim, ci, affichage) {
   }
   if (sim.sigma > 0) q.set('sigma', nombre(sim.sigma));
   if (sim.saturation.active) q.set('umax', nombre(sim.saturation.umax));
+  if (sim.Te > 0) q.set('Te', nombre(sim.Te));
+  if (sim.obs) {
+    q.set('L', sim.obs.L.map(nombre).join(','));
+    q.set('h', nombre(sim.obs.h));
+    q.set('xh0', sim.obs.xh0.map(nombre).join(','));
+    if (!sim.retourEstime) q.set('retour', 'x');
+  }
   if (affichage.fantome) q.set('fantome', '1');
   if (affichage.vitesse !== 1) q.set('vitesse', nombre(affichage.vitesse));
   return q;
@@ -63,6 +70,17 @@ export function depuisURL(q, sim) {
   if (q.has('sigma') && Number.isFinite(sigma) && sigma >= 0) sim.sigma = sigma;
   const umax = Number(q.get('umax'));
   if (q.has('umax') && Number.isFinite(umax) && umax > 0) sim.saturation = { active: true, umax };
+  const Te = Number(q.get('Te'));
+  if (q.has('Te') && Number.isFinite(Te) && Te >= 0) sim.Te = Te;
+  if (sim.obs) {
+    const L = q.has('L') ? liste(q.get('L')) : null;
+    if (L && L.length === sim.n) sim.obs.L = L;
+    const h = Number(q.get('h'));
+    if (q.has('h') && Number.isFinite(h) && h > 0) sim.obs.h = h;
+    const xh0 = q.has('xh0') ? liste(q.get('xh0')) : null;
+    if (xh0 && xh0.length === sim.n) sim.obs.xh0 = xh0;
+    sim.retourEstime = q.get('retour') !== 'x';
+  }
   sim.metAJour();
   const x0 = q.has('x0') ? liste(q.get('x0')) : null;
   const ci = x0 && x0.length === sim.n ? x0 : sim.modele.x0.slice();
