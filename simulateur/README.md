@@ -6,15 +6,14 @@ se stabilise.
 
 En ligne : <https://ocourses.github.io/automatique/>.
 
-État actuel : **jalon V2**, avec cinq exemples :
+État actuel : **jalon V2** et le satellite du jalon V3, avec six exemples :
 
 - le double intégrateur, chariot sur rail droit (poly ; TD3) ;
 - le pendule inversé commandé par un couple (poly ; TD2) ;
 - le pendule inversé commandé en accélération, ou « balai » (TD3) ;
 - le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020) ;
-- la pharmacocinétique avec observateur de Luenberger (TD4), en « courbes seules ».
-
-Le satellite des équations d'Euler (examen 2017-2018) est annoncé sur la page d'accueil et reste à faire.
+- la pharmacocinétique avec observateur de Luenberger (TD4), en « courbes seules » ;
+- le satellite des équations d'Euler (examen 2017-2018), en « courbes seules » : retour d'état diagonal $u = K\omega$ avec $k_i < 0$, et fonction $V = \sum J_i\omega_i^2$, conservée sans contrôle. Cet exemple est volontairement épuré : seuls les inerties et les trois gains $k_i$ se règlent.
 
 ## Organisation de la page
 
@@ -200,6 +199,12 @@ Plusieurs champs sont facultatifs :
 - `loi` est la loi libre proposée par défaut ; `choc` est l'impulsion ajoutée
   à l'état ; `perturbation` et `umax` sont les valeurs proposées pour $e$ et
   $u_{\max}$.
+- `gainsDiagonaux: true` n'expose que la diagonale de $K$ (le reste vaut 0), ce
+  qui allège l'interface d'un exemple à plusieurs commandes ; `latex.loi`
+  remplace la formule affichée au-dessus des gains.
+- `sansSortie: true` indique que tout l'état est mesuré (pas de sortie $y$) ;
+  `noteEquilibre` remplace le commentaire affiché sous le point de
+  fonctionnement.
 - `portrait`, de la forme `{ x1: [a, b], x2: [c, d] }`, est le cadre minimal
   du portrait de phase (exemples à deux états).
 - `invariant(x, p, K)` renvoie `{ latex, valeur }` ou `null` : une quantité

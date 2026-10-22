@@ -123,7 +123,10 @@ export class Console {
       visible: () => sim.perturbation.type !== 'aucune',
     });
     const s = sim.sortie;
-    ajoute('y mesurée', modele.etats[s].unite, () => sim.x[s] + sim.bruit[s], { equilibre: () => sim.xe[s] });
+    ajoute('y mesurée', modele.etats[s].unite, () => sim.x[s] + sim.bruit[s], {
+      equilibre: () => sim.xe[s],
+      visible: () => !modele.sansSortie,
+    });
     ajoute('‖x − x_e‖', '', () => sim.normeEcart(), { agreg: true, zero: (v) => v < sim.seuil });
     ajoute('‖x − x̂‖', '', () => sim.normeErreur(), {
       agreg: true,

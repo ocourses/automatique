@@ -98,7 +98,8 @@ function demarre(modele) {
   // ---- Onglet Système : équations, paramètres, point de fonctionnement ------
   rend($('modele'), modele.latex.modele);
   rend($('etats'), modele.etats.map((e) => e.latex).join(', \\quad '), false);
-  rend($('sortie'), `y = x_${sim.sortie + 1}`, false);
+  if (modele.sansSortie) $('sortie').textContent = 'aucune, tout l’état est mesuré';
+  else rend($('sortie'), `y = x_${sim.sortie + 1}`, false);
   rend($('equilibre'), modele.latex.equilibre);
 
   const libres = modele.parametres.filter((q) => q.famille === 'equilibre');
@@ -115,7 +116,9 @@ function demarre(modele) {
   }
   rendTexte(
     $('aide-eq'),
-    libres.length
+    modele.noteEquilibre
+      ? modele.noteEquilibre
+      : libres.length
       ? `On règle ici ${libres.length > 1 ? 'les coordonnées libres' : 'la coordonnée libre'} de $x_e$ ; la commande d'équilibre $u_e$ s'en déduit par $f(x_e, u_e) = 0$, on ne la règle pas séparément.`
       : `Ce modèle n'a qu'un point de fonctionnement : $x_e$ et $u_e$ sont imposés, il n'y a rien à régler.`,
   );
@@ -127,23 +130,27 @@ function demarre(modele) {
   };
 
   // ---- Onglet Contrôleur : retour d'état ------------------------------------
-  rend($('loi-gains'), 'u = u_e + K(x - x_e)');
+  rend($('loi-gains'), modele.latex.loi ?? 'u = u_e + K(x - x_e)');
   const m = modele.commandes.length;
-  const champsGains = sim.K.map((ligne, i) =>
-    ligne.map((k, j) => {
-      const indice = m === 1 ? `${j + 1}` : `${i + 1}${j + 1}`;
-      return champ($('gains'), { latex: `k_{${indice}}`, valeur: k, ...modele.bornesGains[i][j] }, (v) => {
+  // Un champ par gain ; avec gainsDiagonaux, seule la diagonale de K se règle.
+  const champsGains = [];
+  sim.K.forEach((ligne, i) =>
+    ligne.forEach((k, j) => {
+      if (modele.gainsDiagonaux && i !== j) return;
+      const indice = modele.gainsDiagonaux ? `${i + 1}` : m === 1 ? `${j + 1}` : `${i + 1}${j + 1}`;
+      const c = champ($('gains'), { latex: `k_{${indice}}`, valeur: k, ...modele.bornesGains[i][j] }, (v) => {
         sim.fixeGain(i, j, v);
         analyse();
         note(`Gain k${indice} = ${texte(v)}`, { cle: `k_${indice}` });
         memorise();
       });
+      champsGains.push({ i, j, c });
     }),
   );
   const appliqueGains = (K, message, cle = null) => {
     if (!K[0].every(Number.isFinite)) return;
     sim.fixeGains(K);
-    champsGains.forEach((ligne, i) => ligne.forEach((c, j) => c.fixe(K[i][j])));
+    champsGains.forEach(({ i, j, c }) => c.fixe(K[i][j]));
     analyse();
     note(`${message} → K = ${vecteur(K.flat())}`, { cle });
     memorise();
@@ -159,6 +166,8 @@ function demarre(modele) {
       erreur.hidden = false;
     }
   };
+  // Le placement de pôles à la saisie n'a de sens que pour une seule commande.
+  if (m !== 1) document.querySelector('.champ-poles').hidden = true;
   $('placer').addEventListener('click', placePoles);
   $('poles').addEventListener('keydown', (ev) => {
     if (ev.key === 'Enter') placePoles();

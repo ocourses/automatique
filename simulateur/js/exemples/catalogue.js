@@ -47,7 +47,7 @@ export const catalogue = [
     titre: 'Satellite',
     sous_titre: 'Équations d’Euler',
     source: 'Examen 2017-2018',
-    montre: 'Stabilisation d’un système à trois états, en courbes.',
-    disponible: false,
+    montre: 'Retour d’état diagonal k_i < 0 ; sans contrôle, V est conservée (stable, pas asymptotiquement).',
+    disponible: true,
   },
 ];
