@@ -151,3 +151,79 @@ test('TD2 : le PID (−6, −12, −6) place les pôles en −1, −2, −3', ()
   const K = ackermann(A, B, [z(-1), z(-2), z(-3)])[0];
   [-6, -12, -6].forEach((v, i) => proche(K[i], v, 1e-9));
 });
+
+// ---- Solutions maximales (dimension 1) -------------------------------------------------
+
+import { EQUATIONS, solutionMaximale } from '../js/illustrations/bestiaire.js';
+import { champPendule, puitsAtteint } from '../js/illustrations/pendule-amorti.js';
+import { champF, champG, rhoF, rhoG } from '../js/illustrations/contre-exemple.js';
+
+test('bestiaire : exemples du poly (tan t, x₀/((t − t₀)x₀ + 1), t²/4, −x³)', () => {
+  const tan = solutionMaximale('carre-plus-un', 0, 0);
+  proche(tan.a, -Math.PI / 2, 1e-15);
+  proche(tan.b, Math.PI / 2, 1e-15);
+  proche(tan.x(1), Math.tan(1), 1e-15);
+  const inv = solutionMaximale('moins-carre', 0, 1);
+  assert.equal(inv.a, -1);
+  assert.equal(inv.b, Infinity);
+  assert.equal(solutionMaximale('moins-carre', 2, -0.5).b, 4);
+  // ẋ = √|x|, x(0) = 0 : la solution t²/4 du poly (pour t > 0).
+  proche(solutionMaximale('racine', 0, 0).x(3), 9 / 4, 1e-15);
+  assert.equal(solutionMaximale('racine', 0, 0).x(-1), 0);
+  // ẋ = −x³ : x(t) = sign(x₀)/√(2t + 1/x₀²) (poly).
+  proche(solutionMaximale('cube', 0, 2).x(1), 1 / Math.sqrt(2 + 0.25), 1e-15);
+});
+
+test('bestiaire : chaque solution exacte vérifie l’équation (comparée à RK4)', () => {
+  for (const [eq, t0, x0, t1] of [
+    ['carre-plus-un', 0.3, -1, 1.5],
+    ['moins-carre', -1, 2, 3],
+    ['moins-carre', 0, -0.4, 2],
+    ['racine', 0, 1, 2],
+    ['racine', 0, -1, 1.5],
+    ['cube', 0, -3, 4],
+  ]) {
+    const sol = solutionMaximale(eq, t0, x0);
+    const { x } = simule((t, y) => [EQUATIONS[eq].f(y[0])], [x0], t1 - t0, 1e-4);
+    proche(x[x.length - 1][0], sol.x(t1), 1e-6);
+  }
+});
+
+// ---- Linéarisation -----------------------------------------------------------------------
+
+test('pendule amorti : lâché à l’horizontale, il revient en bas ; lancé fort, il change de puits', () => {
+  assert.equal(puitsAtteint([Math.PI / 2, 0], 1, 9.81), 0);
+  assert.equal(puitsAtteint([0, 8], 1, 9.81), 1);
+  assert.equal(puitsAtteint([0, -8], 1, 9.81), -1);
+  // Sans amortissement, aucun puits n'attire.
+  assert.equal(puitsAtteint([1, 0], 0, 9.81), null);
+  // Le puits annoncé est bien celui où finit la trajectoire.
+  const F = champPendule(1, 9.81);
+  const fin = simule((t, x) => F(x), [0, 8], 40, 1e-3).x.pop();
+  proche(fin[0], 2 * Math.PI, 1e-6);
+});
+
+test('contre-exemple : ρ̇ = ∓2ρ², ρ exact contre RK4, explosion de g en 1/(2ρ₀)', () => {
+  const x0 = [0.6, 0.3];
+  const rho0 = 0.45;
+  const xf = simule((t, x) => champF(x), x0, 3, 1e-3).x.pop();
+  proche(xf[0] ** 2 + xf[1] ** 2, rhoF(rho0, 3), 1e-9);
+  const xg = simule((t, x) => champG(x), x0, 1, 1e-4).x.pop();
+  proche(xg[0] ** 2 + xg[1] ** 2, rhoG(rho0, 1), 1e-7);
+  assert.equal(rhoG(rho0, 1 / (2 * rho0) + 0.01), Infinity);
+  // Même linéarisé : f′(0) = g′(0) = [[0, 1], [−1, 0]].
+  const h = 1e-6;
+  for (const F of [champF, champG]) {
+    const J = [0, 1].map((j) => {
+      const e = [0, 0];
+      e[j] = h;
+      const p = F(e);
+      const m = F(e.map((v) => -v));
+      return p.map((v, i) => (v - m[i]) / (2 * h));
+    });
+    proche(J[0][0], 0);
+    proche(J[0][1], -1);
+    proche(J[1][0], 1);
+    proche(J[1][1], 0);
+  }
+});
