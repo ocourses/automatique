@@ -1,12 +1,13 @@
-# Simulateur de stabilisation
+# Automatique : explorer le cours
 
-Application web statique pour observer la stabilisation des exemples du cours.
-On règle la condition initiale et le contrôleur, puis on regarde si le système
+Site web statique pour explorer le cours d'automatique : des illustrations
+interactives du poly et des TD, et un simulateur de stabilisation, dans lequel
+on règle la condition initiale et le contrôleur, puis on regarde si le système
 se stabilise.
 
 En ligne : <https://ocourses.github.io/automatique/>.
 
-État actuel : **jalon V2**, le satellite du jalon V3 et le segway, avec sept exemples :
+Le simulateur contient huit exemples :
 
 - le double intégrateur, chariot sur rail droit (poly ; TD3) ;
 - le pendule inversé commandé par un couple (poly ; TD2) ;
@@ -14,7 +15,36 @@ En ligne : <https://ocourses.github.io/automatique/>.
 - le chariot sur rail tournant (examen 2024-2025 ; oral 2019-2020) ;
 - la pharmacocinétique avec observateur de Luenberger (TD4), en « courbes seules » ;
 - le satellite des équations d'Euler (examen 2017-2018), en « courbes seules » : retour d'état diagonal $u = K\omega$ avec $k_i < 0$, et fonction $V = \sum J_i\omega_i^2$, conservée sans contrôle. Cet exemple est volontairement épuré : seuls les inerties et les trois gains $k_i$ se règlent ;
+- le mélangeur (poly, chapitre « Commande »), à deux commandes : point de fonctionnement $(V_e, c_e)$, linéarisé $A = \operatorname{diag}(\alpha, 2\alpha)$, retour d'état $2 \times 2$ ;
 - le robot Lego segway (poly, introduction ; TP), un pendule inversé sur deux roues à quatre états $(\theta, \psi, \dot\theta, \dot\psi)$ et une tension de moteur. On y retrouve la condition initiale $\psi_0 = \pi/10$ du TP et ses pôles $-136{,}6$ ; $-2{,}66$ ; $-3{,}50$ ; $-5{,}99$. Seuls la masse et la hauteur du corps, et les quatre gains, se règlent.
+
+## Un site pour explorer le cours
+
+Le dossier est un site statique : l'accueil (`index.html`) est une **carte du cours**, organisée en thèmes dans l'ordre du poly. Chaque thème propose des illustrations interactives ; le simulateur de stabilisation est une rubrique du thème « Commande ».
+
+| Thème | Illustrations |
+|---|---|
+| Stabilité, cas linéaire (TD1) | diagramme de bifurcation $(\operatorname{tr} A, \det A)$ ; les onze cas du TD1 ; le flot $e^{tA}$ et le contre-exemple $e^Ae^B \neq e^{A+B}$ |
+| Existence et unicité | solutions maximales en dimension 1 : $\dot x = 1 + x^2$, $-x^2$, $\sqrt{|x|}$, $-x^3$ |
+| Linéarisation | pendule amorti (équilibres, nœud ou foyer, bassins d'attraction, linéarisé) ; contre-exemple $f$, $g$ de même linéarisé |
+| Lyapunov | surface $z = L(x)$ en 3D, lignes de niveau, argument de la preuve $B(0, \eta) \subset \{L < c\} \subset B(0, \varepsilon)$ |
+| Commande (TD2) | du retour d'état au PID, en quatre étapes ; contrôlabilité (rang de Kalman) ; simulateur, avec le mélangeur à deux commandes |
+| Intégration numérique (TD4) | Euler explicite, implicite et symplectique ; ordre de convergence |
+
+Toutes les illustrations suivent le même **gabarit** (`illustration.html?id=…`) : « Ce que dit le cours » (le résultat, avec le renvoi au poly ou au TD), l'illustration, et « À essayer », des questions guidées dont certaines règlent l'illustration d'un clic. Les réglages sont dans l'URL, pour partager une expérience. Les animations respectent `prefers-reduced-motion`.
+
+La 3D (surface de Lyapunov) est écrite à la main (`js/ui/vue3d.js`, algorithme du peintre) : aucune dépendance de plus.
+
+### Ajouter une illustration
+
+Un module `js/illustrations/<id>.js` exporte par défaut `{ etat, rappel, essais, monte(zone, outils) }` :
+
+- `etat` : les réglages par défaut (nombres, textes ou booléens), gardés dans l'URL ;
+- `rappel` : les paragraphes du cours, avec des formules `$…$` (ou `$$…$$` pour une formule centrée) ;
+- `essais` : `{ texte, etat? }` ; avec `etat`, un bouton « Essayer » applique ce réglage ;
+- `monte(zone, outils)` construit l'illustration dans `zone` et renvoie `{ applique() }`, appelé après un « Essayer ». `outils` fournit `etat`, `change(partiel)` (met à jour l'URL), `rend`, `rendTexte`, `mouvementReduit` et `surTheme(f)`.
+
+Les briques communes sont dans `js/illustrations/commun.js` (cartes, canevas, légendes, tableaux, intégration RK4, glisser à la souris), `js/ui/repere.js` (repère 2D : axes, courbes, champ de vecteurs, lignes de niveau, régions) et `js/core/dim2.js` (systèmes linéaires plans : forme réduite du TD1, nature de l'équilibre, $e^{tA}$ exacte). On déclare enfin l'illustration dans `js/illustrations/catalogue.js`. Les fonctions mathématiques de chaque module sont exportées et testées sous Node contre le poly ou le TD (`tests/illustrations.test.js`).
 
 ## Page d'accueil
 
@@ -169,7 +199,8 @@ npm test
 ## Organisation
 
 ```
-index.html            accueil : schéma de la boucle fermée et galerie (js/accueil.js)
+index.html            accueil : carte du cours, schéma de la boucle fermée, galerie (js/accueil.js)
+illustration.html     gabarit des illustrations (?id=bifurcation)
 exemple.html          page générique (?id=pendule-couple)
 css/style.css
 js/
@@ -189,6 +220,7 @@ js/
     url.js            liens
     …                 scène, courbes, plan complexe, portrait de phase, champs,
                       onglets, tiroirs, console, indications, format
+  illustrations/      une illustration par module, catalogue des thèmes, briques communes
   exemples/           descriptions des exemples, sans dépendance au moteur ni à l'interface
     catalogue.js      liste des exemples (disponibles ou à venir)
     <id>.js           un module par exemple

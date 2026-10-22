@@ -306,3 +306,67 @@ test('TD4 : ordres de convergence, 1 pour les trois Euler, 4 pour RK4', () => {
   proche(pente(erreurs('symplectique', [1, 0], 2 * Math.PI, pas)), 1, 0.05);
   proche(pente(erreurs('rk4', [1, 0], 2 * Math.PI, [0.1, 0.05, 0.02, 0.01])), 4, 0.05);
 });
+
+// ---- Contrôlabilité et mélangeur (S7) -------------------------------------------------------
+
+import { rangKalman } from '../js/illustrations/controlabilite.js';
+import { Simulation } from '../js/core/sim.js';
+import melangeur from '../js/exemples/melangeur.js';
+
+test('contrôlabilité : rang 1 si et seulement si β₁ = β₂ et αβ₁ = 0', () => {
+  assert.equal(rangKalman(0, 1, 1), 1); // α = 0, diagonale
+  assert.equal(rangKalman(0, 1, 0.5), 2);
+  assert.equal(rangKalman(-0.8, 1, 1), 2); // α ≠ 0 : la diagonale redevient contrôlable
+  assert.equal(rangKalman(-0.8, 0, 0), 1); // cas β₁ = β₂ = 0, omis par l'exemple général du poly
+  for (let a = -1; a <= 1; a += 0.5) {
+    for (let b1 = -1; b1 <= 1; b1 += 0.5) {
+      for (let b2 = -1; b2 <= 1; b2 += 0.5) {
+        const attendu = Math.abs(b1 - b2) > 1e-12 || Math.abs(a * b1) > 1e-12 ? 2 : 1;
+        assert.equal(rangKalman(a, b1, b2), attendu, `${a}, ${b1}, ${b2}`);
+      }
+    }
+  }
+});
+
+test('mélangeur : linéarisé du poly, A = diag(α, 2α), B = [[1, 1], [β₁, β₂]]', () => {
+  const sim = new Simulation(melangeur);
+  for (const [Ve, ce] of [[1, 1], [2, 1.5], [0.5, 0.8]]) {
+    sim.fixeParametre('Ve', Ve);
+    sim.fixeParametre('ce', ce);
+    const { gamma, c1, c2 } = sim.p;
+    const alpha = -gamma / (2 * Math.sqrt(Ve));
+    proche(sim.A[0][0], alpha, 1e-6);
+    proche(sim.A[0][1], 0, 1e-6);
+    proche(sim.A[1][0], 0, 1e-6);
+    proche(sim.A[1][1], 2 * alpha, 1e-6);
+    proche(sim.B[1][0], (c1 - ce) / Ve, 1e-6);
+    proche(sim.B[1][1], (c2 - ce) / Ve, 1e-6);
+    // Débits d'équilibre : u₁ + u₂ = γ√V_e et c₁u₁ + c₂u₂ = c_e γ√V_e.
+    proche(sim.ue[0] + sim.ue[1], gamma * Math.sqrt(Ve), 1e-12);
+    proche(c1 * sim.ue[0] + c2 * sim.ue[1], ce * gamma * Math.sqrt(Ve), 1e-12);
+  }
+});
+
+test('mélangeur : le gain par défaut donne A + BK = diag(−2, −3) et la cuve se stabilise', () => {
+  const sim = new Simulation(melangeur);
+  const vp = sim.vpBF.map((z) => z.re).sort((a, b) => a - b);
+  proche(vp[0], -3, 1e-6);
+  proche(vp[1], -2, 1e-6);
+  sim.avance(10);
+  sim.x.forEach((v, i) => proche(v, sim.xe[i], 1e-6));
+});
+
+// ---- Flot et exponentielle -----------------------------------------------------------------
+
+import { A_CE, B_CE, produit } from '../js/illustrations/flot.js';
+
+test('exponentielle : contre-exemple du poly, e^A e^B = [[2, 1], [1, 1]] ≠ e^{A+B}', () => {
+  const eAeB = produit(exponentielle(A_CE, 1), exponentielle(B_CE, 1));
+  assert.deepEqual(eAeB, [[2, 1], [1, 1]]);
+  const eAB = exponentielle([[0, 1], [1, 0]], 1);
+  proche(eAB[0][0], Math.cosh(1), 1e-12);
+  proche(eAB[0][1], Math.sinh(1), 1e-12);
+  // det e^{tA} = e^{t tr A} : l'aire du disque image vaut π e^{t tr A}.
+  const E = exponentielle(matrice(-0.4, 4), 1.3);
+  proche(E[0][0] * E[1][1] - E[0][1] * E[1][0], Math.exp(-0.4 * 1.3), 1e-12);
+});

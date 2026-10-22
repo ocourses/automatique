@@ -51,6 +51,14 @@ export const catalogue = [
     disponible: true,
   },
   {
+    id: 'melangeur',
+    titre: 'Mélangeur',
+    sous_titre: 'Deux commandes',
+    source: 'Poly, chapitre « Commande »',
+    montre: 'Point de fonctionnement (V_e, c_e), retour d’état 2 × 2, contrôlabilité si c₁ ≠ c₂.',
+    disponible: true,
+  },
+  {
     id: 'segway',
     titre: 'Robot Lego segway',
     sous_titre: 'Pendule inversé sur deux roues',
