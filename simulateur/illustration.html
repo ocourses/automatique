@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Illustration du cours</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script type="module" src="js/illustration.js"></script>
+  </head>
+  <body class="page-illustration">
+    <header class="entete entete-barre">
+      <div>
+        <nav class="fil" aria-label="Fil d'Ariane">
+          <a href="index.html" class="retour">← Accueil</a>
+          <span id="fil-theme" class="fil-theme"></span>
+        </nav>
+        <h1 id="titre">Chargement…</h1>
+        <p id="source" class="source"></p>
+      </div>
+      <div class="entete-actions">
+        <button id="copier" type="button">Copier le lien</button>
+      </div>
+    </header>
+
+    <p id="introuvable" class="carte" hidden>
+      Cette illustration n'existe pas ou n'est pas encore disponible.
+      <a href="index.html">Retour à l'accueil</a>.
+    </p>
+
+    <!-- Gabarit commun : rappel du cours et choses à essayer à gauche,
+         illustration interactive à droite. -->
+    <div id="page" class="illustration">
+      <aside class="illustration-texte">
+        <section class="carte">
+          <h2>Ce que dit le cours</h2>
+          <div id="rappel" class="rappel"></div>
+        </section>
+        <section class="carte" id="bloc-essais">
+          <h2>À essayer</h2>
+          <ol id="essais" class="essais"></ol>
+        </section>
+      </aside>
+      <main id="zone" class="illustration-zone"></main>
+    </div>
+  </body>
+</html>

@@ -13,6 +13,7 @@ export function couleurs() {
     observateur: v('--observateur'),
     observateurZone: v('--observateur-zone'),
     zone: v('--zone-stable'),
+    alerte: v('--alerte'),
   };
 }
 

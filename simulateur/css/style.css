@@ -201,7 +201,7 @@ input[type='range'] {
     overflow: hidden;
   }
 
-  #page {
+  .page-exemple #page {
     flex: 1;
     min-height: 0;
     display: flex;
@@ -1282,14 +1282,7 @@ a.exemple:hover {
 
 .schema {
   max-width: 1000px;
-  margin: 0.8rem 16px 0;
-}
-
-@media (min-width: 1032px) {
-  .schema {
-    margin-left: auto;
-    margin-right: auto;
-  }
+  margin: 0.6rem 0 0;
 }
 
 #schema {
@@ -1373,4 +1366,245 @@ a.exemple:hover {
 
 .exemple.estompe {
   opacity: 0.3;
+}
+
+/* ---- Pages d'illustration (gabarit commun) ------------------------------- */
+
+.fil {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6em;
+  align-items: baseline;
+}
+
+.fil-theme {
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  color: var(--discret);
+}
+
+.fil-theme::before {
+  content: '·';
+  margin-right: 0.6em;
+}
+
+.illustration {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0.6rem 16px 2rem;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  align-items: start;
+}
+
+.illustration-texte {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.illustration-zone {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+@media (max-width: 900px) {
+  .illustration {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .illustration-zone {
+    order: -1;
+  }
+}
+
+.rappel p {
+  margin: 0.4em 0;
+  font-size: 0.97rem;
+}
+
+.essais {
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.essais li {
+  margin: 0.55em 0;
+  font-size: 0.95rem;
+}
+
+button.essayer {
+  font-size: 0.78rem;
+  padding: 0.1em 0.6em;
+  margin-left: 0.2em;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Éléments communs des illustrations. */
+
+.grille-2 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: start;
+}
+
+.grille-3 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .grille-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 700px) {
+  .grille-2,
+  .grille-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+canvas.toile {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--proportions, 4 / 3);
+  touch-action: none;
+}
+
+canvas.toile.cliquable {
+  cursor: crosshair;
+}
+
+canvas.toile.saisissable {
+  cursor: grab;
+}
+
+.legende-courbes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1.2em;
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  color: var(--discret);
+  margin: 0.4em 0 0;
+}
+
+.legende-courbes .trait {
+  display: inline-block;
+  width: 1.6em;
+  height: 0;
+  border-top: 2.5px solid currentColor;
+  vertical-align: middle;
+  margin-right: 0.35em;
+}
+
+.legende-courbes .trait.tirets {
+  border-top-style: dashed;
+}
+
+.etapes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.etapes button[aria-pressed='true'] {
+  color: var(--accent);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.verdict {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  border-left: 3px solid var(--bordure);
+  padding: 0.2em 0 0.2em 0.7em;
+  margin: 0.5em 0;
+}
+
+.verdict.ok {
+  border-left-color: var(--accent);
+}
+
+.verdict.alerte {
+  border-left-color: var(--alerte);
+}
+
+table.valeurs {
+  border-collapse: collapse;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0.4em 0;
+}
+
+table.valeurs th,
+table.valeurs td {
+  padding: 0.15em 0.9em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.valeurs th {
+  font-weight: 500;
+  color: var(--discret);
+  border-bottom: 1px solid var(--bordure);
+}
+
+table.valeurs th:first-child,
+table.valeurs td:first-child {
+  text-align: left;
+}
+
+/* ---- Accueil : carte du cours ------------------------------------------- */
+
+.themes {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0.5rem 16px 2rem;
+}
+
+.theme {
+  margin-top: 1.6rem;
+}
+
+.theme > h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.1em;
+}
+
+.theme > .source {
+  margin-bottom: 0.4rem;
+}
+
+.theme .catalogue {
+  padding: 0.6rem 0 0;
+}
+
+.sous-rubrique {
+  font-family: var(--police-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--discret);
+  margin: 1.2rem 0 0;
+}
+
+.exemple .genre {
+  font-family: var(--police-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.2em;
 }

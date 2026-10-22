@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Simulateur de stabilisation</title>
+    <title>Automatique : explorer le cours</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
     <link rel="stylesheet" href="css/style.css" />
     <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
@@ -11,13 +11,24 @@
   </head>
   <body>
     <header class="entete">
-      <h1>Simulateur de stabilisation</h1>
+      <h1>Automatique : explorer le cours</h1>
       <p class="source">Automatique, première année — ENSEEIHT, Sciences du numérique</p>
     </header>
     <p class="intro">
-      Chaque exemple reprend un système du cours. On règle la condition initiale
-      et le contrôleur, puis on observe si le système se stabilise.
+      Des illustrations interactives du poly et des TD, rangées par thème dans l'ordre du cours.
+      Chacune rappelle le résultat du cours, propose des choses à essayer et garde ses réglages
+      dans son lien. Le simulateur de stabilisation est dans le thème « Commande ».
     </p>
+
+    <div id="themes" class="themes"></div>
+
+    <!-- Rubrique du simulateur, placée par js/accueil.js dans le thème « Commande ». -->
+    <template id="modele-simulateur">
+      <h3 class="sous-rubrique">Simulateur de stabilisation</h3>
+      <p class="note">
+        Chaque exemple reprend un système du cours. On règle la condition initiale et le contrôleur,
+        puis on observe si le système se stabilise.
+      </p>
 
     <!-- Schéma fonctionnel complet d'un système en boucle fermée (poly, introduction).
          Coordonnées de la figure TikZ : (x, y) ↦ (20 + 70x, 252 − 70y). -->
@@ -77,6 +88,7 @@
       </p>
     </section>
 
-    <main id="catalogue" class="catalogue"></main>
+      <div id="catalogue" class="catalogue"></div>
+    </template>
   </body>
 </html>

@@ -1,9 +1,12 @@
-// Page d'accueil : le schéma fonctionnel de la boucle fermée (poly,
-// introduction, « Schéma fonctionnel complet ») et la galerie des exemples.
-// Un clic sur un bloc du schéma dit où on le règle dans le simulateur et
-// estompe les exemples qui ne le font pas intervenir.
+// Page d'accueil : la carte du cours, thème par thème, avec ses illustrations
+// (js/illustrations/catalogue.js). Le thème « Commande » contient aussi le
+// simulateur de stabilisation : le schéma fonctionnel de la boucle fermée
+// (poly, introduction) et la galerie des exemples. Un clic sur un bloc du
+// schéma dit où on le règle dans le simulateur et estompe les exemples qui ne
+// le font pas intervenir.
 
 import { catalogue } from './exemples/catalogue.js';
+import { themes } from './illustrations/catalogue.js';
 import { typographie } from './ui/format.js';
 import { rendTexte } from './ui/katex.js';
 
@@ -46,32 +49,77 @@ const modeles = Object.fromEntries(
   await Promise.all(disponibles.map(async (e) => [e.id, (await import(`./exemples/${e.id}.js`)).default])),
 );
 
-// ---- Galerie ------------------------------------------------------------------
-const racine = document.getElementById('catalogue');
-const cartes = [];
-for (const e of catalogue) {
-  const carte = document.createElement(e.disponible ? 'a' : 'div');
-  carte.className = 'carte exemple' + (e.disponible ? '' : ' a-venir');
-  if (e.disponible) carte.href = `exemple.html?id=${e.id}`;
-  const titre = document.createElement('h2');
-  titre.textContent = typographie(e.titre);
-  if (!e.disponible) {
+// Carte présentant une illustration ou un exemple ; un lien s'il est disponible.
+function carte({ titre, sousTitre, resume, source, lien, genre }) {
+  const el = document.createElement(lien ? 'a' : 'div');
+  el.className = 'carte exemple' + (lien ? '' : ' a-venir');
+  if (lien) el.href = lien;
+  if (genre) {
+    const g = document.createElement('p');
+    g.className = 'genre';
+    g.textContent = genre;
+    el.appendChild(g);
+  }
+  const h = document.createElement('h2');
+  h.textContent = typographie(titre);
+  if (!lien) {
     const badge = document.createElement('span');
     badge.className = 'badge';
     badge.textContent = 'à venir';
-    titre.appendChild(badge);
+    h.appendChild(badge);
   }
-  const sousTitre = document.createElement('p');
-  sousTitre.className = 'sous-titre';
-  sousTitre.textContent = typographie(e.sous_titre);
-  const montre = document.createElement('p');
-  montre.textContent = typographie(e.montre);
-  const source = document.createElement('p');
-  source.className = 'source';
-  source.textContent = typographie(e.source);
-  carte.append(titre, sousTitre, montre, source);
-  racine.appendChild(carte);
-  cartes.push({ carte, modele: modeles[e.id] ?? null });
+  el.appendChild(h);
+  for (const [texte, classe] of [
+    [sousTitre, 'sous-titre'],
+    [resume, ''],
+    [source, 'source'],
+  ]) {
+    if (!texte) continue;
+    const p = document.createElement('p');
+    if (classe) p.className = classe;
+    p.textContent = typographie(texte);
+    el.appendChild(p);
+  }
+  return el;
+}
+
+// ---- Thèmes ---------------------------------------------------------------------
+const zoneThemes = document.getElementById('themes');
+for (const theme of themes) {
+  const section = document.createElement('section');
+  section.className = 'theme';
+  section.id = `theme-${theme.id}`;
+  const h = document.createElement('h2');
+  h.textContent = typographie(theme.titre);
+  const src = document.createElement('p');
+  src.className = 'source';
+  src.textContent = typographie(theme.source);
+  const grille = document.createElement('div');
+  grille.className = 'catalogue';
+  for (const i of theme.illustrations) {
+    grille.appendChild(
+      carte({ titre: i.titre, resume: i.resume, source: i.source, lien: i.disponible ? `illustration.html?id=${i.id}` : null }),
+    );
+  }
+  section.append(h, src, grille);
+  if (theme.simulateur) section.appendChild(document.getElementById('modele-simulateur').content.cloneNode(true));
+  zoneThemes.appendChild(section);
+}
+
+// ---- Galerie du simulateur --------------------------------------------------------
+const racine = document.getElementById('catalogue');
+const cartes = [];
+for (const e of catalogue) {
+  const el = carte({
+    titre: e.titre,
+    sousTitre: e.sous_titre,
+    resume: e.montre,
+    source: e.source,
+    lien: e.disponible ? `exemple.html?id=${e.id}` : null,
+    genre: 'Simulateur',
+  });
+  racine.appendChild(el);
+  cartes.push({ carte: el, modele: modeles[e.id] ?? null });
 }
 
 // ---- Schéma -------------------------------------------------------------------
