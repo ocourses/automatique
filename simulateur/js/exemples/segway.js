@@ -5,9 +5,11 @@
 //   (ψ > 0 : penché vers l'avant), u la tension appliquée aux deux moteurs, en V.
 //
 // Deux signes diffèrent de fonction.m tel qu'il est archivé : dans le calcul de
-// θ̈, les termes c3 et c5 y sont comptés avec le signe inverse de celui de ψ̈, ce
-// qui donne un corps qui oscille au lieu de tomber (ψ̈ = −66 ψ au lieu de
-// +270 ψ). Avec les signes corrigés, les termes de gravité du linéarisé
+// θ̈, les termes c3 et c5 y sont comptés avec le signe inverse de celui de ψ̈ :
+// les deux lignes ne résolvent pas le même système. Le robot tombe quand même
+// sans commande, mais le linéarisé est faux (coefficient de ψ dans ψ̈ : −66 au
+// lieu de +270 ; valeur propre instable +9,1 au lieu de +7,4). Avec les signes
+// corrigés, les termes de gravité du linéarisé
 // retrouvent exactement ceux de matrices.m (−409,7 et 269,6). Les termes
 // d'amortissement et d'entrée de matrices.m, eux, diffèrent de ceux du modèle
 // (A₃₃ = −104,6 contre −162,1 ; B₃ = 203,4 contre 315,2) : le linéarisé affiché

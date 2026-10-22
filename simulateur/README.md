@@ -288,8 +288,9 @@ Le modèle est celui de `fonction.m` du TP, d'après le NXTway-GS de Yamamoto, a
 ses constantes physiques. Deux écarts avec les fichiers archivés sont à connaître :
 
 - **Deux signes corrigés dans $\ddot\theta$.** Dans `fonction.m`, les termes $c_3$ et $c_5$ y sont comptés
-  avec le signe inverse de celui de $\ddot\psi$. Le corps oscille alors au lieu de
-  tomber : le linéarisé a $\ddot\psi = -66\,\psi$, au lieu de $+270\,\psi$ pour un pendule inversé. Avec les signes corrigés,
+  avec le signe inverse de celui de $\ddot\psi$ : les deux lignes ne résolvent pas le même système. Le robot tombe
+  quand même sans commande, mais le linéarisé est faux : dans l'équation de $\ddot\psi$, le coefficient de $\psi$
+  vaut $-66$ au lieu de $+270$, et la valeur propre instable $+9{,}1$ au lieu de $+7{,}4$. Avec les signes corrigés,
   les termes de gravité du linéarisé retrouvent exactement ceux de `matrices.m` ($-409{,}7$ et $269{,}6$).
 - **`matrices.m` n'est pas le linéarisé de ce modèle.** Ses termes d'amortissement et d'entrée diffèrent
   (par exemple $A_{33} = -104{,}6$ contre $-162{,}1$ et $B_3 = 203{,}4$ contre $315{,}2$). La page affiche le
