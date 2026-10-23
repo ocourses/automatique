@@ -14,6 +14,15 @@ import { Particules, dessinePortrait } from './portraits.js';
 // Fonctions du plan (tr, det), exportées ici pour les tests.
 export { aimante, pointDuPlan } from './plan-trace-det.js';
 
+// Remarque propre à un cas du TD1, ou null. Pour P₅ (tr = det = 0), la forme
+// réduite est [[0, 1], [0, 0]], non diagonalisable ; mais la matrice nulle a le
+// même spectre (valeur propre double nulle) et est diagonalisable : la
+// multiplicité géométrique y est égale à l'algébrique, et l'origine est stable.
+export function remarqueCas(cas) {
+  if (cas !== 'P₅') return null;
+  return 'Pour être complet : la matrice nulle $A = 0_2$ a aussi pour spectre $\\{0, 0\\}$, mais elle est diagonalisable (multiplicités algébrique et géométrique égales à 2). Tout point est alors un équilibre, et l’origine est stable, sans être asymptotiquement stable.';
+}
+
 export default {
   // Préférences d'affichage (navigateur, hors du lien) : courbes du portrait
   // tracées ou en mouvement, avec ou sans particules.
@@ -39,6 +48,7 @@ export default {
     { texte: 'Partez d’un foyer puits ($P_7$) et augmentez la trace jusqu’à 0 : les spirales deviennent des ellipses (centre, $P_8$), puis s’ouvrent ($P_9$).', etat: { tr: -2, det: 4 }, preferences: { mode: 'trace' } },
     { texte: 'Depuis le foyer puits $P_7$, descendez verticalement jusqu’à la parabole $\\Delta = 0$ (en $\\det A = 1$) : les spirales disparaissent et une seule direction propre subsiste. C’est un nœud impropre, comme $P_{11}$.', etat: { tr: -2, det: 4 }, preferences: { mode: 'trace' } },
     { texte: 'Depuis le centre $P_8$, descendez le long de l’axe $\\operatorname{tr} A = 0$ et passez sous l’axe $\\det A = 0$ : l’origine devient un col ($P_3$). Les orbites entrent le long d’une direction propre et sortent le long de l’autre.', etat: { tr: 0, det: 3 }, preferences: { mode: 'trace' } },
+    { texte: 'Placez-vous en $P_5$, à l’origine du plan : $A = \\begin{pmatrix} 0 & 1 \\\\ 0 & 0 \\end{pmatrix}$ n’est pas diagonalisable, et l’origine est instable. La remarque dit pourquoi la matrice nulle, de même spectre, se comporte autrement.', etat: { tr: 0, det: 0 }, preferences: { mode: 'trace' } },
     { texte: 'Sur l’axe $\\det = 0$, à gauche ($P_4$) : une droite d’équilibres apparaît. L’origine est-elle encore asymptotiquement stable ?', etat: { tr: -3, det: 0 }, preferences: { mode: 'trace' } },
     { texte: 'En coordonnées « compagnon », la même trace et le même déterminant donnent un portrait déformé, mais de même nature : la nature ne dépend que du spectre.', etat: { forme: 'compagnon' }, preferences: { mode: 'trace' } },
     { texte: 'Dans le portrait, mettez les courbes « en mouvement » : des arcs glissent le long des orbites, dans le sens du flot. Ajoutez les particules pour voir le flot les emporter. Ces choix sont gardés dans votre navigateur.' },
@@ -138,6 +148,8 @@ export default {
     bloc.appendChild(formule);
     const details = paragraphe(bloc, '', '');
     const proprietes = paragraphe(bloc, '', '');
+    const remarque = paragraphe(bloc, '', 'note');
+    let casAffiche = null;
 
     plan(canvasPlan, repPlan, (point) => {
       outils.change(point);
@@ -176,6 +188,18 @@ export default {
         `$\\operatorname{tr} A = ${latexNombreFixe(r.tr)}$, $\\det A = ${latexNombreFixe(r.det)}$, $\\Delta = ${latexNombreFixe(delta)}$.`,
       );
       outils.rendTexte(proprietes, `Valeurs propres : $${valeurs.map((z) => latexComplexeFixe(z)).join(',\\ ')}$.`);
+      // La remarque n'est reconstruite que quand le cas change : sa bulle de
+      // glossaire reste utilisable pendant les animations.
+      if (n.cas !== casAffiche) {
+        casAffiche = n.cas;
+        const texteRemarque = remarqueCas(n.cas);
+        remarque.hidden = !texteRemarque;
+        if (texteRemarque) {
+          outils.rendTexte(remarque, texteRemarque);
+          outils.glossaire(remarque, ['diagonalisable']);
+        }
+        fermeInfobulle();
+      }
 
       // Portrait.
       if (repPortrait.prepare()) {
