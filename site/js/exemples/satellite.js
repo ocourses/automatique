@@ -63,6 +63,9 @@ export default {
 
   // Seule la diagonale de K se règle, comme dans l'énoncé.
   gainsDiagonaux: true,
+  // Pourquoi les valeurs propres du bouclé ne se placent que sur l'axe réel.
+  aideValeursPropresReelles:
+    'Ici K est diagonale (u_i = k_i ω_i) : A + BK est diagonale, de valeurs propres k_i/J_i. Chacune ne dépend que de son gain et est réelle : elle se déplace seulement sur l’axe réel.',
   gains: [
     [-2, 0, 0],
     [0, -2, 0],

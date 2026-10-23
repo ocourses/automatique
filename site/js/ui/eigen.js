@@ -11,6 +11,7 @@
 // lâcher la souris, et l'échelle reste ensuite telle quelle (pas de saut).
 
 import { deplaceValeurPropre, nettoieSpectre } from '../core/poles.js';
+import { cacheInfobulle, infobulleSurPoint } from './infobulle.js';
 import { couleurs } from './theme.js';
 
 const RAYON_SAISIE = 12; // px
@@ -31,7 +32,14 @@ function pasGraduation(R) {
 }
 
 export class PlanComplexe {
-  // rappels : { modifiable(), deplace(vp), modifiableObs(), deplaceObs(vp) }
+  // rappels : { mode(), explique(), deplace(vp), axeDe(vp), deplaceReel(axe, re),
+  //             modifiableObs(), deplaceObs(vp) }
+  //   - mode() : comment se déplacent les valeurs propres du bouclé : 'complet'
+  //     (n'importe où, avec leur conjuguée), 'reel' (sur l'axe réel seulement,
+  //     chacune indépendamment des autres) ou 'aucun' ;
+  //   - explique(mode) : le texte de la bulle d'aide pour 'reel' et 'aucun' ;
+  //   - axeDe(vp) et deplaceReel(axe, re) : en mode 'reel', l'axe (le gain) qui
+  //     porte la valeur propre vp, et son nouveau placement.
   // rayon : demi-largeur fixe du plan, pour un système raide dont un pôle très rapide
   // écraserait les autres ; les valeurs propres hors cadre sont ramenées au bord.
   constructor(canvas, rappels, rayon = null) {
@@ -123,28 +131,67 @@ export class PlanComplexe {
         }
       });
     };
-    if (this.rappels.modifiable()) cherche('bf', this.vpABK);
+    if (this.rappels.mode() !== 'aucun') cherche('bf', this.vpABK);
     if (this.vpObs && this.rappels.modifiableObs?.()) cherche('obs', this.vpObs);
     return meilleur;
+  }
+
+  // Une valeur propre du bouclé est-elle sous la souris, même si elle est fixe ?
+  boucleSousLaSouris(ev) {
+    const g = this.geometrie();
+    const px = ev.clientX - g.rect.left;
+    const py = ev.clientY - g.rect.top;
+    return this.vpABK.some((v) => {
+      const z = this.affichee(v, g);
+      return Math.hypot(g.X(z.re) - px, g.Y(z.im) - py) <= RAYON_SAISIE;
+    });
+  }
+
+  // Bulle d'aide sur une valeur propre qui ne se déplace pas (ou pas partout).
+  aide(ev, mode) {
+    infobulleSurPoint(ev.clientX, ev.clientY, this.rappels.explique(mode));
   }
 
   ecouteSouris() {
     const c = this.canvas;
     c.addEventListener('pointerdown', (ev) => {
       const prise = this.sousLaSouris(ev);
-      if (!prise) return;
+      if (!prise) {
+        if (this.rappels.mode() === 'aucun' && this.boucleSousLaSouris(ev)) this.aide(ev, 'aucun');
+        return;
+      }
       const vp = prise.jeu === 'bf' ? this.vpABK : this.vpObs;
-      this.saisie = { ...prise, vp0: nettoieSpectre(vp) };
+      const axe = prise.jeu === 'bf' && this.rappels.mode() === 'reel' ? this.rappels.axeDe(vp[prise.i]) : null;
+      this.saisie = { ...prise, vp0: nettoieSpectre(vp), axe, aideMontree: false };
       c.setPointerCapture(ev.pointerId);
       c.classList.add('saisi');
       ev.preventDefault();
     });
     c.addEventListener('pointermove', (ev) => {
       if (!this.saisie) {
-        c.classList.toggle('survol', this.sousLaSouris(ev) !== null);
+        const mode = this.rappels.mode();
+        const sur = this.boucleSousLaSouris(ev);
+        c.classList.toggle('survol', mode !== 'aucun' && this.sousLaSouris(ev) !== null);
+        c.classList.toggle('interdit', mode === 'aucun' && sur);
+        // Survol d'une valeur propre qui ne se déplace pas, ou pas partout : la raison.
+        if (sur && mode !== 'complet') this.aide(ev, mode);
+        else cacheInfobulle();
         return;
       }
-      const { jeu, i, vp0 } = this.saisie;
+      const { jeu, i, vp0, axe } = this.saisie;
+      if (axe !== null && jeu === 'bf') {
+        // Axe réel seulement : la partie imaginaire est ignorée ; si la souris
+        // s'en écarte nettement, la bulle dit pourquoi.
+        const z = this.versComplexe(ev);
+        const { sx, sy } = this.geometrie();
+        const re = Math.abs(z.re) < AIMANTATION / sx ? 0 : z.re;
+        if (Math.abs(z.im) * sy > 14 && !this.saisie.aideMontree) {
+          this.saisie.aideMontree = true;
+          this.aide(ev, 'reel');
+        }
+        this.rappels.deplaceReel(axe, re);
+        return;
+      }
       const nouveau = () => {
         const { sx, sy } = this.geometrie();
         return deplaceValeurPropre(vp0, i, this.versComplexe(ev), { re: AIMANTATION / sx, im: AIMANTATION / sy });
@@ -166,10 +213,15 @@ export class PlanComplexe {
       if (!this.saisie) return;
       this.saisie = null;
       c.classList.remove('saisi');
+      cacheInfobulle();
       this.dessine();
     };
     c.addEventListener('pointerup', fin);
     c.addEventListener('pointercancel', fin);
+    c.addEventListener('pointerleave', () => {
+      cacheInfobulle();
+      c.classList.remove('interdit');
+    });
   }
 
   dessine() {

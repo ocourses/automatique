@@ -66,6 +66,25 @@ export function ackermann(A, B, racines) {
   return [Ka.map((v) => -v)];
 }
 
+// Systèmes à gains diagonaux (satellite : A = 0, B = diag(1/J_i), K = diag(k_i)) :
+// A + BK est diagonale, de coefficients a_jj + b_jj k_jj. Une valeur propre ne
+// dépend alors que du gain de « son » axe, et se place seulement sur l'axe réel.
+const coefficient = (A, B, K, j) => A[j][j] + B[j][j] * K[j][j];
+
+// Indice j de l'axe dont la valeur propre est la plus proche de `re`.
+export function axeDeValeurPropre(A, B, K, re) {
+  let meilleur = 0;
+  A.forEach((_, j) => {
+    if (Math.abs(coefficient(A, B, K, j) - re) < Math.abs(coefficient(A, B, K, meilleur) - re)) meilleur = j;
+  });
+  return meilleur;
+}
+
+// Gain k_jj qui donne la valeur propre `lambda` à l'axe j, ramené dans [min, max].
+export function gainPourValeurPropre(A, B, j, lambda, { min = -Infinity, max = Infinity } = {}) {
+  return Math.min(max, Math.max(min, (lambda - A[j][j]) / B[j][j]));
+}
+
 // Nouvel ensemble de valeurs propres quand on amène vp[i] en z.
 // `seuil` est la distance d'aimantation aux axes (dans le plan complexe) : un
 // nombre, ou { re, im } quand les deux axes n'ont pas la même échelle.
