@@ -1,0 +1,2295 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  margin: 0 0 0.5em;
+}
+
+h1 {
+  font-size: 1.6rem;
+  color: var(--titre-1);
+}
+
+h2 {
+  font-size: 1.1rem;
+  color: var(--titre-2);
+}
+
+button,
+select,
+input {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  color: var(--texte);
+}
+
+button {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  padding: 0.35em 0.9em;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+  background: var(--fond-survol);
+}
+
+select,
+input[type='text'] {
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  padding: 0.2em 0.4em;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+/* ---- En-tête ----------------------------------------------------------- */
+
+.entete {
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 16px 0.4rem;
+}
+
+.entete-barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.entete-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.entete-barre h1 {
+  margin-bottom: 0.1em;
+}
+
+.retour {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.source {
+  color: var(--discret);
+  margin: 0;
+}
+
+/* ---- Mise en page de la page d'exemple ---------------------------------
+   Quatre zones : réglages, scène (avec la barre de lecture), courbes et
+   graphiques. Sur grand écran, la page tient dans la fenêtre : chaque zone
+   remplit sa case de la grille, les réglages défilent à l'intérieur, et la
+   console reste collée au bas de l'écran. La disposition des zones dépend de
+   l'exemple (classe disposition-… sur .app, voir js/core/modele.js). */
+
+.app {
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0.6rem 16px 1rem;
+  display: grid;
+  gap: 14px;
+  align-items: start;
+  grid-template-columns: minmax(290px, 340px) minmax(0, 1fr);
+  grid-template-areas:
+    'reglages scene'
+    'courbes graphes';
+}
+
+.zone-reglages {
+  grid-area: reglages;
+}
+
+.zone-scene {
+  grid-area: scene;
+}
+
+.zone-courbes {
+  grid-area: courbes;
+}
+
+.zone-graphes {
+  grid-area: graphes;
+}
+
+.zone-portrait {
+  grid-area: portrait;
+}
+
+.zone-animation {
+  grid-area: animation;
+}
+
+canvas.animation {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  touch-action: none;
+}
+
+/* Exemple sans scène : la zone de la scène ne garde que la barre de lecture. */
+.sans-scene .barre {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Tablette : les courbes passent sous les réglages quand il n'y a pas de scène. */
+.app.disposition-courbes {
+  grid-template-areas:
+    'reglages scene'
+    'reglages courbes'
+    'graphes graphes';
+}
+
+@media (min-width: 1001px) and (min-height: 601px) {
+  body.page-exemple {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .page-exemple #page {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .app {
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+    padding-top: 0.4rem;
+    padding-bottom: 0.6rem;
+    grid-template-rows: minmax(0, 1.25fr) minmax(0, 1fr);
+  }
+
+  /* En-tête sur une ligne : lien, titre et source. */
+  .entete {
+    padding-top: 0.5rem;
+    padding-bottom: 0;
+  }
+
+  .entete-barre {
+    align-items: center;
+  }
+
+  .entete-barre > div:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 14px;
+  }
+
+  .entete-barre h1 {
+    font-size: 1.35rem;
+    margin: 0;
+  }
+
+  .console .console-corps {
+    height: clamp(110px, 18vh, 190px);
+  }
+
+  /* Textes d'aide sous les graphiques et la scène : plus discrets. */
+  .zone-graphes .note,
+  .zone-scene .aide {
+    font-size: 0.8rem;
+    line-height: 1.35;
+    margin: 0.3em 0 0;
+  }
+
+  /* Trois colonnes de même importance : scène carrée au centre sur toute la
+     hauteur, courbes et graphiques empilés à droite. */
+  .app.disposition-colonnes {
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'reglages scene courbes'
+      'reglages scene graphes';
+  }
+
+  /* Scène large en haut, courbes et graphiques côte à côte dessous. */
+  .app.disposition-large {
+    grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 0.75fr) minmax(0, 1.25fr);
+    grid-template-areas:
+      'reglages scene scene'
+      'reglages courbes graphes';
+  }
+
+  /* Courbes sur toute la hauteur au centre ; à droite, la scène (60 %) au-dessus
+     des graphiques (40 %). */
+  .app.disposition-empilee {
+    grid-template-columns: minmax(320px, 0.8fr) minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1.5fr) minmax(0, 1fr);
+    grid-template-areas:
+      'reglages courbes scene'
+      'reglages courbes graphes';
+  }
+
+  /* Sans scène : la barre de lecture, puis les courbes au centre. */
+  .app.disposition-courbes {
+    grid-template-columns: minmax(320px, 0.9fr) minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr);
+    grid-template-areas:
+      'reglages scene graphes'
+      'reglages courbes graphes';
+  }
+
+  /* Valeurs propres et portrait de phase dans deux boîtes l'une sur l'autre. */
+  .app.disposition-courbes.graphes-empiles {
+    grid-template-rows: auto minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-areas:
+      'reglages scene graphes'
+      'reglages courbes graphes'
+      'reglages courbes portrait';
+  }
+
+  /* Animation au-dessus des graphiques (satellite). */
+  .app.disposition-courbes.avec-animation {
+    grid-template-rows: auto minmax(0, 1.3fr) minmax(0, 1fr);
+    grid-template-areas:
+      'reglages scene animation'
+      'reglages courbes animation'
+      'reglages courbes graphes';
+  }
+
+  /* position: relative retient dans la case les éléments en position absolue
+     (le MathML caché de KaTeX), qui sinon allongeraient la page. */
+  .app > .carte {
+    position: relative;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .app > .zone-reglages {
+    overflow-y: auto;
+    display: block;
+  }
+
+  #bloc-scene,
+  #courbes,
+  .zone-graphes > [role='tabpanel'],
+  .zone-portrait > [role='tabpanel'],
+  .zone-animation > [role='tabpanel'] {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #scene,
+  #plan,
+  #portrait,
+  canvas.animation {
+    flex: 1 1 0;
+    min-height: 0;
+    aspect-ratio: auto;
+    max-height: none;
+  }
+
+  #courbes .courbe {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  .console {
+    position: static;
+  }
+}
+
+.carte {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-carte);
+  padding: 0.8rem 0.9rem;
+  min-width: 0;
+  overflow-x: auto;
+  box-shadow: var(--ombre-carte);
+}
+
+.carte-entete {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 12px;
+}
+
+.carte-entete h2 {
+  margin-bottom: 0.3em;
+}
+
+.carte-entete h2 .petit {
+  font-weight: normal;
+  margin-left: 0.4em;
+}
+
+h3 {
+  font-family: var(--police-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--titre-3);
+  margin: 1.2em 0 0.4em;
+}
+
+h3 .katex {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+[role='tabpanel'] > h3:first-child {
+  margin-top: 0.2em;
+}
+
+.note {
+  color: var(--discret);
+  font-size: 0.9rem;
+  margin: 0.5em 0;
+}
+
+.petit {
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  color: var(--discret);
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 0.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+/* ---- Onglets ----------------------------------------------------------- */
+
+.onglets {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px;
+  border-bottom: 1px solid var(--bordure);
+  margin: -0.2rem 0 0.7rem;
+  font-family: var(--police-ui);
+}
+
+.onglets [role='tab'] {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  margin-bottom: -1px;
+  padding: 0.45em 0.6em;
+  color: var(--discret);
+  font-size: 0.88rem;
+}
+
+.onglets [role='tab']:hover {
+  color: var(--texte);
+  border-bottom-color: var(--bordure);
+}
+
+.onglets [role='tab'][aria-selected='true'] {
+  color: var(--texte);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+
+.onglets [role='tab']:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.choix {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1em;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  margin-bottom: 0.4em;
+}
+
+/* ---- Champs ------------------------------------------------------------ */
+
+.champ {
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 15em) 5.6em 3.5em;
+  justify-content: start;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.35em 0;
+}
+
+/* Saisies seules, listes et cases : mêmes colonnes que les champs à curseur,
+   pour que les saisies soient alignées d'une section à l'autre. */
+.saisie-pas {
+  display: inline-flex;
+  vertical-align: middle;
+  overflow: hidden;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  background: var(--fond);
+}
+
+.saisie-pas:focus-within {
+  border-color: var(--accent);
+}
+
+/* La bordure est celle de l'ensemble : la saisie n'a plus la sienne. */
+.saisie-pas input[type='text'] {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+}
+
+.pas-boutons {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 1.6em;
+  border-left: 1px solid var(--bordure);
+}
+
+.pas-boutons button {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--fond-survol);
+  color: var(--texte);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.pas-boutons button + button {
+  border-top: 1px solid var(--bordure);
+}
+
+.pas-boutons button:hover {
+  background: var(--accent-pale);
+  color: var(--accent);
+}
+
+.champ-court {
+  grid-template-columns: 4.5em 7em auto;
+}
+
+.champ-court select {
+  width: 100%;
+}
+
+.case {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.champ input[type='text'] {
+  width: 100%;
+}
+
+.unite {
+  color: var(--discret);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+}
+
+#lancer {
+  margin-top: 0.4em;
+}
+
+.champ-poles,
+.ligne-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.5em 0;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+}
+
+.champ-poles input {
+  flex: 1 1 8em;
+  min-width: 0;
+}
+
+.ligne-options input[type='text'] {
+  width: 5em;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  font-family: var(--police-mono);
+  font-size: 0.9rem;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 0.3em 0.4em;
+  resize: vertical;
+}
+
+.erreur {
+  color: var(--alerte);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  margin: 0.3em 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Lien de l'en-tête présenté comme un bouton (page suivante). */
+a.bouton-lien {
+  display: inline-block;
+  padding: 0.35em 0.9em;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  background: var(--fond-carte);
+  color: var(--texte);
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.bouton-lien:hover {
+  border-color: var(--accent);
+  background: var(--fond-survol);
+}
+
+button.lien {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--accent);
+  text-decoration: underline;
+  font-size: inherit;
+}
+
+/* ---- Scène et lecture -------------------------------------------------- */
+
+/* Proportions de la vue de l'exemple (fixées par js/ui/scene.js), sauf sur
+   grand écran où la scène remplit sa case. */
+#scene {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--proportions, 1);
+  max-height: 62vh;
+  touch-action: none;
+}
+
+#scene.saisissable {
+  cursor: grab;
+}
+
+#scene.saisi {
+  cursor: grabbing;
+}
+
+#lecture {
+  min-width: 6.5em;
+}
+
+.barre {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6em;
+  align-items: center;
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  padding-top: 0.6rem;
+  border-top: 1px solid var(--bordure);
+}
+
+/* ---- Graphiques -------------------------------------------------------- */
+
+#courbes .courbe {
+  height: 210px;
+  overflow: hidden;
+}
+
+#plan,
+#portrait {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  touch-action: none;
+}
+
+#portrait {
+  cursor: crosshair;
+}
+
+#plan.survol {
+  cursor: grab;
+}
+
+#plan.saisi {
+  cursor: grabbing;
+}
+
+.legende > span {
+  margin-left: 0.6em;
+}
+
+.legende > span:first-child {
+  margin-left: 0;
+}
+
+.symbole-abk {
+  color: var(--accent);
+  font-weight: 700;
+}
+
+.symbole-obs {
+  color: var(--observateur);
+  font-weight: 700;
+}
+
+.symbole-zone {
+  color: var(--zone-stable);
+  -webkit-text-stroke: 1px var(--bordure);
+}
+
+.indications {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.indications li {
+  border-left: 3px solid var(--bordure);
+  padding: 0.15em 0 0.15em 0.7em;
+  margin: 0.4em 0;
+  font-size: 0.95rem;
+}
+
+.indications li.ok {
+  border-left-color: var(--accent);
+}
+
+.indications li.alerte {
+  border-left-color: var(--alerte);
+}
+
+/* ---- Console ----------------------------------------------------------- */
+
+.console {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--fond-carte);
+  border-top: 2px solid var(--bordure);
+  box-shadow: var(--ombre-feuille);
+}
+
+.console-int {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+.console-entete {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.console .onglets {
+  border-bottom: none;
+  margin: 0;
+}
+
+/* Largeurs fixes : les nombres qui changent ne font pas bouger l'en-tête. */
+.console-resume {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  color: var(--discret);
+  font-variant-numeric: tabular-nums;
+  white-space: pre;
+}
+
+#console-t {
+  display: inline-block;
+  min-width: 19ch;
+}
+
+#console-norme {
+  display: inline-block;
+  min-width: 22ch;
+}
+
+#console-badge {
+  display: inline-block;
+  min-width: 29ch;
+  text-align: center;
+}
+
+#console-replier {
+  min-width: 6.5em;
+}
+
+/* Écran moyen : la norme se lit dans les mesures, l'en-tête tient sur une ligne. */
+@media (max-width: 1180px) {
+  #console-norme {
+    display: none;
+  }
+}
+
+.badge-etat {
+  padding: 0.05em 0.7em;
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  font-family: var(--police-ui);
+  font-size: 0.8rem;
+}
+
+.badge-etat.ok {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.badge-etat.alerte {
+  color: var(--alerte);
+  border-color: var(--alerte);
+}
+
+.console-corps {
+  height: clamp(130px, 22vh, 210px);
+  overflow: auto;
+  padding: 0.4rem 0 0.8rem;
+}
+
+.console.replie .console-corps,
+.console.replie .onglets {
+  display: none;
+}
+
+.console.replie .console-entete {
+  padding: 0.35rem 0;
+}
+
+
+.mesures-tete {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 20px;
+  margin-bottom: 0.4rem;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+}
+
+.mesures-tete input {
+  width: 4.5em;
+  font-family: var(--police-mono);
+}
+
+.mesures-grille {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  gap: 4px 40px;
+}
+
+/* Colonnes de largeur fixe : un signe « − » ou un exposant qui apparaît ne
+   décale pas le tableau. */
+.mesures {
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+}
+
+.mesures th:nth-child(1) {
+  width: 20ch;
+}
+
+.mesures th:nth-child(2),
+.mesures th:nth-child(3),
+.mesures th:nth-child(4) {
+  width: 13ch;
+}
+
+.mesures th:last-child {
+  width: 5ch;
+}
+
+.mesures td {
+  overflow: hidden;
+}
+
+.mesures th {
+  font-weight: 500;
+  color: var(--discret);
+  text-align: right;
+  padding: 0.1em 0.9em;
+  border-bottom: 1px solid var(--bordure);
+}
+
+.mesures td {
+  padding: 0.03em 0.9em;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.mesures th:first-child,
+.mesures td.nom {
+  text-align: left;
+}
+
+.mesures td.marque {
+  text-align: left;
+  padding-left: 0;
+  color: var(--accent);
+}
+
+.mesures tr.zero td.ecart,
+.mesures tr.zero td.val {
+  color: var(--accent);
+}
+
+.analyse {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr);
+  gap: 1.5rem;
+  align-items: start;
+  font-size: 0.95rem;
+}
+
+@media (max-width: 900px) {
+  .analyse {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.analyse > div > div {
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.journal-barre {
+  text-align: right;
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+}
+
+.journal {
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+}
+
+.journal .ligne {
+  display: flex;
+  gap: 1em;
+}
+
+.journal .temps-ligne {
+  flex: none;
+  min-width: 10em;
+  color: var(--discret);
+}
+
+.journal .ligne.ok {
+  color: var(--accent);
+}
+
+.journal .ligne.alerte {
+  color: var(--alerte);
+}
+
+.journal .ligne.sep {
+  color: var(--discret);
+  margin-top: 0.5em;
+  padding-top: 0.3em;
+  border-top: 1px dashed var(--bordure);
+}
+
+/* ---- uPlot ------------------------------------------------------------- */
+
+.uplot {
+  font-family: var(--police-ui);
+  color: var(--texte);
+}
+
+.uplot .u-legend {
+  font-size: 0.8rem;
+}
+
+/* Valeurs de la légende : chasse fixe, pour que le texte ne bouge pas. */
+.uplot .u-legend .u-value {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  white-space: pre;
+}
+
+/* La ligne « t: » de la légende n'apporte rien : on la masque. */
+.uplot .u-legend .u-series:first-child {
+  display: none;
+}
+
+/* ---- Téléphone : réglages et console en feuilles ------------------------------
+   Sur petit écran (étroit, ou paysage très bas), la page garde l'essentiel dans
+   le défilement : scène, lecture, courbes, graphiques. Les réglages et la
+   console deviennent deux feuilles qui montent du bas, ouvertes depuis une barre
+   fixe qui rappelle l'état de stabilisation. La feuille ne masque pas la scène :
+   celle-ci se réduit pendant qu'elle est ouverte. */
+
+:root {
+  --barre-h: 52px;
+  --feuille-h: 46vh;
+  --feuille-grande: 84vh;
+  --bas-sur: env(safe-area-inset-bottom, 0px);
+}
+
+@supports (height: 1dvh) {
+  :root {
+    --feuille-h: 46dvh;
+    --feuille-grande: 84dvh;
+  }
+}
+
+.feuille-actions,
+.barre-mobile {
+  display: none;
+}
+
+@media (max-width: 760px), (max-height: 500px) {
+  body {
+    padding-bottom: calc(var(--barre-h) + var(--bas-sur));
+  }
+
+  body.feuille-ouverte {
+    padding-bottom: calc(var(--barre-h) + var(--feuille-h) + var(--bas-sur));
+  }
+
+  /* Page : une seule colonne, la scène d'abord ; réglages et console sortent du flux. */
+  .app {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .zone-scene {
+    order: -1;
+    padding: 0.6rem;
+  }
+
+  .app {
+    padding-top: 0.3rem;
+  }
+
+  .entete {
+    padding-top: 0.6rem;
+  }
+
+  .entete-barre {
+    align-items: flex-start;
+  }
+
+  .entete h1 {
+    font-size: 1.3rem;
+  }
+
+  .source {
+    font-size: 0.85rem;
+  }
+
+  .entete-actions {
+    flex: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .entete-actions button {
+    flex: none;
+    font-size: 0.8rem;
+    padding: 0.3em 0.6em;
+  }
+
+  #scene {
+    max-height: 44vh;
+  }
+
+  /* Tiroir ouvert : l'en-tête et la scène se compactent pour laisser la barre de
+     lecture visible au-dessus du tiroir. */
+  body.feuille-ouverte #scene {
+    max-height: 24vh;
+  }
+
+  body.feuille-ouverte .aide,
+  body.feuille-ouverte .source {
+    display: none;
+  }
+
+  body.feuille-ouverte .entete h1 {
+    font-size: 1.05rem;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  body.feuille-ouverte .entete {
+    min-width: 0;
+  }
+
+  body.feuille-ouverte .entete-barre > div {
+    min-width: 0;
+  }
+
+  body.feuille-ouverte .barre {
+    margin-top: 0.3rem;
+    padding-top: 0.4rem;
+  }
+
+  .barre button,
+  .barre select {
+    min-height: 38px;
+  }
+
+  .champ {
+    min-height: 40px;
+  }
+
+  /* Feuilles */
+  .feuille {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: calc(var(--barre-h) + var(--bas-sur));
+    height: var(--feuille-h);
+    z-index: 20;
+    margin: 0;
+    padding: 0 12px 12px;
+    border-radius: 14px 14px 0 0;
+    border-bottom: none;
+    background: var(--fond-carte);
+    box-shadow: var(--ombre-feuille);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    visibility: hidden;
+    transform: translateY(100%);
+    transition: transform 0.2s ease, visibility 0s 0.2s;
+  }
+
+  .feuille.ouverte {
+    visibility: visible;
+    transform: none;
+    transition: transform 0.2s ease;
+  }
+
+  .feuille.grande {
+    height: var(--feuille-grande);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .feuille,
+    .feuille.ouverte {
+      transition: none;
+    }
+  }
+
+  .feuille-entete {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding-top: 0.5rem;
+    background: var(--fond-carte);
+  }
+
+  .feuille-entete .onglets {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .feuille-actions {
+    display: flex;
+    flex: none;
+    gap: 6px;
+    margin-left: auto;
+  }
+
+  .feuille-actions button {
+    min-width: 38px;
+    min-height: 36px;
+    padding: 0.2em 0.5em;
+    font-size: 1rem;
+    line-height: 1;
+  }
+
+  .feuille .onglets [role='tab'] {
+    padding: 0.45em 0.6em;
+    white-space: nowrap;
+  }
+
+  /* Quatre onglets de réglages : la liste défile horizontalement si besoin. */
+  .feuille .onglets {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+
+  /* Console en feuille : plus de repli, ni de résumé (il passe dans la barre). */
+  .console {
+    border-top: none;
+  }
+
+  .console-int {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    padding: 0;
+  }
+
+  .console-entete {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    flex-wrap: nowrap;
+    gap: 8px;
+    padding-top: 0.5rem;
+    background: var(--fond-carte);
+  }
+
+  .console .onglets {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .console-resume,
+  #console-replier {
+    display: none;
+  }
+
+  .console-corps,
+  .console.replie .console-corps {
+    display: block;
+    flex: 1;
+    height: auto;
+    min-height: 0;
+  }
+
+  .console.replie .onglets {
+    display: flex;
+  }
+
+  /* Mesures : on garde l'essentiel, la colonne « Équilibre » se lit dans l'onglet Système. */
+  .mesures {
+    font-size: 0.78rem;
+  }
+
+  .mesures:not(#mesures-agreg) th:nth-child(3),
+  .mesures td.eq {
+    display: none;
+  }
+
+  /* Barre du bas */
+  .barre-mobile {
+    display: flex;
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 30;
+    align-items: center;
+    gap: 10px;
+    height: calc(var(--barre-h) + var(--bas-sur));
+    padding: 0 12px var(--bas-sur);
+    background: var(--fond-carte);
+    border-top: 1px solid var(--bordure);
+  }
+
+  .barre-mobile button {
+    min-height: 40px;
+    padding: 0 0.9em;
+    font-weight: 600;
+  }
+
+  .barre-mobile button[aria-expanded='true'] {
+    color: var(--accent);
+    border-color: var(--accent);
+  }
+
+  .barre-resume {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-family: var(--police-mono);
+    font-size: 0.72rem;
+    line-height: 1.2;
+    color: var(--discret);
+    white-space: nowrap;
+  }
+}
+
+/* Paysage sur téléphone : la feuille devient un tiroir à droite. */
+@media (max-height: 500px) and (orientation: landscape) {
+  .feuille {
+    left: auto;
+    top: 0;
+    width: min(430px, 60vw);
+    height: auto;
+    border-radius: 14px 0 0 0;
+    transform: translateX(100%);
+  }
+
+  .feuille.ouverte {
+    transform: none;
+  }
+
+  .feuille.grande {
+    height: auto;
+    width: min(640px, 85vw);
+  }
+
+  body.feuille-ouverte {
+    padding-bottom: calc(var(--barre-h) + var(--bas-sur));
+    padding-right: min(430px, 60vw);
+  }
+
+  #scene,
+  body.feuille-ouverte #scene {
+    max-height: 70vh;
+  }
+
+  body.feuille-ouverte .aide {
+    display: none;
+  }
+}
+
+/* ---- Catalogue --------------------------------------------------------- */
+
+.intro {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0 16px;
+  color: var(--discret);
+}
+
+.catalogue {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 1rem 16px 2rem;
+  display: grid;
+  gap: 16px;
+  /* Colonnes d'au moins 400 px : 4 cartes sur 1800 px, 3 sur 1500, 2 sur une
+     tablette, 1 sur téléphone. */
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 400px), 1fr));
+}
+
+.exemple {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+
+a.exemple:hover {
+  border-color: var(--accent);
+  background: var(--fond-survol);
+}
+
+a:hover {
+  color: var(--accent-fort);
+}
+
+.exemple h2 {
+  margin-bottom: 0.1em;
+}
+
+.exemple .sous-titre {
+  margin: 0 0 0.5em;
+}
+
+.exemple .source {
+  font-size: 0.9rem;
+}
+
+.exemple.a-venir {
+  opacity: 0.55;
+}
+
+.badge {
+  font-family: var(--police-ui);
+  font-size: 0.75rem;
+  color: var(--discret);
+  border: 1px solid var(--bordure);
+  border-radius: 999px;
+  padding: 0.05em 0.6em;
+  margin-left: 0.4em;
+  vertical-align: middle;
+}
+
+/* ---- Schéma de la boucle fermée (accueil) ------------------------------ */
+
+.schema {
+  max-width: 1000px;
+  margin: 0.6rem auto 0;
+}
+
+#schema {
+  display: block;
+  width: 100%;
+  height: auto;
+  font-family: var(--police);
+}
+
+#schema .liens path {
+  fill: none;
+  stroke: var(--texte);
+  stroke-width: 1.5;
+}
+
+#schema marker path {
+  fill: var(--texte);
+}
+
+#schema .etiquettes text {
+  fill: var(--texte);
+  font-size: 19px;
+  font-style: italic;
+  text-anchor: middle;
+}
+
+#schema .bloc {
+  cursor: pointer;
+}
+
+#schema .bloc rect {
+  fill: var(--bloc);
+  stroke: var(--texte);
+  stroke-width: 1.5;
+}
+
+/* Le contrôleur, ce que montrent les exemples, est en rouge. */
+#schema .bloc.controleur rect {
+  fill: var(--bloc-controleur);
+  stroke: var(--alerte);
+  stroke-width: 2;
+}
+
+#schema .bloc text {
+  fill: var(--texte);
+  font-size: 19px;
+  text-anchor: middle;
+}
+
+/* w(t) et d(t) n'ont pas de bloc dans le poly : zone cliquable invisible. */
+#schema .bloc.entree rect {
+  fill: transparent;
+  stroke: none;
+}
+
+#schema .bloc:hover rect,
+#schema .bloc:focus-visible rect {
+  stroke: var(--accent);
+  stroke-width: 2.5;
+}
+
+#schema .bloc.entree:hover rect,
+#schema .bloc.entree:focus-visible rect {
+  stroke: var(--accent);
+  stroke-dasharray: 4 3;
+}
+
+#schema .bloc[aria-pressed='true'] rect {
+  stroke: var(--accent);
+  stroke-width: 3;
+}
+
+#schema .bloc:focus {
+  outline: none;
+}
+
+#legende-schema {
+  min-height: 3em;
+}
+
+.exemple {
+  transition: opacity 0.15s;
+}
+
+.exemple.estompe {
+  opacity: 0.3;
+}
+
+/* ---- Pages d'illustration (gabarit commun) ------------------------------- */
+
+.fil {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.6em;
+  align-items: baseline;
+}
+
+.fil-theme {
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  color: var(--discret);
+}
+
+.fil-theme::before {
+  content: '·';
+  margin-right: 0.6em;
+}
+
+.illustration {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0.6rem 16px 2rem;
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  align-items: stretch;
+}
+
+/* En-tête sur deux lignes, sur toutes les pages : le fil d'Ariane, puis le titre
+   suivi de la source. */
+body.page-illustration .entete-barre > div:first-child,
+body.page-exemple .entete-barre > div:first-child {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  column-gap: 14px;
+}
+
+body.page-illustration .entete-barre .fil,
+body.page-exemple .entete-barre .fil {
+  flex: 0 0 100%;
+}
+
+body.page-illustration .entete-barre h1 {
+  font-size: 1.35rem;
+  margin: 0;
+}
+
+.illustration-texte {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.illustration-texte > .carte {
+  flex: 1;
+}
+
+.carte-onglets {
+  display: flex;
+  flex-direction: column;
+}
+
+.carte-onglets [role='tabpanel'] {
+  flex: 1;
+}
+
+.illustration-zone {
+  /* position: relative retient dans la zone les éléments en position absolue
+     des formules KaTeX, qui sinon allongeraient la page. */
+  position: relative;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* Sur grand écran, la page tient dans la fenêtre, entre une hauteur minimale
+   et maximale : la colonne de droite se partage la hauteur, ses canevas
+   remplissent leurs cartes, et la boîte de gauche, de même hauteur, défile
+   à l'intérieur si son texte est long. En dessous, la page défile
+   naturellement avec les proportions propres à chaque canevas. */
+@media (min-width: 901px) and (min-height: 620px) {
+  body.page-illustration {
+    height: 100vh;
+    height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.page-illustration .illustration {
+    flex: 1 1 0;
+    min-height: 0;
+    width: 100%;
+    max-height: 1000px;
+    padding-bottom: 0.8rem;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  body.page-illustration .illustration-texte,
+  body.page-illustration .illustration-zone {
+    min-height: 0;
+  }
+
+  body.page-illustration .illustration-texte > .carte {
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  body.page-illustration .illustration-zone {
+    overflow-y: auto;
+  }
+
+  /* Chaque bloc de la zone se partage la hauteur ; il ne descend pas sous son
+     contenu minimal, et la zone défile alors. */
+  body.page-illustration .illustration-zone > * {
+    flex: 1 1 auto;
+    min-height: min-content;
+  }
+
+  /* Un bloc repliable fermé garde la hauteur de son en-tête ; ouvert, il se
+     partage la hauteur avec le reste, son contenu en colonne. */
+  body.page-illustration .illustration-zone > .repliable {
+    flex: 0 0 auto;
+  }
+
+  body.page-illustration .illustration-zone > .repliable.ouvert {
+    flex: 0.55 1 0;
+  }
+
+  body.page-illustration .illustration-zone .contenu-repliable {
+    flex: 1 1 0;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+  }
+
+  body.page-illustration .illustration-zone .contenu-repliable > .grille-3 {
+    flex: 1 1 0;
+    min-height: 0;
+  }
+
+  /* La rangée principale (figures) prend deux fois plus de hauteur que les autres. */
+  body.page-illustration .illustration-zone > .principale {
+    flex-grow: 2;
+  }
+
+  /* Rangée du haut un peu plus haute que celle du bas : 60 % contre 40 %. */
+  body.page-illustration .illustration-zone > .plus-haut {
+    flex: 3 1 0;
+  }
+
+  body.page-illustration .illustration-zone > .rangee-basse {
+    flex: 2 1 0;
+  }
+
+  /* Une ligne d'outils garde sa hauteur naturelle. */
+  body.page-illustration .illustration-zone > .barre-outils {
+    flex: 0 0 auto;
+  }
+
+  /* Seuls les blocs qui portent un canevas se partagent la place en plus. */
+  body.page-illustration .illustration-zone > .carte:not(:has(canvas.toile)) {
+    flex-grow: 0;
+  }
+
+  body.page-illustration .illustration-zone > .deux-colonnes {
+    flex: 1 1 0;
+    grid-template-rows: minmax(0, 1fr);
+  }
+
+  body.page-illustration .illustration-zone .colonne {
+    min-height: 0;
+  }
+
+  /* La carte du haut a 5 % de hauteur de plus que la moitié, celle du bas 5 % de moins. */
+  body.page-illustration .illustration-zone .colonne > .carte:first-child {
+    flex: 1.1 1 0;
+  }
+
+  body.page-illustration .illustration-zone .colonne > .carte:last-child {
+    flex: 0.9 1 0;
+  }
+
+  /* Une carte ne descend pas sous la hauteur de son texte : c'est le canevas
+     d'à côté qui cède. */
+  body.page-illustration .illustration-zone .colonne > .carte {
+    min-height: min-content;
+  }
+
+  /* Les grilles se partagent leur hauteur en lignes égales ; les cartes, et les
+     blocs qui portent un canevas, deviennent des colonnes dont le canevas
+     occupe la place restante, quelles que soient ses proportions d'origine. */
+  body.page-illustration .illustration-zone .grille-2,
+  body.page-illustration .illustration-zone .grille-3 {
+    grid-auto-rows: minmax(0, 1fr);
+  }
+
+  body.page-illustration .illustration-zone .grille-3 {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    align-items: stretch;
+  }
+
+  body.page-illustration .illustration-zone .carte,
+  body.page-illustration .illustration-zone .grille-3 > div {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+
+  body.page-illustration .illustration-zone .carte {
+    overflow: hidden;
+  }
+
+  /* Dans une carte, seuls les canevas rétrécissent ; un bloc de formules ou de
+     texte garde sa hauteur (sinon, coupé, il pourrait disparaître). */
+  body.page-illustration .illustration-zone .carte > :not(canvas),
+  body.page-illustration .illustration-zone .grille-3 > div > :not(canvas) {
+    flex-shrink: 0;
+  }
+
+  /* Le canevas prend la place restante ; un canevas carré garde ses
+     proportions, sa largeur s'en déduit, centrée, sans dépasser la carte. */
+  /* contain: size : la taille du canevas ne dépend que de la mise en page, pas
+     de sa taille interne. Sinon, redimensionner le dessin change la hauteur de
+     la carte, qui change celle du canevas, et le dessin reste étiré. */
+  body.page-illustration .illustration-zone canvas.toile {
+    flex: 1 1 0;
+    min-height: 60px;
+    aspect-ratio: auto;
+    contain: size;
+  }
+
+  body.page-illustration .illustration-zone canvas.toile.carree {
+    align-self: center;
+    width: auto;
+    max-width: 100%;
+    aspect-ratio: var(--proportions, 1 / 1);
+  }
+}
+
+@media (max-width: 900px) {
+  .illustration {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .illustration-zone {
+    order: -1;
+  }
+}
+
+/* Tailles de police des pages d'illustration : un seul corps pour tout le texte
+   (cours, essais, notes, verdicts), le même que les notes du simulateur ; les
+   formules ont le même corps partout, dans les deux types de pages. */
+body.page-illustration {
+  --taille-texte: 0.9rem;
+}
+
+.rappel p,
+.rappel li,
+.essais li,
+.verdict,
+.page-illustration .note,
+.bloc-maths p,
+body.page-illustration .illustration-zone p:not(.legende-courbes) {
+  font-family: var(--police);
+  font-size: var(--taille-texte);
+  line-height: 1.5;
+}
+
+.rappel p {
+  margin: 0.4em 0;
+}
+
+.rappel ul {
+  margin: 0.4em 0;
+  padding-left: 1.2em;
+}
+
+.rappel li {
+  margin: 0.35em 0;
+}
+
+.essais {
+  margin: 0;
+  padding-left: 1.3em;
+}
+
+.essais li {
+  margin: 0.55em 0;
+}
+
+button.essayer {
+  font-size: 0.78rem;
+  padding: 0.1em 0.6em;
+  margin-left: 0.2em;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+/* Éléments communs des illustrations. */
+
+.grille-2 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+/* Deux colonnes : deux cartes empilées à gauche, une carte sur toute la hauteur
+   à droite. En colonne unique, l'ordre est celui de la lecture : première carte
+   de gauche, carte de droite, seconde carte de gauche. */
+.deux-colonnes {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.colonne {
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.bloc-maths {
+  min-height: 13em; /* texte et formules : hauteur réservée */
+}
+
+.formule {
+  text-align: center;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.formule .katex-display {
+  margin: 0.2em 0;
+}
+
+.grille-3 {
+  display: grid;
+  gap: 14px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: start;
+}
+
+@media (max-width: 1100px) {
+  .grille-3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 900px) {
+  .deux-colonnes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .colonne {
+    display: contents;
+  }
+
+  .colonne > .carte:first-child {
+    order: 1;
+  }
+
+  .deux-colonnes > .carte {
+    order: 2;
+  }
+
+  .colonne > .carte:last-child {
+    order: 3;
+  }
+}
+
+@media (max-width: 700px) {
+  .grille-2,
+  .grille-3 {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+canvas.toile.carree {
+  max-width: 560px;
+  margin-inline: auto;
+}
+
+canvas.toile {
+  display: block;
+  width: 100%;
+  aspect-ratio: var(--proportions, 4 / 3);
+  touch-action: none;
+}
+
+canvas.toile.cliquable {
+  cursor: crosshair;
+}
+
+canvas.toile.saisissable {
+  cursor: grab;
+}
+
+.legende-courbes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3em 1.2em;
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  color: var(--discret);
+  margin: 0.4em 0 0;
+}
+
+.legende-courbes .trait {
+  display: inline-block;
+  width: 1.6em;
+  height: 0;
+  border-top: 2.5px solid currentColor;
+  vertical-align: middle;
+  margin-right: 0.35em;
+}
+
+.legende-courbes .trait.tirets {
+  border-top-style: dashed;
+}
+
+.verdict {
+  min-height: 3.4em; /* deux lignes : la figure ne change pas de taille avec le texte */
+  border-left: 3px solid var(--bordure);
+  padding: 0.2em 0 0.2em 0.7em;
+  margin: 0.5em 0;
+}
+
+.verdict.ok {
+  border-left-color: var(--accent);
+}
+
+.verdict.alerte {
+  border-left-color: var(--alerte);
+}
+
+table.valeurs {
+  border-collapse: collapse;
+  font-family: var(--police-mono);
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  margin: 0.4em 0;
+}
+
+table.valeurs th,
+table.valeurs td {
+  padding: 0.15em 0.9em;
+  text-align: right;
+  white-space: nowrap;
+}
+
+table.valeurs th {
+  font-weight: 500;
+  color: var(--discret);
+  border-bottom: 1px solid var(--bordure);
+}
+
+table.valeurs th:first-child,
+table.valeurs td:first-child {
+  text-align: left;
+}
+
+/* ---- Accueil : carte du cours ------------------------------------------- */
+
+.themes {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0.5rem 16px 2rem;
+}
+
+.theme {
+  margin-top: 1.6rem;
+}
+
+.theme > h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.1em;
+}
+
+.theme > .source {
+  margin-bottom: 0.4rem;
+}
+
+.theme .catalogue {
+  padding: 0.6rem 0 0;
+}
+
+.sous-rubrique {
+  font-family: var(--police-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--discret);
+  margin: 1.2rem 0 0;
+}
+
+.exemple .genre {
+  font-family: var(--police-ui);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin: 0 0 0.2em;
+}
+
+/* ---- Infobulle sur un terme, barre de zoom -------------------------------- */
+
+.terme {
+  border-bottom: 1px dotted var(--discret);
+  cursor: help;
+}
+
+.terme:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.infobulle {
+  position: fixed;
+  z-index: 50;
+  max-width: 22rem;
+  padding: 0.5em 0.7em;
+  background: var(--fond-bulle);
+  color: var(--texte);
+  border: 1.5px solid var(--bord-bulle);
+  border-radius: var(--rayon-controle);
+  box-shadow: var(--ombre-carte);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.barre-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.3em 1em;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom .petit {
+  margin-right: 0.4em;
+}
+
+.zoom button {
+  min-width: 2em;
+  padding: 0.1em 0.5em;
+  font-size: 0.85rem;
+}
+
+/* Choix des courbes et des particules du portrait de phase. */
+.reglages-courbes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.2em 0.9em;
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  margin: 0.3em 0 0.4em;
+}
+
+.reglages-courbes .groupe {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.reglages-courbes label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4em;
+}
+
+/* Bouton « i » d'une carte et légende en bulle. */
+.carte-avec-info {
+  position: relative;
+}
+
+.bouton-info {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  width: 1.7em;
+  height: 1.7em;
+  padding: 0;
+  border-radius: 50%;
+  font-family: var(--police);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.titre-bulle {
+  margin: 0 0 0.4em;
+  font-weight: 600;
+}
+
+.legende-bulle {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legende-bulle li {
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  align-items: baseline;
+  gap: 0.4em;
+  margin: 0.3em 0;
+}
+
+.pastille {
+  justify-self: center;
+  display: inline-block;
+  color: var(--couleur-pastille);
+}
+
+.pastille.ligne,
+.pastille.tirets {
+  width: 1.4em;
+  border-top: 2px solid var(--couleur-pastille);
+  transform: translateY(-0.25em);
+}
+
+.pastille.tirets {
+  border-top-style: dashed;
+}
+
+.pastille.point,
+.pastille.cercle {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  background: var(--couleur-pastille);
+}
+
+.pastille.cercle {
+  background: none;
+  border: 2px solid var(--couleur-pastille);
+}
+
+.pastille.zone {
+  width: 1.2em;
+  height: 0.8em;
+  border-radius: 2px;
+  background: var(--couleur-pastille);
+  border: 1px solid var(--accent);
+}
+
+/* Ligne d'outils au-dessus d'une illustration (choix, bouton « i »), sans carte. */
+.barre-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em 1em;
+  padding: 0 0.2rem;
+}
+
+.barre-outils .bouton-info {
+  position: static;
+}
+
+/* Infobulle de glossaire : terme, définition du poly, source. */
+.corps-bulle {
+  margin: 0 0 0.4em;
+  font-family: var(--police);
+  font-size: 0.92rem;
+}
+
+.source-bulle {
+  margin: 0;
+  color: var(--discret);
+  font-size: 0.8rem;
+}
+
+/* Bloc repliable (contre-exemple, compléments). */
+.repliable {
+  padding: 0;
+}
+
+.entete-repliable {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1em;
+  padding: 0.6rem 0.9rem;
+  border: none;
+  border-radius: var(--rayon-carte);
+  background: none;
+  font-family: var(--police);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--titre-2);
+  text-align: left;
+}
+
+.etat-repliable {
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.contenu-repliable {
+  padding: 0 0.9rem 0.8rem;
+}
+
+/* Vignettes de la galerie : sur grand écran, quatre colonnes, pour que les
+   onze cas tiennent sur trois lignes ; en colonne unique, autant de colonnes
+   de 170 px que la largeur en permet. */
+.grille-vignettes {
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+}
+
+@media (min-width: 901px) and (min-height: 620px) {
+  body.page-illustration .illustration-zone .grille-vignettes {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.grille-vignettes .note {
+  font-size: 0.85rem;
+  margin: 0.3em 0 0;
+}
+
+/* Figure et formule côte à côte (contre-exemple du flot). */
+.figure-et-formule {
+  display: flex;
+  align-items: center;
+  gap: 0.6em;
+  min-width: 0;
+}
+
+.figure-et-formule > canvas.toile {
+  flex: 0 0 auto;
+  width: 45%;
+}
+
+@media (min-width: 901px) and (min-height: 620px) {
+  body.page-illustration .illustration-zone .grille-3 > .figure-et-formule {
+    flex-direction: row;
+  }
+
+  body.page-illustration .illustration-zone .figure-et-formule > canvas.toile.carree {
+    flex: 0 0 auto;
+    align-self: stretch;
+    height: 100%;
+    min-height: 0;
+    width: auto;
+    max-width: 48%;
+  }
+}
+
+/* Texte qui change avec un choix mais garde la même hauteur (trois lignes),
+   pour que la figure en dessous ne bouge pas. */
+.texte-fixe {
+  min-height: 5.8em;
+}
+
+.texte-fixe p {
+  margin: 0.3em 0;
+}
+
+/* Formule serrée, sous une autre formule du même verdict. */
+.formule.compacte {
+  margin: 0;
+}
+
+.verdict:has(.conclusion-fixe) p {
+  margin: 0.2em 0;
+}
+
+/* Note qui apparaît avec une formule (KaTeX) : sa hauteur est réservée. */
+.note.conclusion-fixe {
+  min-height: 3em;
+}
+
+/* Colonne de plusieurs cartes dans une grille : elles se partagent sa hauteur. */
+.colonne-cartes {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-height: 0;
+}
+
+.colonne-cartes > .carte {
+  flex: 1 1 0;
+  min-height: 0;
+}
+
+/* Conclusion d'un verdict dont le texte change : une ligne réservée. */
+.conclusion-fixe {
+  min-height: 1.5em;
+}
+
+/* Curseurs sur deux colonnes (beaucoup de paramètres dans une carte). */
+.reglages-2 {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  column-gap: 1em;
+}
+
+.reglages-2 .champ {
+  grid-template-columns: 3.2em minmax(0, 1fr) 5.4em 0;
+}

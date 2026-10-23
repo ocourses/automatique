@@ -8,7 +8,8 @@ Ce dépôt rassemble les ressources accessibles aux étudiants :
 - [supports de cours](cours/README.md) ;
 - [travaux dirigés](td/README.md) ;
 - [travaux pratiques](tp/README.md) ;
-- [examens et corrigés disponibles](examens/README.md).
+- [examens et corrigés disponibles](examens/README.md) ;
+- [site web du cours](https://ocourses.github.io/automatique/) : illustrations interactives du poly et des TD, et simulateur de stabilisation ([documentation](site/README.md)).
 
 ## Cloner et mettre à jour le dépôt
 
@@ -42,3 +43,4 @@ conservés dans le dépôt enseignant.
 | [`td/`](td/) | Sujets PDF des quatre travaux dirigés, avec leurs objectifs |
 | [`tp/`](tp/) | Supports et présentation des travaux pratiques |
 | [`examens/`](examens/) | Sujets et certains corrigés classés par année universitaire |
+| [`site/`](site/) | Site web du cours (illustrations interactives et simulateur de stabilisation), publié sur GitHub Pages |

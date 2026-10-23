@@ -1,0 +1,116 @@
+/*
+ * Charte graphique
+ * ----------------
+ * Les couleurs et les choix visuels communs vivent ici. Les règles de
+ * disposition et les composants sont dans style.css.
+ *
+ * Pour changer l'identité du site, modifier d'abord les primitives ci-dessous,
+ * puis les quelques rôles sémantiques. Les composants ne doivent pas contenir
+ * de couleur en dur.
+ */
+
+:root {
+  /* Palette : bleu encre, bleu pédagogique et accents fonctionnels. */
+  --bleu-950: #102a43;
+  --bleu-800: #174a7c;
+  --bleu-700: #1769aa;
+  --bleu-100: #e8f1fa;
+  --bleu-050: #f3f8fd;
+  --cyan-700: #087f8c;
+  --cyan-100: #e2f4f5;
+  --orange-700: #b45309;
+  --rouge-700: #a33a1a;
+  --vert-700: #0f7b6c;
+  --violet-700: #7a3e9d;
+
+  /* Rôles sémantiques : c'est cette section qui est consommée par le site. */
+  --fond: #f5f8fc;
+  --fond-carte: #ffffff;
+  --fond-survol: var(--bleu-050);
+  --texte: #172b4d;
+  --discret: #52657a;
+  --grille: #d9e5f0;
+  --bordure: #c8d7e6;
+  --accent: var(--bleu-700);
+  --accent-fort: var(--bleu-800);
+  --accent-pale: var(--bleu-100);
+  --titre-1: var(--bleu-950);
+  --titre-2: var(--bleu-800);
+  --titre-3: var(--cyan-700);
+  --alerte: var(--rouge-700);
+  --perturbation: var(--orange-700);
+  --observateur: var(--vert-700);
+  --equilibre: var(--violet-700);
+  /* Séries comparées (schémas numériques, méthodes) : quatre teintes distinctes,
+     sans rôle ailleurs. */
+  --serie-1: #c2410c;
+  --serie-2: #1d4ed8;
+  --serie-3: #047857;
+  --serie-4: #6b7280;
+  /* Bulles (infobulles, légendes) : fond gris léger, bord marqué. */
+  --fond-bulle: #eef2f6;
+  --bord-bulle: #7f93a8;
+  /* Bassins d'attraction des autres équilibres (le premier est --zone-stable). */
+  --zone-2: rgba(180, 83, 9, 0.1);
+  --zone-3: rgba(15, 123, 108, 0.1);
+  --zone-stable: rgba(23, 105, 170, 0.09);
+  --observateur-zone: rgba(15, 123, 108, 0.09);
+  --bloc: #edf3f8;
+  --bloc-controleur: #f6cccc;
+  --ombre-carte: 0 4px 16px rgba(16, 42, 67, 0.07);
+  --ombre-feuille: 0 -6px 22px rgba(16, 42, 67, 0.2);
+  --rayon-carte: 10px;
+  --rayon-controle: 6px;
+  --police: 'Latin Modern Roman', 'CMU Serif', 'Computer Modern Serif', Georgia, 'Times New Roman', serif;
+  --police-ui: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --police-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bleu-950: #d9ebff;
+    --bleu-800: #9ac7f2;
+    --bleu-700: #72b3ed;
+    --bleu-100: #193a5a;
+    --bleu-050: #1c344c;
+    --cyan-700: #70d1d2;
+    --cyan-100: #19484d;
+    --orange-700: #f0a050;
+    --rouge-700: #f08a6a;
+    --vert-700: #4fc3b0;
+    --violet-700: #c9a3e6;
+    --fond: #111d2b;
+    --fond-carte: #192b3e;
+    --fond-survol: #203a53;
+    --texte: #e8f1fa;
+    --discret: #a9bacb;
+    --grille: #29445d;
+    --bordure: #35536c;
+    --accent: var(--bleu-700);
+    --accent-fort: var(--bleu-800);
+    --accent-pale: var(--bleu-100);
+    --titre-1: var(--bleu-950);
+    --titre-2: var(--bleu-800);
+    --titre-3: var(--cyan-700);
+    --alerte: var(--rouge-700);
+    --perturbation: var(--orange-700);
+    --observateur: var(--vert-700);
+    --equilibre: var(--violet-700);
+    --serie-1: #fb923c;
+    --serie-2: #60a5fa;
+    --serie-3: #34d399;
+    --serie-4: #9ca3af;
+    --fond-bulle: #22364b;
+    --bord-bulle: #7d97b0;
+    --zone-2: rgba(240, 160, 80, 0.13);
+    --zone-3: rgba(79, 195, 176, 0.13);
+    --zone-stable: rgba(114, 179, 237, 0.14);
+    --observateur-zone: rgba(79, 195, 176, 0.14);
+    --bloc: #20384e;
+    --bloc-controleur: #5a2a2a;
+    --ombre-carte: 0 4px 18px rgba(0, 0, 0, 0.2);
+    --ombre-feuille: 0 -6px 22px rgba(0, 0, 0, 0.35);
+    color-scheme: dark;
+  }
+}

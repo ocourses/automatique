@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>Illustration du cours</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
+    <link rel="stylesheet" href="css/theme.css" />
+    <link rel="stylesheet" href="css/style.css" />
+    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+    <script type="module" src="js/illustration.js"></script>
+  </head>
+  <body class="page-illustration">
+    <header class="entete entete-barre">
+      <div>
+        <nav class="fil" aria-label="Fil d'Ariane">
+          <a href="index.html" class="retour">← Accueil</a>
+          <span id="fil-theme" class="fil-theme"></span>
+        </nav>
+        <h1 id="titre">Chargement…</h1>
+        <p id="source" class="source"></p>
+      </div>
+      <div class="entete-actions">
+      </div>
+    </header>
+
+    <p id="introuvable" class="carte" hidden>
+      Cette illustration n'existe pas ou n'est pas encore disponible.
+      <a href="index.html">Retour à l'accueil</a>.
+    </p>
+
+    <!-- Gabarit commun : une boîte à onglets à gauche, l'illustration à droite. -->
+    <div id="page" class="illustration">
+      <aside class="illustration-texte">
+        <section class="carte carte-onglets">
+          <div class="onglets" role="tablist" data-groupe="illustration-texte" aria-label="Ressources de l'illustration">
+            <button type="button" role="tab" data-onglet="rappel" aria-controls="panneau-rappel">Ce que dit le cours</button>
+            <button type="button" role="tab" data-onglet="essais" id="onglet-essais" aria-controls="panneau-essais">À essayer</button>
+          </div>
+          <div role="tabpanel" data-groupe="illustration-texte" data-panneau="rappel" id="panneau-rappel">
+            <h2>Ce que dit le cours</h2>
+            <div id="rappel" class="rappel"></div>
+          </div>
+          <div role="tabpanel" data-groupe="illustration-texte" data-panneau="essais" id="panneau-essais" hidden>
+            <h2>À essayer</h2>
+            <ol id="essais" class="essais"></ol>
+          </div>
+        </section>
+      </aside>
+      <main id="zone" class="illustration-zone"></main>
+    </div>
+  </body>
+</html>

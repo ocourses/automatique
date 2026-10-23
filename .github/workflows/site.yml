@@ -1,0 +1,54 @@
+# Site du cours : tests, puis publication sur GitHub Pages.
+# Réglage unique : Settings → Pages → Source : GitHub Actions.
+
+name: Site
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm test
+        working-directory: site
+
+  deploiement:
+    # Seulement après un push sur main (ou à la demande), pas sur une pull request.
+    if: github.event_name != 'pull_request'
+    needs: tests
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.pages.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+      - id: pages
+        uses: actions/deploy-pages@v4
