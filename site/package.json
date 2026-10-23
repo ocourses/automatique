@@ -1,0 +1,10 @@
+{
+  "name": "site-automatique",
+  "private": true,
+  "type": "module",
+  "description": "Site web d'illustrations interactives du cours d'Automatique (sans étape de build).",
+  "scripts": {
+    "test": "node --test",
+    "serve": "node serve.mjs"
+  }
+}
