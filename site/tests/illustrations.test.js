@@ -642,3 +642,14 @@ test('nombreScientifique : largeur constante, quelle que soit la valeur', async 
   assert.equal(nombreScientifique(9.9999), '+1,00e+01');
   assert.equal(nombreScientifique(NaN).length, nombreScientifique(1).length);
 });
+
+test('bifurcation : P₅ signale la matrice nulle, de même spectre mais diagonalisable', async () => {
+  const { remarqueCas } = await import('../js/illustrations/bifurcation.js');
+  const { matrice, nature, spectre } = await import('../js/core/dim2.js');
+  assert.equal(nature(0, 0).cas, 'P₅');
+  assert.match(remarqueCas('P₅'), /matrice nulle/);
+  for (const cas of ['P₁', 'P₃', 'P₄', 'P₆', 'P₁₀']) assert.equal(remarqueCas(cas), null, cas);
+  // La forme réduite de P₅ n'est pas la matrice nulle : même spectre, autre comportement.
+  assert.deepEqual(matrice(0, 0), [[0, 1], [0, 0]]);
+  assert.deepEqual(spectre(0, 0).valeurs.map((z) => z.re), [0, 0]);
+});
