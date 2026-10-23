@@ -663,6 +663,10 @@ button.lien {
   cursor: crosshair;
 }
 
+#plan.interdit {
+  cursor: not-allowed;
+}
+
 #plan.survol {
   cursor: grab;
 }
@@ -1470,6 +1474,10 @@ a:hover {
 }
 
 /* ---- Pages d'illustration (gabarit commun) ------------------------------- */
+
+.signalement {
+  margin-top: 0.8em;
+}
 
 .fil {
   display: flex;

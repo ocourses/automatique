@@ -8,7 +8,7 @@
 import { catalogue } from './exemples/catalogue.js';
 import { GenerateurChocs } from './core/chocs.js';
 import { Modele } from './core/modele.js';
-import { ackermann, placementObservateur, placementPossible } from './core/poles.js';
+import { ackermann, axeDeValeurPropre, gainPourValeurPropre, placementObservateur, placementPossible } from './core/poles.js';
 import { applique, capture } from './core/reglages.js';
 import { Simulation } from './core/sim.js';
 import { Console } from './ui/console.js';
@@ -228,11 +228,32 @@ function demarre(modele) {
 
   // ---- Plan complexe : placement des valeurs propres à la souris -------------
   // K est recalculé par la formule d'Ackermann à partir des valeurs propres voulues.
-  const glissable = () => sim.mode === 'gains' && placementPossible(sim.A, sim.B);
+  // Comment se déplacent les valeurs propres du bouclé :
+  //   - 'complet' : une seule commande, système contrôlable (Ackermann) ;
+  //   - 'reel'    : gains diagonaux (satellite), chaque valeur propre sur l'axe réel ;
+  //   - 'aucun'   : sinon (plusieurs commandes, loi libre, non contrôlable).
+  const modeValeursPropres = () => {
+    if (sim.mode !== 'gains') return 'aucun';
+    if (placementPossible(sim.A, sim.B)) return 'complet';
+    return modele.gainsDiagonaux ? 'reel' : 'aucun';
+  };
+  const explique = (mode) => {
+    if (mode === 'reel') return modele.aideValeursPropresReelles;
+    if (sim.mode !== 'gains') return 'En loi libre, il n’y a pas de gain K à recalculer : les valeurs propres du linéarisé ne se déplacent pas à la souris.';
+    if (modele.uneCommande) return 'Le linéarisé n’est pas contrôlable : la formule d’Ackermann ne s’applique pas, les valeurs propres ne se déplacent pas.';
+    return 'Avec plusieurs commandes, des valeurs propres données ne déterminent pas K (une infinité de gains conviennent) : elles ne se déplacent pas. Réglez les gains K dans l’onglet Contrôleur, elles suivent.';
+  };
   const plan = new PlanComplexe(
     $('plan'),
     {
-      modifiable: glissable,
+      mode: modeValeursPropres,
+      explique,
+      axeDe: (v) => axeDeValeurPropre(sim.A, sim.B, sim.K, v.re),
+      deplaceReel: (axe, lambda) => {
+        const K = sim.K.map((ligne) => ligne.slice());
+        K[axe][axe] = gainPourValeurPropre(sim.A, sim.B, axe, lambda, modele.bornesGains[axe][axe]);
+        controleur.appliqueGains(K, 'Valeur propre déplacée', 'glisse');
+      },
       deplace: (vp) => controleur.appliqueGains(ackermann(sim.A, sim.B, vp), 'Valeurs propres déplacées', 'glisse'),
       modifiableObs: () => Boolean(sim.obs) && sim.observable,
       deplaceObs: (vp) =>
@@ -246,7 +267,15 @@ function demarre(modele) {
     document.querySelector('.zone-graphes'),
     [
       ['cercle', '--discret', 'Valeurs propres de $A$ (le système sans commande).'],
-      ['point', '--accent', 'Valeurs propres du bouclé $A + BK$ : faites glisser une croix pour les placer, le gain $K$ est recalculé par la formule d’Ackermann. Près des axes, la valeur propre s’y colle.'],
+      [
+        'point',
+        '--accent',
+        modele.uneCommande
+          ? 'Valeurs propres du bouclé $A + BK$ : faites glisser une croix pour les placer (retour d’état, système contrôlable), le gain $K$ est recalculé par la formule d’Ackermann. Près des axes, la valeur propre s’y colle.'
+          : modele.gainsDiagonaux
+            ? 'Valeurs propres du bouclé $A + BK$ : $K$ est diagonale, donc chaque valeur propre $k_i/J_i$ est réelle et ne dépend que de son gain. Faites glisser une croix le long de l’axe réel pour régler $k_i$.'
+            : 'Valeurs propres du bouclé $A + BK$. Avec plusieurs commandes, les valeurs propres ne déterminent pas $K$ : elles ne se déplacent pas, on règle les gains $K$ dans l’onglet Contrôleur et elles suivent.',
+      ],
       ...(sim.obs
         ? [
             ['point', '--observateur', 'Valeurs propres de $A - LC$ (observateur) : les losanges se déplacent de même et recalculent $L$.'],
@@ -254,7 +283,7 @@ function demarre(modele) {
           ]
         : []),
       ['zone', '--zone-stable', 'Demi-plan $\\operatorname{Re} < 0$ : valeurs propres stables.'],
-      ['ligne', '--texte', 'Portrait de phase : cliquez pour lancer une trajectoire depuis ce point ; les précédentes restent en gris.'],
+      ...(modele.aPortrait ? [['ligne', '--texte', 'Portrait de phase : cliquez pour lancer une trajectoire depuis ce point ; les précédentes restent en gris.']] : []),
     ],
     { titre: 'Ce que montrent les graphiques', etiquette: 'Légende des graphiques' },
   );

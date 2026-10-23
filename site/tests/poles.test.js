@@ -66,3 +66,19 @@ test('déplacement : une réelle glisse sur l’axe, ou emmène la plus proche',
   // Seule réelle (n = 3, une paire complexe) : elle reste sur l'axe.
   assert.deepEqual(deplaceValeurPropre([z(-1), z(-2, 1), z(-2, -1)], 0, z(-3, 2), 0.1), [z(-3), z(-2, 1), z(-2, -1)]);
 });
+
+test('gains diagonaux : une valeur propre se place sur l’axe réel en réglant le gain de son axe', async () => {
+  const { axeDeValeurPropre, gainPourValeurPropre } = await import('../js/core/poles.js');
+  const J = [3, 2, 1];
+  const A = [[0, 0, 0], [0, 0, 0], [0, 0, 0]];
+  const B = J.map((v, i) => J.map((_, j) => (i === j ? 1 / v : 0)));
+  const K = [[-2, 0, 0], [0, -2, 0], [0, 0, -2]];
+  // Valeurs propres k_i/J_i : −2/3, −1, −2.
+  assert.equal(axeDeValeurPropre(A, B, K, -1), 1);
+  assert.equal(axeDeValeurPropre(A, B, K, -2), 2);
+  assert.equal(axeDeValeurPropre(A, B, K, -0.6), 0);
+  // Placer −3 sur l'axe 1 (J = 3) : k = −9 ; hors bornes, on borne.
+  assert.ok(Math.abs(gainPourValeurPropre(A, B, 0, -3) + 9) < 1e-12);
+  assert.equal(gainPourValeurPropre(A, B, 0, -9, { min: -10, max: 2 }), -10);
+  assert.equal(gainPourValeurPropre(A, B, 2, 5, { min: -10, max: 2 }), 2);
+});
