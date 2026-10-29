@@ -19,7 +19,7 @@
 //              mesurée (bruit compris), x̂ restant constant entre deux instants ;
 //   - retourEstime : la commande est calculée sur x̂ au lieu de l'état mesuré.
 
-import { rk4 } from './ode.js';
+import { rk4 } from '../../socle/js/core/ode.js';
 import { compile } from './expr.js';
 import { Modele } from './modele.js';
 import { ackermann, facteurEuler, ligneSortie, matriceObservateur, observable, pasEulerMax } from './poles.js';

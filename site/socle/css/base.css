@@ -1,0 +1,70 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--fond);
+  color: var(--texte);
+  font-family: var(--police);
+  font-size: 17px;
+  line-height: 1.45;
+}
+
+a {
+  color: var(--accent);
+}
+
+h1,
+h2 {
+  font-weight: 600;
+  margin: 0 0 0.5em;
+}
+
+h1 {
+  font-size: 1.6rem;
+  color: var(--titre-1);
+}
+
+h2 {
+  font-size: 1.1rem;
+  color: var(--titre-2);
+}
+
+button,
+select,
+input {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  color: var(--texte);
+}
+
+button {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  padding: 0.35em 0.9em;
+  cursor: pointer;
+}
+
+button:hover {
+  border-color: var(--accent);
+  background: var(--fond-survol);
+}
+
+select,
+input[type='text'] {
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  padding: 0.2em 0.4em;
+}
+
+input[type='range'] {
+  accent-color: var(--accent);
+}
+
+/* Formule et ponctuation qui la suit : jamais séparées par une fin de ligne. */
+.insecable {
+  white-space: nowrap;
+}

@@ -3,8 +3,8 @@
 // texte). Chaque animation suit la simulation par `pas(sim)` (appelé à chaque
 // image, même onglet masqué) et se dessine par `dessine(sim)`.
 
-import { Camera } from '../camera3d.js';
-import { couleurs } from '../theme.js';
+import { Camera } from '../../../socle/js/ui/camera3d.js';
+import { couleurs } from '../../../socle/js/ui/theme.js';
 
 export class Vue {
   constructor(canvas, { azimut = -0.9, elevation = 0.45, etendue = 1.8 } = {}) {

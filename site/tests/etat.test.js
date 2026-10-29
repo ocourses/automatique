@@ -9,7 +9,7 @@ import { Modele, estLineaire, verifie } from '../js/core/modele.js';
 import { applique, capture } from '../js/core/reglages.js';
 import { Simulation } from '../js/core/sim.js';
 import { AFFICHAGE_DEFAUT, Memoire, normaliseAffichage } from '../js/ui/etat.js';
-import { etiquettesAxe } from '../js/ui/format.js';
+import { etiquettesAxe } from '../socle/js/ui/format.js';
 import { depuisURL, porteReglages } from '../js/ui/url.js';
 import { catalogue } from '../js/exemples/catalogue.js';
 import pendule from '../js/exemples/pendule-couple.js';

@@ -1,15 +1,12 @@
 // Glossaire des illustrations : les définitions du poly, reprises au plus près
 // de leur énoncé (chapitre et définition indiqués dans `source`). Une page
-// déclare les termes qu'elle emploie (`termes` dans son module) ; le gabarit
-// souligne leur première occurrence dans « Ce que dit le cours » et dans « À
-// essayer », et la définition s'affiche en infobulle.
+// déclare les termes qu'elle emploie (`termes` dans son module) ; le socle
+// (`appliqueGlossaire`) souligne leur première occurrence dans « Ce que dit le
+// cours » et dans « À essayer », et la définition s'affiche en infobulle.
 //
 // Chaque entrée donne les formes du terme telles qu'elles apparaissent dans les
 // textes (casse, accord, apostrophe typographique), de la plus longue à la plus
 // courte.
-
-import { souligne } from '../ui/infobulle.js';
-import { rendTexte } from '../ui/katex.js';
 
 const STABILITE = 'Poly, chapitre « Stabilité »';
 const COMMANDE = 'Poly, chapitre « Commande »';
@@ -147,33 +144,3 @@ export const GLOSSAIRE = {
     source: COMMANDE,
   },
 };
-
-// Contenu d'une infobulle de glossaire : le terme, sa définition, sa source.
-function bulle(cle) {
-  const { definition, source } = GLOSSAIRE[cle];
-  return () => {
-    const div = document.createElement('div');
-    const titre = document.createElement('p');
-    titre.className = 'titre-bulle';
-    titre.textContent = cle[0].toUpperCase() + cle.slice(1);
-    const corps = document.createElement('p');
-    corps.className = 'corps-bulle';
-    rendTexte(corps, definition);
-    const origine = document.createElement('p');
-    origine.className = 'source-bulle';
-    origine.textContent = source;
-    div.append(titre, corps, origine);
-    return div;
-  };
-}
-
-// Souligne dans `racine` la première occurrence de chacun des termes `cles`
-// du glossaire. Les termes les plus longs passent d'abord, pour que « nœud
-// impropre » ne soit pas pris pour « nœud ».
-export function appliqueGlossaire(racine, cles) {
-  const tries = [...cles].sort((a, b) => Math.max(...GLOSSAIRE[b].formes.map((f) => f.length)) - Math.max(...GLOSSAIRE[a].formes.map((f) => f.length)));
-  for (const cle of tries) {
-    if (!GLOSSAIRE[cle]) throw new Error(`Terme absent du glossaire : ${cle}`);
-    souligne(racine, GLOSSAIRE[cle].formes, bulle(cle));
-  }
-}

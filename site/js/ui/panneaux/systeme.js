@@ -5,9 +5,9 @@
 // note(message, options) pour le journal, modifie() après un réglage, et
 // lance(x0) pour démarrer une trajectoire.
 
-import { champ, saisieNombre } from '../controls.js';
-import { texte } from '../format.js';
-import { rend, rendTexte } from '../katex.js';
+import { champ, saisieNombre } from '../../../socle/js/ui/controls.js';
+import { texte } from '../../../socle/js/ui/format.js';
+import { rend, rendTexte } from '../../../socle/js/ui/katex.js';
 
 const $ = (id) => document.getElementById(id);
 

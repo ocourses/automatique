@@ -1,8 +1,7 @@
 // Caméra 3D orthographique, tournée à la souris : l'azimut tourne autour de
 // l'axe vertical z, l'élévation incline la vue. Le geste saisit l'objet :
 // tirer vers la droite le fait tourner vers la droite, tirer vers le bas fait
-// voir le dessus. Partagée par la surface de Lyapunov et les animations du
-// simulateur.
+// voir le dessus. Partagée par les surfaces 3D et les animations des cours.
 
 export class Camera {
   // `elevations` : bornes de l'élévation (une surface ne se regarde pas par-dessous).

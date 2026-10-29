@@ -8,15 +8,15 @@
 // L'argument de la preuve de stabilité est dessiné : un niveau c sous le
 // minimum de L sur la sphère de rayon ε, et une boule B(0, η) ⊂ {L < c}.
 
-import { matrice } from '../core/dim2.js';
-import { champ } from '../ui/controls.js';
-import { latexMatriceFixe, latexNombreFixe } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
-import { Vue3D } from '../ui/vue3d.js';
+import { matrice } from '../../socle/js/core/dim2.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { latexMatriceFixe, latexNombreFixe } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
+import { Vue3D } from '../../socle/js/ui/vue3d.js';
 import { barreOutils, boutonInfo, carte, choixRadios, glisse, legende, paragraphe, simule, toile, zoomable } from './commun.js';
 import { champPendule } from './pendule-amorti.js';
-import { dessinePlan, plan } from './plan-trace-det.js';
+import { dessinePlan, plan } from '../../socle/js/briques/plan-trace-det.js';
 
 // Solution symétrique P de AᵀP + PA = −Q pour A (2, 2) et Q = I : trois
 // inconnues (p, q, r) avec P = [[p, q], [q, r]].

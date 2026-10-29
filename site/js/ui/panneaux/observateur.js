@@ -3,9 +3,9 @@
 // retour d'état sur x̂.
 
 import { litPoles, placementObservateur } from '../../core/poles.js';
-import { champ, saisieNombre } from '../controls.js';
-import { texte } from '../format.js';
-import { rend } from '../katex.js';
+import { champ, saisieNombre } from '../../../socle/js/ui/controls.js';
+import { texte } from '../../../socle/js/ui/format.js';
+import { rend } from '../../../socle/js/ui/katex.js';
 import { formatePoles } from './controleur.js';
 
 const $ = (id) => document.getElementById(id);

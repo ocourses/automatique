@@ -6,13 +6,13 @@
 // En complément, repliable, le contre-exemple du poly : e^A e^B ≠ e^{A+B} quand
 // A et B ne commutent pas.
 
-import { applique, exponentielle, matrice, nature } from '../core/dim2.js';
-import { champ } from '../ui/controls.js';
-import { latexMatrice, latexMatriceFixe, latexNombre, latexNombreFixe } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { applique, exponentielle, matrice, nature } from '../../socle/js/core/dim2.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { latexMatrice, latexMatriceFixe, latexNombre, latexNombreFixe } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { boutonInfo, carte, legende, paragraphe, repliable, toile } from './commun.js';
-import { dessinePlan, plan } from './plan-trace-det.js';
+import { dessinePlan, plan } from '../../socle/js/briques/plan-trace-det.js';
 
 // Produit de matrices (2, 2).
 export const produit = (M, N) => [

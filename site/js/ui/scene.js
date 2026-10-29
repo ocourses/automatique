@@ -1,7 +1,7 @@
 // Scène physique : dessin de l'exemple en coordonnées du monde (y vers le haut)
 // et réglage de la condition initiale à la souris.
 
-import { couleurs } from './theme.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 
 const FENETRE_LANCER = 0.08; // s, durée du geste prise en compte au lâcher
 const OPACITE_FANTOME = 0.28;

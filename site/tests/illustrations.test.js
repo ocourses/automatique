@@ -1,52 +1,20 @@
 // Tests des illustrations du cours : les résultats du TD1 (portraits de phase)
-// et du TD2 (retour d'état, PID), et la cohérence du catalogue.
+// et du TD2 (retour d'état, PID), les données du glossaire et le parcours.
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { CAS_TD1, applique, directionsPropres, exponentielle, matrice, nature, spectre } from '../js/core/dim2.js';
+import { CAS_TD1, applique, directionsPropres, exponentielle, matrice, nature, spectre } from '../socle/js/core/dim2.js';
 import { valeursPropres } from '../js/core/linalg.js';
 import { ackermann } from '../js/core/poles.js';
-import { lisEtat, versRecherche } from '../js/illustration.js';
-import { themes, trouve } from '../js/illustrations/catalogue.js';
+import { lisEtat, versRecherche } from '../socle/js/illustration.js';
 import { simule } from '../js/illustrations/commun.js';
 import { aimante, pointDuPlan } from '../js/illustrations/bifurcation.js';
-import { Particules, orbitesDuPortrait } from '../js/illustrations/portraits.js';
+import { Particules, orbitesDuPortrait } from '../socle/js/briques/portraits.js';
 import td2, { essaisEtape, hurwitzPD, matriceBouclee, matricePID, thetaBoucleOuverte, thetaInfiniPD } from '../js/illustrations/td2-pid.js';
 
 const proche = (a, b, tol = 1e-6) => assert.ok(Math.abs(a - b) <= tol, `${a} ≠ ${b}`);
 const z = (re, im = 0) => ({ re, im });
-
-// ---- Catalogue et gabarit --------------------------------------------------------
-
-test('catalogue : identifiants uniques, modules présents pour les illustrations disponibles', async () => {
-  const ids = themes.flatMap((t) => t.illustrations.map((i) => i.id));
-  assert.equal(new Set(ids).size, ids.length);
-  for (const id of ids.filter((id) => trouve(id).illustration.disponible)) {
-    const m = (await import(`../js/illustrations/${id}.js`)).default;
-    assert.equal(typeof m.monte, 'function', id);
-    for (const essai of m.essais ?? []) {
-      // Un essai ne règle que des réglages connus de l'illustration.
-      for (const cle of Object.keys(essai.etat ?? {})) assert.ok(cle in m.etat, `${id} : ${cle}`);
-    }
-  }
-});
-
-test('gabarit : les réglages traversent l’URL avec leur type', () => {
-  const defaut = { tr: -2, forme: 'propres', anime: true };
-  const q = versRecherche('bifurcation', { tr: 1.5, forme: 'compagnon', anime: false });
-  assert.deepEqual(lisEtat(defaut, new URLSearchParams(q.toString())), { tr: 1.5, forme: 'compagnon', anime: false });
-  assert.deepEqual(lisEtat(defaut, new URLSearchParams('tr=abc')), defaut);
-});
-
-test('gabarit : un texte hors des valeurs permises garde la valeur par défaut', () => {
-  const defaut = { forme: 'propres', tr: 0 };
-  const choix = { forme: ['propres', 'compagnon'] };
-  assert.equal(lisEtat(defaut, new URLSearchParams('forme=compagnon'), choix).forme, 'compagnon');
-  assert.equal(lisEtat(defaut, new URLSearchParams('forme=foo'), choix).forme, 'propres');
-  // Sans liste pour la clé, tout texte est accepté.
-  assert.equal(lisEtat(defaut, new URLSearchParams('forme=foo')).forme, 'foo');
-});
 
 test('bifurcation : le point collé à la parabole a un discriminant exactement nul', () => {
   // Cliquer près de la parabole, à une trace quelconque : Δ vaut 0, pas 10⁻³.
@@ -153,20 +121,11 @@ test('portraits : les orbites d’un centre sont des ellipses fermées et régul
   assert.ok(Math.max(...ecarts) < 1.6 * Math.min(...ecarts), `écarts ${ecarts.map((e) => e.toFixed(2))}`);
 });
 
-test('glossaire : chaque terme déclaré par une illustration existe et a une définition sourcée', async () => {
+test('glossaire : chaque définition indique sa source dans le poly', async () => {
+  // La présence des termes déclarés et la forme des entrées sont du contrat
+  // (verifieCours, socle.test.js) ; reste la règle propre au cours : la source.
   const { GLOSSAIRE } = await import('../js/illustrations/glossaire.js');
-  for (const { illustrations } of themes) {
-    for (const { id, disponible } of illustrations) {
-      if (!disponible) continue;
-      const module = (await import(`../js/illustrations/${id}.js`)).default;
-      for (const terme of module.termes ?? []) {
-        assert.ok(GLOSSAIRE[terme], `${id} : terme absent du glossaire, ${terme}`);
-      }
-    }
-  }
-  for (const [cle, { formes, definition, source }] of Object.entries(GLOSSAIRE)) {
-    assert.ok(formes.length > 0 && definition.length > 20 && /^Poly, chapitre/.test(source), cle);
-  }
+  for (const [cle, { source }] of Object.entries(GLOSSAIRE)) assert.ok(/^Poly, chapitre/.test(source), cle);
 });
 
 // ---- TD1 : portraits de phase ---------------------------------------------------------
@@ -521,7 +480,7 @@ test('solutions maximales : courbes de fond nombreuses, sans doublon, solutions 
 });
 
 test('format : nombres et matrices de largeur fixe', async () => {
-  const { latexMatriceFixe, latexNombreFixe } = await import('../js/ui/format.js');
+  const { latexMatriceFixe, latexNombreFixe } = await import('../socle/js/ui/format.js');
   assert.equal(latexNombreFixe(0.5), '\\phantom{-}0{,}50');
   assert.equal(latexNombreFixe(-1.234), '-1{,}23');
   assert.equal(latexNombreFixe(-0.001), '\\phantom{-}0{,}00'); // pas de « −0,00 »
@@ -555,7 +514,7 @@ test('contrôlabilité : l’enveloppe des points atteints est un polygone conve
 });
 
 test('latexComplexeFixe : largeur constante, signe de la partie imaginaire conservé', async () => {
-  const { latexComplexeFixe } = await import('../js/ui/format.js');
+  const { latexComplexeFixe } = await import('../socle/js/ui/format.js');
   assert.equal(latexComplexeFixe({ re: -1.234, im: 0 }), '-1{,}23');
   assert.equal(latexComplexeFixe({ re: 0.5, im: -2 }), '\\phantom{-}0{,}50 - 2{,}00\\,i');
   assert.equal(latexComplexeFixe({ re: 0, im: 3 }), '\\phantom{-}0{,}00 + 3{,}00\\,i');
@@ -569,7 +528,7 @@ test('pendule amorti : les essais annoncent le bon bassin', async () => {
 });
 
 test('plan restreint : borneLe ramène le point dans le cadran des matrices de Hurwitz', async () => {
-  const { borneLe } = await import('../js/illustrations/plan-trace-det.js');
+  const { borneLe } = await import('../socle/js/briques/plan-trace-det.js');
   const { BORNE_PLAN } = await import('../js/illustrations/lyapunov.js');
   assert.deepEqual(borneLe({ tr: 3, det: -2 }, BORNE_PLAN), { tr: -0.1, det: 0.1 });
   assert.deepEqual(borneLe({ tr: -7, det: 9 }, BORNE_PLAN), { tr: -4, det: 6 });
@@ -577,20 +536,22 @@ test('plan restreint : borneLe ramène le point dans le cadran des matrices de H
 });
 
 test('parcours : chaque page disponible a une suivante, sauf la dernière', async () => {
-  const { parcours, suivante, precedente } = await import('../js/parcours.js');
-  assert.ok(parcours.length > 10);
-  for (const p of parcours.slice(0, -1)) assert.ok(suivante(p.genre, p.id), p.id);
-  const dernier = parcours[parcours.length - 1];
-  assert.equal(suivante(dernier.genre, dernier.id), null);
-  assert.equal(precedente(parcours[0].genre, parcours[0].id), null);
-  for (const p of parcours.slice(1)) assert.ok(precedente(p.genre, p.id), p.id);
-  assert.equal(precedente(parcours[1].genre, parcours[1].id).id, parcours[0].id);
+  const { parcours, suivante, precedente } = await import('../socle/js/parcours.js');
+  const { default: config } = await import('../site.config.js');
+  const pages = parcours(config);
+  assert.ok(pages.length > 10);
+  for (const p of pages.slice(0, -1)) assert.ok(suivante(pages, p.genre, p.id), p.id);
+  const dernier = pages[pages.length - 1];
+  assert.equal(suivante(pages, dernier.genre, dernier.id), null);
+  assert.equal(precedente(pages, pages[0].genre, pages[0].id), null);
+  for (const p of pages.slice(1)) assert.ok(precedente(pages, p.genre, p.id), p.id);
+  assert.equal(precedente(pages, pages[1].genre, pages[1].id).id, pages[0].id);
   // Même ordre que l'accueil : le simulateur est dans le thème « Commande », avant Euler.
-  const ids = parcours.map((p) => p.id);
+  const ids = pages.map((p) => p.id);
   assert.ok(ids.indexOf('controlabilite') < ids.indexOf('double-integrateur'));
   assert.ok(ids.indexOf('segway') < ids.indexOf('euler'));
   assert.equal(ids[ids.length - 1], 'euler');
-  assert.equal(new Set(parcours.map((p) => p.lien)).size, parcours.length);
+  assert.equal(new Set(pages.map((p) => p.lien)).size, pages.length);
 });
 
 test('plan complexe : l’aimantation accepte un seuil propre à chaque axe', async () => {
@@ -632,7 +593,7 @@ test('simulation emballée : un lancer très vif ne rend pas le seuil trop large
 });
 
 test('nombreScientifique : largeur constante, quelle que soit la valeur', async () => {
-  const { nombreScientifique } = await import('../js/ui/format.js');
+  const { nombreScientifique } = await import('../socle/js/ui/format.js');
   const valeurs = [0, 1, -1, 0.05, -0.0123, 123.456, -9876.5, 1e-7, -2.5e12, 0.999999, 9.9999];
   const largeurs = new Set(valeurs.map((v) => nombreScientifique(v).length));
   assert.equal(largeurs.size, 1);
@@ -645,7 +606,7 @@ test('nombreScientifique : largeur constante, quelle que soit la valeur', async 
 
 test('bifurcation : P₅ signale la matrice nulle, de même spectre mais diagonalisable', async () => {
   const { remarqueCas } = await import('../js/illustrations/bifurcation.js');
-  const { matrice, nature, spectre } = await import('../js/core/dim2.js');
+  const { matrice, nature, spectre } = await import('../socle/js/core/dim2.js');
   assert.equal(nature(0, 0).cas, 'P₅');
   assert.match(remarqueCas('P₅'), /matrice nulle/);
   for (const cas of ['P₁', 'P₃', 'P₄', 'P₆', 'P₁₀']) assert.equal(remarqueCas(cas), null, cas);

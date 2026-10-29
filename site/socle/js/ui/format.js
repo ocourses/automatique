@@ -37,6 +37,31 @@ export function latexNombreFixe(v, decimales = 2, entiers = 1) {
   return `${v < 0 ? '-' : '\\phantom{-}'}${'\\phantom{0}'.repeat(manque)}${s}`;
 }
 
+// Nombre de chiffres de la partie entière du plus grand nombre que peut
+// atteindre une grandeur : la valeur à donner à `entiers` quand un texte suit
+// le nombre et que la grandeur peut passer de 9,9 à 10.
+export const chiffresEntiers = (max) => Math.max(1, String(Math.floor(Math.abs(max))).length);
+
+// Nombre positif à virgule fixe : comme latexNombreFixe, sans la place du signe
+// (une intégrale, une mesure, une somme de Darboux d'une fonction positive). La
+// partie entière n'est complétée que si `entiers` le demande : le défaut, 1, ne
+// réserve rien, ce qui convient à un nombre en fin de phrase (rien ne le suit,
+// donc rien ne bouge) ou qui reste sous 10. `+∞` s'écrit \infty, complété à la
+// même largeur.
+export function latexPositifFixe(v, decimales = 3, entiers = 1) {
+  if (v === Infinity) return `\\phantom{${'0'.repeat(Math.max(0, entiers + decimales - 1))}}+\\infty`;
+  return latexNombreFixe(Math.max(0, v), decimales, entiers).replace('\\phantom{-}', '');
+}
+
+// Nombre de signe connu pour le réglage courant, en fin de phrase : le signe
+// moins n'est écrit que si le nombre est négatif, sans place réservée (rien ne
+// suit le nombre). Pour une grandeur dont le signe ne change pas pendant le
+// geste (une valeur propre au cas choisi : la tranche d'une fonction, un total).
+export function latexNombreFinal(v, decimales = 3) {
+  const s = Math.abs(v).toFixed(decimales);
+  return `${v < 0 && Number(s) !== 0 ? '-' : ''}${s.replace('.', '{,}')}`;
+}
+
 // Nombre complexe à virgule fixe : partie réelle et partie imaginaire ont
 // chacune `decimales` décimales, le signe de la partie imaginaire garde sa
 // place (voir latexNombreFixe).
@@ -112,6 +137,20 @@ export function etiquettesAxe(valeurs) {
   });
 }
 
+// Séparateur d'une liste de nombres écrite en LaTeX : la virgule, sauf si l'un
+// d'eux s'écrit avec une virgule décimale (« 2,5 ; 3 », pas « 2,5, 3 ») ;
+// `chiffres` : les décimales affichées, qui décident si le nombre est entier.
+export function separateur(valeurs, chiffres = 3) {
+  return valeurs.every((v) => Number.isInteger(Number(v.toFixed(chiffres)))) ? ',\\ ' : '\\,;\\ ';
+}
+
+// Intervalle [u, v] de bornes fermées, LaTeX ; `ouvert` : 'gauche', 'droite' ou 'les deux'.
+export function latexIntervalle(u, v, { chiffres = 3, ouvert = '' } = {}) {
+  const g = ouvert === 'gauche' || ouvert === 'les deux' ? '\\mathopen{]}' : '[';
+  const d = ouvert === 'droite' || ouvert === 'les deux' ? '\\mathclose{[}' : ']';
+  return `${g}${latexNombre(u, chiffres)}${separateur([u, v], chiffres)}${latexNombre(v, chiffres)}${d}`;
+}
+
 export function latexVecteur(v, chiffres = 3) {
   return v.length === 1 ? latexNombre(v[0], chiffres) : `\\left(${v.map((x) => latexNombre(x, chiffres)).join('\\ ;\\ ')}\\right)`;
 }
@@ -130,4 +169,18 @@ export function polynomeLatex(c) {
     s += ` ${signe} ${coef}${puissance}`;
   });
   return s.trim() || '0';
+}
+
+// Nombre en LaTeX, en notation scientifique (1{,}23 \cdot 10^{-5}) s'il est
+// très petit ou très grand, sinon à `chiffres` chiffres significatifs.
+export function latexScientifique(v, chiffres = 3) {
+  if (!Number.isFinite(v)) return v > 0 ? '+\\infty' : v < 0 ? '-\\infty' : '\\text{—}';
+  const a = Math.abs(v);
+  if (a === 0 || (a >= 1e-3 && a < 1e5)) return latexNombre(v, chiffres);
+  const e = Math.floor(Math.log10(a));
+  let m = v / 10 ** e;
+  // L'arrondi peut donner 10 : on passe à la puissance suivante.
+  if (Math.abs(Number(m.toPrecision(chiffres))) >= 10) return latexScientifique(Math.sign(v) * 10 ** (e + 1), chiffres);
+  m = Number(m.toPrecision(chiffres));
+  return `${latexNombre(m, chiffres)} \\cdot 10^{${e}}`;
 }

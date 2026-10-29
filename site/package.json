@@ -4,7 +4,10 @@
   "type": "module",
   "description": "Site web d'illustrations interactives du cours d'Automatique (sans étape de build).",
   "scripts": {
+    "socle": "test -f socle/package.json || { echo 'Socle absent : git submodule update --init' >&2; exit 1; }",
+    "pretest": "npm run -s socle",
+    "preserve": "npm run -s socle",
     "test": "node --test",
-    "serve": "node serve.mjs"
+    "serve": "node socle/serve.mjs"
   }
 }

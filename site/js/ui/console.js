@@ -2,10 +2,10 @@
 // (matrice, polynôme caractéristique, indications) et journal des événements.
 
 import { polynomeCaracteristique } from '../core/linalg.js';
-import { ajoutePas } from './controls.js';
+import { ajoutePas } from '../../socle/js/ui/controls.js';
 import { afficheIndications, nomBoucle } from './hints.js';
-import { latexComplexe, latexMatrice, latexNombre, nombreCourt, polynomeLatex, texte } from './format.js';
-import { rend } from './katex.js';
+import { latexComplexe, latexMatrice, latexNombre, nombreCourt, polynomeLatex, texte } from '../../socle/js/ui/format.js';
+import { rend } from '../../socle/js/ui/katex.js';
 
 const MAX_LIGNES = 400;
 const FUSION_MS = 900; // des réglages successifs d'un même curseur ne forment qu'une ligne

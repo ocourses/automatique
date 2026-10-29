@@ -1,0 +1,37 @@
+/* ---- Petit écran ------------------------------------------------------------
+   Étroit, ou paysage très bas : un en-tête plus compact et des cibles tactiles
+   plus hautes. */
+
+@media (max-width: 760px), (max-height: 500px) {
+  .entete {
+    padding-top: 0.6rem;
+  }
+
+  .entete-barre {
+    align-items: flex-start;
+  }
+
+  .entete h1 {
+    font-size: 1.3rem;
+  }
+
+  .source {
+    font-size: 0.85rem;
+  }
+
+  .entete-actions {
+    flex: none;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .entete-actions button {
+    flex: none;
+    font-size: 0.8rem;
+    padding: 0.3em 0.6em;
+  }
+
+  .champ {
+    min-height: 40px;
+  }
+}

@@ -1,0 +1,24 @@
+/* ---- Accueil : carte du cours ------------------------------------------- */
+
+.themes {
+  max-width: 1800px;
+  margin: 0 auto;
+  padding: 0.5rem 16px 2rem;
+}
+
+.theme {
+  margin-top: 1.6rem;
+}
+
+.theme > h2 {
+  font-size: 1.3rem;
+  margin-bottom: 0.1em;
+}
+
+.theme > .source {
+  margin-bottom: 0.4rem;
+}
+
+.theme .catalogue {
+  padding: 0.6rem 0 0;
+}

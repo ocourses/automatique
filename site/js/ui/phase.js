@@ -2,7 +2,7 @@
 // précédentes en gris, le fantôme du linéarisé en tirets. Un clic lance une
 // nouvelle trajectoire depuis le point visé.
 
-import { couleurs } from './theme.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 
 const TRAJECTOIRES_GARDEES = 8;
 

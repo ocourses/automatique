@@ -3,27 +3,34 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Automatique : explorer le cours</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-    <link rel="stylesheet" href="css/theme.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-    <script type="module" src="js/accueil.js"></script>
+    <title>Explorer le cours</title>
+    <link rel="stylesheet" href="socle/css/theme.css" />
+    <link rel="stylesheet" href="socle/css/style.css" />
+    <link rel="stylesheet" href="css/cours.css" />
+    <script type="module">
+      import config from './site.config.js';
+      import { demarreAccueil } from './socle/js/accueil.js';
+      import { greffeSimulateur } from './js/accueil.js';
+      await demarreAccueil(config);
+      await greffeSimulateur();
+    </script>
   </head>
   <body>
+    <!-- Modèle du socle (ocots-site/modeles/index.html), dont le module appelle
+         demarreAccueil puis greffe le simulateur sur le thème « Commande » :
+         cette page n'est pas une copie du modèle (socle/docs/conception.md,
+         « Greffe sur l'accueil »), verifieModeles ne l'exige pas. -->
     <header class="entete">
-      <h1>Automatique : explorer le cours</h1>
-      <p class="source">Automatique, première année — ENSEEIHT, Sciences du numérique</p>
+      <h1 id="titre"></h1>
+      <p id="sous-titre" class="source"></p>
     </header>
-    <p class="intro">
-      Des illustrations interactives du poly et des TD, rangées par thème dans l'ordre du cours.
-      Chacune rappelle le résultat du cours, propose des choses à essayer et garde ses réglages
-      dans son lien. Le simulateur de stabilisation est dans le thème « Commande ».
-    </p>
+    <noscript>
+      <p class="intro">Cette page demande JavaScript.</p>
+    </noscript>
 
-    <p class="intro signalement">
-      Une erreur, un bug, une remarque ou une idée ? Ouvrez une
-      <a href="https://github.com/ocourses/automatique/issues" target="_blank" rel="noopener">issue sur GitHub</a>
+    <p id="signalement" class="intro signalement">
+      Une erreur, un bug, une remarque ou une idée ? Ouvrez une
+      <a id="issues" href="https://github.com/ocourses" target="_blank" rel="noopener">issue sur GitHub</a>
       en décrivant la page, ce que vous avez fait et ce que vous attendiez.
     </p>
 

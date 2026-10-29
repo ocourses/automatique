@@ -10,11 +10,11 @@
 // alors nulle et x₂ n'est pas commandable).
 
 import { kalman, rang } from '../core/linalg.js';
-import { champ } from '../ui/controls.js';
-import { latexMatriceFixe, latexNombreFixe } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
-import { boutonInfo, carte, glisse, paragraphe, toile } from './commun.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { latexMatriceFixe, latexNombreFixe } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
+import { boutonInfo, carte, glisse, paragraphe, toile, verdict } from './commun.js';
 
 export const matrices = (alpha, b1, b2) => ({
   A: [
@@ -111,7 +111,7 @@ export default {
     const canvasCarte = toile(cCarte, '1 / 1', () => dessine());
     canvasCarte.classList.add('saisissable');
     const repCarte = new Repere(canvasCarte, { x: [-2, 2], y: [-2, 2], egal: true });
-    const verdict = paragraphe(cCarte, '', 'verdict');
+    const texteVerdict = verdict(cCarte, '');
 
     boutonInfo(cCarte, [
       ['point', '--accent', 'Le point $(\\beta_1, \\beta_2)$ : faites-le glisser. Bleu si le système est contrôlable (rang 2), rouge sinon.'],
@@ -157,9 +157,9 @@ export default {
         else repCarte.point(0, 0, { rayon: 5, couleur: col.alerte });
         repCarte.point(r.b1, r.b2, { rayon: 7, couleur: rg === 2 ? col.accent : col.alerte });
       }
-      verdict.className = `verdict ${rg === 2 ? 'ok' : 'alerte'}`;
+      texteVerdict.className = `verdict ${rg === 2 ? 'ok' : 'alerte'}`;
       outils.rendTexte(
-        verdict,
+        texteVerdict,
         `$\\mathcal C(A, B) = ${latexMatriceFixe(kalman(A, B))}$ est de rang ${rg} : ${rg === 2 ? 'le système est contrôlable.' : 'le système n’est pas contrôlable.'} ` +
           `En rouge, le lieu du rang 1 pour $\\alpha = ${latexNombreFixe(r.alpha)}$ : ${Math.abs(r.alpha) < 1e-9 ? 'toute la diagonale $\\beta_1 = \\beta_2$' : 'le seul point $\\beta_1 = \\beta_2 = 0$'}.`,
       );

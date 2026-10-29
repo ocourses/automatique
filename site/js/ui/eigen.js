@@ -11,8 +11,8 @@
 // lâcher la souris, et l'échelle reste ensuite telle quelle (pas de saut).
 
 import { deplaceValeurPropre, nettoieSpectre } from '../core/poles.js';
-import { cacheInfobulle, infobulleSurPoint } from './infobulle.js';
-import { couleurs } from './theme.js';
+import { cacheInfobulle, infobulleSurPoint } from '../../socle/js/ui/infobulle.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 
 const RAYON_SAISIE = 12; // px
 const AIMANTATION = 8; // px

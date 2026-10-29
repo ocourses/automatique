@@ -1,8 +1,8 @@
 // Indications courtes, qui renvoient aux résultats du poly et des TD.
 
 import { kalman, rang } from '../core/linalg.js';
-import { latexComplexe, latexNombre } from './format.js';
-import { rendTexte } from './katex.js';
+import { latexComplexe, latexNombre } from '../../socle/js/ui/format.js';
+import { rendTexte } from '../../socle/js/ui/katex.js';
 
 const TOL = 1e-9;
 

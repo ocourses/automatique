@@ -7,11 +7,14 @@
 // prepare() ajuste le canevas à sa taille affichée et efface ; il faut
 // l'appeler au début de chaque dessin.
 
+import { ajusteCanevas } from './canevas.js';
 import { etiquettesAxe } from './format.js';
 import { couleurs } from './theme.js';
 
-// Graduations régulières « rondes » couvrant [a, b], une tous les 50 px environ.
+// Graduations régulières « rondes » couvrant [a, b], une tous les `espacement` px
+// environ ; aucune si l'intervalle est vide ou à l'envers.
 export function graduations(a, b, longueurPx, espacement = 55) {
+  if (!(b > a)) return [];
   const n = Math.max(2, Math.floor(longueurPx / espacement));
   const brut = (b - a) / n;
   const p = 10 ** Math.floor(Math.log10(brut));
@@ -72,15 +75,8 @@ export class Repere {
   // Taille, échelle et cadre effectif ; efface le canevas. Renvoie false si le
   // canevas est masqué (taille nulle).
   prepare() {
-    const rect = this.canvas.getBoundingClientRect();
-    if (rect.width < 2 || rect.height < 2) return false;
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.round(rect.width * dpr);
-    const h = Math.round(rect.height * dpr);
-    if (this.canvas.width !== w || this.canvas.height !== h) {
-      this.canvas.width = w;
-      this.canvas.height = h;
-    }
+    const rect = ajusteCanevas(this.canvas, this.ctx);
+    if (!rect) return false;
     this.rect = rect;
     this.col = couleurs();
     const m = this.marges;
@@ -100,9 +96,6 @@ export class Repere {
     this.sy = H / (y1 - y0);
     this.L = L;
     this.H = H;
-    const ctx = this.ctx;
-    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    ctx.clearRect(0, 0, rect.width, rect.height);
     return true;
   }
 
@@ -140,24 +133,31 @@ export class Repere {
   // `nomsAuBord` : les noms des axes vont aux bords du cadre (en bas à droite,
   // en haut à gauche) sur un fond, au lieu de suivre les axes : utile quand un
   // axe est au bord du cadre, où son nom tomberait sur les courbes.
-  axes({ noms = ['', ''], grille = true, nomsAuBord = false } = {}) {
+  // `ordonnees: false` : seul l'axe des abscisses est tracé et gradué (une
+  // figure dont la hauteur ne porte pas de valeur, comme une droite réelle).
+  // `dans` : { x: [a, b], y: [c, d] }, les axes et graduations restent dans ce
+  // rectangle, plus petit que le cadre (un cadre élargi par `egal`) ; les
+  // graduations de x vont alors juste sous l'axe, et non au bas du canevas.
+  axes({ noms = ['', ''], grille = true, nomsAuBord = false, ordonnees = true, dans = null } = {}) {
     const ctx = this.ctx;
     const col = this.col;
-    const { x: [a, b], y: [c, d] } = this.cadre;
-    const gx = graduations(a, b, this.L);
-    const gy = graduations(c, d, this.H, 40);
+    const { x: [a, b], y: [c, d] } = dans ?? this.cadre;
+    const gx = graduations(a, b, dans ? this.sx * (b - a) : this.L);
+    const gy = ordonnees ? graduations(c, d, dans ? this.sy * (d - c) : this.H, 40) : [];
+    const [gauche, droite] = dans ? [this.X(a), this.X(b)] : [this.marges.gauche, this.marges.gauche + this.L];
+    const [haut, bas] = dans ? [this.Y(d), this.Y(c)] : [this.marges.haut, this.marges.haut + this.H];
     ctx.save();
     ctx.lineWidth = 1;
     if (grille) {
       ctx.strokeStyle = col.grille;
       ctx.beginPath();
       for (const v of gx) {
-        ctx.moveTo(this.X(v), this.marges.haut);
-        ctx.lineTo(this.X(v), this.marges.haut + this.H);
+        ctx.moveTo(this.X(v), haut);
+        ctx.lineTo(this.X(v), bas);
       }
       for (const v of gy) {
-        ctx.moveTo(this.marges.gauche, this.Y(v));
-        ctx.lineTo(this.marges.gauche + this.L, this.Y(v));
+        ctx.moveTo(gauche, this.Y(v));
+        ctx.lineTo(droite, this.Y(v));
       }
       ctx.stroke();
     }
@@ -165,23 +165,32 @@ export class Repere {
     const y0 = Math.min(Math.max(0, c), d);
     ctx.strokeStyle = col.discret;
     ctx.beginPath();
-    ctx.moveTo(this.marges.gauche, this.Y(y0));
-    ctx.lineTo(this.marges.gauche + this.L, this.Y(y0));
-    ctx.moveTo(this.X(x0), this.marges.haut);
-    ctx.lineTo(this.X(x0), this.marges.haut + this.H);
+    ctx.moveTo(gauche, this.Y(y0));
+    ctx.lineTo(droite, this.Y(y0));
+    if (ordonnees) {
+      ctx.moveTo(this.X(x0), haut);
+      ctx.lineTo(this.X(x0), bas);
+    }
     ctx.stroke();
     ctx.fillStyle = col.discret;
     ctx.font = '11px system-ui, sans-serif';
     ctx.textAlign = 'center';
-    etiquettesAxe(gx).forEach((t, i) => ctx.fillText(t, this.X(gx[i]), this.marges.haut + this.H + 14));
+    // Une graduation trop proche du bord droit serait coupée : on l'aligne sur le bord.
+    const total = this.marges.gauche + this.L + this.marges.droite;
+    etiquettesAxe(gx).forEach((t, i) => {
+      const x = this.X(gx[i]);
+      const coupee = x + ctx.measureText(t).width / 2 > total - 1;
+      ctx.textAlign = coupee ? 'right' : 'center';
+      ctx.fillText(t, coupee ? total - 1 : x, (dans ? this.Y(y0) : this.marges.haut + this.H) + 14);
+    });
     ctx.textAlign = 'right';
     etiquettesAxe(gy).forEach((t, i) => ctx.fillText(t, this.marges.gauche - 4, this.Y(gy[i]) + 4));
     if (nomsAuBord) {
       if (noms[0]) ecritNom(ctx, noms[0], this.marges.gauche + this.L - 4, this.marges.haut + this.H - 6, 'right', col.fond);
       if (noms[1]) ecritNom(ctx, noms[1], this.marges.gauche + 6, this.marges.haut + 14, 'left', col.fond);
     } else {
-      if (noms[0]) ecritNom(ctx, noms[0], this.marges.gauche + this.L - 2, this.Y(y0) - 5, 'right');
-      if (noms[1]) ecritNom(ctx, noms[1], this.X(x0) + 5, this.marges.haut + 12, 'left');
+      if (noms[0]) ecritNom(ctx, noms[0], droite - 2, this.Y(y0) - 5, 'right');
+      if (noms[1]) ecritNom(ctx, noms[1], this.X(x0) + 5, haut + 12, 'left');
     }
     ctx.restore();
   }
@@ -264,7 +273,7 @@ export class Repere {
   }
 
   // Champ de vecteurs normalisé : de petites flèches de longueur fixe sur une grille.
-  champ(f, { n = 17, couleur = this.col.grilleForte ?? this.col.discret, longueur = 0.6 } = {}) {
+  champ(f, { n = 17, couleur = this.col.discret, longueur = 0.6 } = {}) {
     const ctx = this.ctx;
     const { x: [a, b], y: [c, d] } = this.cadre;
     const pasPx = this.L / n;
@@ -305,7 +314,6 @@ export class Repere {
     ctx.restore();
   }
 
-  // Texte en coordonnées du monde, décalé de (dx, dy) pixels.
   // Texte au point (x, y) décalé de (dx, dy) px ; avec `fond`, sur un aplat de
   // la couleur du fond, pour rester lisible par-dessus les courbes.
   texte(x, y, chaine, { couleur = this.col.trait, align = 'left', dx = 0, dy = 0, police = '12px system-ui, sans-serif', fond = false } = {}) {

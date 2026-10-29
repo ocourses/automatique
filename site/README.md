@@ -5,6 +5,15 @@ interactives du poly et des TD, et un simulateur de stabilisation, dans lequel
 on règle la condition initiale et le contrôleur, puis on regarde si le système
 se stabilise.
 
+Le site est construit sur le socle commun des sites de cours,
+[`ocots-site`](https://github.com/ocourses/ocots-site), en sous-module dans
+`socle/` et épinglé sur un tag : gabarits, feuille de style, briques, moteur du
+glossaire et CI viennent de lui. Le cours n'écrit que ce qui le distingue :
+`site.config.js`, ses illustrations, son catalogue, son glossaire, le
+simulateur et `css/cours.css`. Les conventions sont celles de
+[`site.md`](https://github.com/ocourses/ocots-conventions/blob/main/site.md),
+plus les arbitrages du cours ([`CONVENTIONS.md`](CONVENTIONS.md)).
+
 En ligne : <https://ocourses.github.io/automatique/>.
 
 Le simulateur contient huit exemples :
@@ -33,23 +42,23 @@ Le dossier est un site statique : l'accueil (`index.html`) est une **carte du co
 
 Toutes les illustrations suivent le même **gabarit** (`illustration.html?id=…`) : « Ce que dit le cours » (le résultat, avec le renvoi au poly ou au TD), l'illustration, et « À essayer », des questions guidées dont certaines règlent l'illustration d'un clic. Les réglages sont dans l'URL, pour partager une expérience. Les animations respectent `prefers-reduced-motion`.
 
-La 3D (surface de Lyapunov) est écrite à la main (`js/ui/vue3d.js`, algorithme du peintre) : aucune dépendance de plus.
+La 3D (surface de Lyapunov) est écrite à la main (`socle/js/ui/vue3d.js`, algorithme du peintre) : aucune dépendance de plus.
 
 ### Ajouter une illustration
 
 Avant d'écrire ou de reprendre une illustration, lire [`CONVENTIONS.md`](CONVENTIONS.md) : mise en page, typographie, rôle des couleurs, ce qui va dans l'URL ou dans le navigateur, interactions et vérifications. La page de référence est le diagramme de bifurcation.
 
-Un module `js/illustrations/<id>.js` exporte par défaut `{ etat, rappel, essais, monte(zone, outils) }`, et au besoin `preferences` et `choix` :
+Un module `js/illustrations/<id>.js` exporte par défaut `{ etat, rappel, essais, monte(zone, outils) }`, et au besoin `preferences`, `choix` et `termes` (le contrat complet : `socle/docs/conception.md`, « Contrat d'un module d'illustration », vérifié par `verifieCours`) :
 
 - `etat` : les réglages par défaut (nombres, textes ou booléens), gardés dans l'URL ;
 - `rappel` : les paragraphes du cours, avec des formules `$…$` (ou `$$…$$` pour une formule centrée) ; un élément qui est un tableau de textes devient une liste à puces ;
 - `essais` : `{ texte, etat?, preferences? }` ; avec `etat`, un bouton « Essayer » applique ce réglage, et `preferences` les préférences d'affichage voulues ;
-- `preferences` : les préférences d'affichage par défaut, gardées dans le navigateur (clé `simulateur.illustration.<id>`) ;
+- `preferences` : les préférences d'affichage par défaut, gardées dans le navigateur (clé `automatique.illustration.<id>`) ;
 - `termes` : les termes du glossaire employés par la page ; leur première occurrence dans le cours et les essais est soulignée, avec la définition du poly en infobulle ;
 - `choix` : les valeurs permises des réglages et préférences textuels (`{ forme: ['propres', 'compagnon'] }`) ; une autre valeur lue dans l'URL ou le navigateur est remplacée par la valeur par défaut ;
-- `monte(zone, outils)` construit l'illustration dans `zone` et renvoie `{ applique() }`, appelé après un « Essayer ». `outils` fournit `etat`, `change(partiel)` (met à jour l'URL), `preferences` (`.valeurs`, `.change(partiel)`), `rend`, `rendTexte`, `mouvementReduit` et `surTheme(f)`. Le gabarit garde aussi dans les préférences l'onglet ouvert (cours ou essais) d'une visite à l'autre.
+- `monte(zone, outils)` construit l'illustration dans `zone` et renvoie `{ applique() }`, appelé après un « Essayer ». `outils` fournit `etat`, `change(partiel)` (met à jour l'URL), `preferences` (`.valeurs`, `.change(partiel)`), `rend`, `rendTexte`, `glossaire`, `mouvementReduit` et `surTheme(f)`. Le gabarit garde aussi dans les préférences l'onglet ouvert (cours ou essais) d'une visite à l'autre.
 
-Les briques communes sont dans `js/illustrations/commun.js` (cartes, canevas, légendes, tableaux, intégration RK4, glisser à la souris), `js/illustrations/portraits.js` (portraits de phase : orbites, arcs en mouvement, particules), `js/ui/infobulle.js` (termes expliqués, légendes en bulle), `js/illustrations/glossaire.js` (définitions du poly, déclarées par `termes`), `js/illustrations/plan-trace-det.js` (plan (tr, det) saisissable), `js/ui/preferences.js`, `js/ui/repere.js` (repère 2D : axes, courbes, champ de vecteurs, lignes de niveau, régions) et `js/core/dim2.js` (systèmes linéaires plans : forme réduite du TD1, nature de l'équilibre, $e^{tA}$ exacte). On déclare enfin l'illustration dans `js/illustrations/catalogue.js`. Les fonctions mathématiques de chaque module sont exportées et testées sous Node contre le poly ou le TD (`tests/illustrations.test.js`).
+Les briques communes sont celles du socle (`socle/js/briques/` : cartes, canevas, légendes, tableaux, glisser à la souris, plan (tr, det) saisissable, portraits de phase), reprises par la façade `js/illustrations/commun.js`, qui ne garde que `simule()` (intégration RK4 d'une trajectoire). Les modules du socle s'importent par leur fichier (`socle/js/ui/repere.js`, `socle/js/core/dim2.js`…) ; le glossaire du cours (`js/illustrations/glossaire.js`) ne garde que ses données. On déclare enfin l'illustration dans `js/illustrations/catalogue.js`. Les fonctions mathématiques de chaque module sont exportées et testées sous Node contre le poly ou le TD (`tests/illustrations.test.js`).
 
 ## Page d'accueil
 
@@ -182,6 +191,7 @@ Les modules JavaScript ne se chargent pas depuis `file://`. Il faut servir le
 dossier :
 
 ```bash
+git submodule update --init   # une fois après le clone : le socle (site/socle/)
 cd site
 npm run serve        # http://localhost:8000/, sans cache (python3 -m http.server marche aussi,
                      # mais le navigateur garde alors d'anciens modules : rechargez avec Cmd/Ctrl+Maj+R)
@@ -196,7 +206,9 @@ Les tests vérifient les résultats du poly, des TD et de l'examen : valeurs
 propres, critère de Kalman, conditions sur les gains, erreur statique et
 action intégrale du TD2, fonction $V$ du TD3, pôles du rail tournant. Ils
 couvrent aussi le parseur de la loi libre et l'aller-retour des réglages par
-l'URL. Il faut Node 18 ou plus récent :
+l'URL. `npm test` lance en plus les tests du socle (`socle/tests/`), dont
+`verifieCours`, qui vérifie la configuration et chaque module d'illustration.
+Il faut Node 18 ou plus récent :
 
 ```bash
 cd site
@@ -206,43 +218,50 @@ npm test
 ## Organisation
 
 ```
-index.html            accueil : carte du cours, schéma de la boucle fermée, galerie (js/accueil.js)
-illustration.html     gabarit des illustrations (?id=bifurcation)
+index.html            accueil : modèle du socle, plus la greffe du simulateur (js/accueil.js)
+illustration.html     gabarit des illustrations (?id=bifurcation), modèle du socle
 exemple.html          page générique (?id=pendule-couple)
-css/theme.css         charte graphique : palette, rôles de couleur, ombres et rayons
-css/style.css
+site.config.js        ce qui distingue le cours (identité, catalogue, glossaire, pagesDuTheme)
+socle/                socle commun ocots-site (sous-module, épinglé sur un tag)
+css/cours.css         ce qui reste au cours une fois le socle posé (scripts/residu-css.py)
 js/
+  accueil.js          greffe de la rubrique du simulateur sur l'accueil
   app.js              assemblage de la page d'un exemple
-  core/               moteur, sans DOM (testé sous Node)
+  core/               moteur du simulateur, sans DOM (testé sous Node)
     modele.js         classe Modele : vérification d'un exemple, linéarité, disposition
     sim.js            boucle de simulation
     reglages.js       réglages sérialisables (mémoire du navigateur et liens)
     chocs.js          tirage des chocs
-    ode.js            RK4 et Euler
     linalg.js         valeurs propres, Kalman, linéarisation numérique
     poles.js          placement de pôles (Ackermann), déplacement des valeurs propres
     expr.js           parseur de la loi libre
-  ui/                 interface
+  ui/                 interface du simulateur
     panneaux/         onglets Système, Contrôleur et Observateur
     etat.js           affichage et mémoire du navigateur (localStorage)
     url.js            liens
-    …                 scène, courbes, plan complexe, portrait de phase, champs,
-                      onglets, tiroirs, console, indications, format
-  illustrations/      une illustration par module, catalogue des thèmes, briques communes
+    …                 scène, courbes, plan complexe, portrait de phase,
+                      tiroirs, console, indications
+  illustrations/      une illustration par module, catalogue des thèmes, façade commun.js,
+                      données du glossaire
   exemples/           descriptions des exemples, sans dépendance au moteur ni à l'interface
     catalogue.js      liste des exemples (disponibles ou à venir)
     <id>.js           un module par exemple
-tests/                tests Node du moteur et des exemples
+tests/                tests Node du moteur, des exemples et des illustrations
 ```
+
+Les briques partagées avec les autres cours (repère, format, infobulle,
+onglets, préférences, KaTeX, plan (tr, det), portraits, `dim2`, `ode`) sont
+dans `socle/js/`, importées par leur fichier, sauf les briques
+d'illustration, importées par la façade `commun.js`.
 
 ### Charte graphique
 
-`css/theme.css` contient les primitives de la palette et les rôles sémantiques
-du site. Les composants de `css/style.css` ne contiennent pas de couleur en
-dur : pour changer l'identité visuelle, modifier les variables de `theme.css`.
-Les titres suivent trois niveaux (`--titre-1`, `--titre-2`, `--titre-3`). Le rôle
-de chaque couleur (condition initiale, équilibres, alerte…) est fixé dans
-[`CONVENTIONS.md`](CONVENTIONS.md).
+`socle/css/theme.css` contient les primitives de la palette et les rôles
+sémantiques du site. Les composants de `socle/css/` et de `css/cours.css` ne
+contiennent pas de couleur en dur : pour changer l'identité visuelle, modifier
+les variables de `theme.css`. Les titres suivent trois niveaux (`--titre-1`,
+`--titre-2`, `--titre-3`). Le rôle de chaque couleur (condition initiale,
+équilibres, alerte…) est fixé dans [`CONVENTIONS.md`](CONVENTIONS.md).
 
 Le système réel est intégré par RK4 avec un pas fin fixe d'au plus 1 ms. Ce pas
 est réduit automatiquement lorsque le spectre du bouclé l'exige, et il n'est

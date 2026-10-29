@@ -1,0 +1,15 @@
+{
+  "name": "ocots-site",
+  "version": "0.2.0",
+  "private": true,
+  "type": "module",
+  "description": "Socle commun des sites interactifs des cours (sans étape de build).",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "node --test",
+    "test:outils": "python3 -m unittest discover -s scripts/tests",
+    "serve": "node serve.mjs"
+  }
+}

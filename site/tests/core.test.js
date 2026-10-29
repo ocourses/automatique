@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { euler, integre, rk4 } from '../js/core/ode.js';
+import { euler, integre, rk4 } from '../socle/js/core/ode.js';
 import { kalman, linearise, matadd, matmul, rang, valeursPropres } from '../js/core/linalg.js';
 import { Simulation } from '../js/core/sim.js';
 import pendule from '../js/exemples/pendule-couple.js';
