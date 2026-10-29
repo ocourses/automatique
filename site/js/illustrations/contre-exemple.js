@@ -4,9 +4,9 @@
 // Pour f, ρ̇ = −2ρ² : ρ(t) = ρ₀/(1 + 2ρ₀t) → 0, l'origine est asymptotiquement
 // stable. Pour g, ρ̇ = 2ρ² : ρ(t) = ρ₀/(1 − 2ρ₀t), qui explose en t = 1/(2ρ₀).
 
-import { nombreCourt } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { latexPositifFixe, nombreCourt, nombreScientifique } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { boutonInfo, carte, glisse, legende, paragraphe, simule, tableau, toile, zoomable } from './commun.js';
 
 export const champF = (x) => {
@@ -134,14 +134,14 @@ export default {
       const [tf, tg] = trajets;
       const lit = (tr, t) => {
         const k = Math.round(t / 0.002);
-        return k < tr.x.length ? nombreCourt(tr.x[k][0] ** 2 + tr.x[k][1] ** 2) : 'explosé';
+        return k < tr.x.length ? nombreScientifique(tr.x[k][0] ** 2 + tr.x[k][1] ** 2) : 'explosé';
       };
       tableau(
         zoneTableau,
         ['t', 'ρ exact (f)', 'ρ simulé (f)', 'ρ exact (g)', 'ρ simulé (g)'],
-        [0.25, 0.5, 1, 2, 5, 10].map((t) => [String(t).replace('.', ','), nombreCourt(rhoF(rho0, t)), lit(tf, t), Number.isFinite(rhoG(rho0, t)) ? nombreCourt(rhoG(rho0, t)) : '+∞', lit(tg, t)]),
+        [0.25, 0.5, 1, 2, 5, 10].map((t) => [String(t).replace('.', ','), nombreScientifique(rhoF(rho0, t)), lit(tf, t), Number.isFinite(rhoG(rho0, t)) ? nombreScientifique(rhoG(rho0, t)) : '+∞', lit(tg, t)]),
       );
-      paragraphe(zoneTableau, `$\\rho_0 = ${nombreCourt(rho0).replace(',', '{,}')}$ : pour $g$, explosion en $t = 1/(2\\rho_0) \\approx ${nombreCourt(tExplosion).replace(',', '{,}')}$.`, 'note');
+      paragraphe(zoneTableau, `$\\rho_0 = ${latexPositifFixe(rho0)}$ : pour $g$, explosion en $t = 1/(2\\rho_0) \\approx ${nombreCourt(tExplosion).replace(',', '{,}')}$.`, 'note');
     }
 
     outils.surTheme(dessine);

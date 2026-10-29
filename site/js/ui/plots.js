@@ -5,8 +5,8 @@
 // Chaque graphique occupe une case (.courbe) dont la hauteur est fixée par la
 // feuille de style : le graphique la remplit, légende comprise.
 
-import { etiquettesAxe, nombreScientifique } from './format.js';
-import { couleurs } from './theme.js';
+import { etiquettesAxe, nombreScientifique } from '../../socle/js/ui/format.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 
 const FENETRE = 10; // s
 const MARQUES_PAR_FENETRE = 50; // marqueurs de l'estimée x̂ sur la largeur d'un graphique

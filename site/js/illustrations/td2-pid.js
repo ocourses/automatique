@@ -9,11 +9,11 @@
 //      θ∞ = −e/(1 + k₁) ; le PID (k₀, k₁, k₂) = (−6, −12, −6) ramène θ à 0.
 
 import { valeursPropres } from '../core/linalg.js';
-import { champ } from '../ui/controls.js';
-import { latexComplexeFixe, nombreCourt } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
-import { barreOutils, boutonInfo, carte, choixRadios, glisse, legende, paragraphe, simule, tableau, toile, zoomable } from './commun.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { latexComplexeFixe, nombreCourt, nombreScientifique } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
+import { barreOutils, boutonInfo, carte, choixRadios, glisse, legende, paragraphe, simule, tableau, toile, verdict, zoomable } from './commun.js';
 
 const X0 = [1, -2];
 const DUREE = 10;
@@ -174,7 +174,7 @@ export default {
     const canvasK = toile(cDroite, '4 / 3', () => dessine());
     const repK = new Repere(canvasK, { x: [-6, 2], y: [-5, 2] });
     canvasK.classList.add('saisissable');
-    const verdict = paragraphe(cDroite, '', 'verdict');
+    const texteVerdict = verdict(cDroite, '');
     const reglages = document.createElement('div');
     cDroite.appendChild(reglages);
     const zoneTableau = document.createElement('div');
@@ -276,15 +276,15 @@ export default {
       canvasK.hidden = r.etape === 'ouverte';
       if (r.etape === 'ouverte') {
         titreDroite.textContent = 'Valeurs prédites et simulées';
-        verdict.className = 'verdict alerte';
-        outils.rendTexte(verdict, `$A$ a les valeurs propres $-1$ et $+1$ : l’erreur $\\varepsilon\\sinh t$ croît comme $\\tfrac{\\varepsilon}{2}e^{t}$.`);
+        texteVerdict.className = 'verdict alerte';
+        outils.rendTexte(texteVerdict, `$A$ a les valeurs propres $-1$ et $+1$ : l’erreur $\\varepsilon\\sinh t$ croît comme $\\tfrac{\\varepsilon}{2}e^{t}$.`);
         const tr = trajets[1];
         tableau(
           nouveau,
           ['t', 'θ nominal', 'θ exact (ε)', 'θ simulé (ε)'],
           [2, 4, 6, 8].map((t) => {
             const k = Math.round(t / 0.01);
-            return [String(t), nombreCourt(thetaBoucleOuverte(t, 0)), nombreCourt(thetaBoucleOuverte(t, r.eps)), nombreCourt(tr.x[k]?.[0] ?? NaN)];
+            return [String(t), nombreScientifique(thetaBoucleOuverte(t, 0)), nombreScientifique(thetaBoucleOuverte(t, r.eps)), nombreScientifique(tr.x[k]?.[0] ?? NaN)];
           }),
         );
         zoneTableau.replaceChildren(...nouveau.childNodes);
@@ -304,10 +304,10 @@ export default {
       }
       const vp = valeursPropres(matriceBouclee(r.k1, r.k2));
       const stable = hurwitzPD(r.k1, r.k2);
-      verdict.className = `verdict ${stable ? 'ok' : 'alerte'}`;
+      texteVerdict.className = `verdict ${stable ? 'ok' : 'alerte'}`;
       const complexes = vp.some((z) => Math.abs(z.im) > 1e-9);
       outils.rendTexte(
-        verdict,
+        texteVerdict,
         `Valeurs propres de $A + BK$ : $${vp.map((z) => latexComplexeFixe(z)).join(',\\ ')}$. ` +
           (stable
             ? `Matrice de Hurwitz : l’origine est asymptotiquement stable${complexes ? ', avec des oscillations amorties (sous la parabole)' : ', sans oscillation (au-dessus de la parabole)'}.`
@@ -315,15 +315,15 @@ export default {
       );
       if (r.etape === 'constante') {
         const [pd, pid] = trajets;
-        const fin = (tr, i) => nombreCourt(tr.x[tr.x.length - 1][i]);
+        const fin = (tr, i) => nombreScientifique(tr.x[tr.x.length - 1][i]);
         const vpPID = valeursPropres(matricePID(r.p0, r.p1, r.p2));
         tableau(
           nouveau,
           ['', 'prédit', `simulé à t = ${DUREE}`],
           [
-            ['θ∞ retour d’état', nombreCourt(thetaInfiniPD(r.e, r.k1)), fin(pd, 0)],
-            ['θ∞ PID', '0', fin(pid, 0)],
-            ['x₀∞ = ∫θ, PID', r.p0 !== 0 ? nombreCourt(-r.e / r.p0) : '—', fin(pid, 2)],
+            ['θ∞ retour d’état', nombreScientifique(thetaInfiniPD(r.e, r.k1)), fin(pd, 0)],
+            ['θ∞ PID', nombreScientifique(0), fin(pid, 0)],
+            ['x₀∞ = ∫θ, PID', nombreScientifique(r.p0 !== 0 ? -r.e / r.p0 : NaN), fin(pid, 2)],
           ],
         );
         paragraphe(

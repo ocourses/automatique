@@ -5,11 +5,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { Preferences, VERSION } from '../js/ui/preferences.js';
+import { fauxStockage } from './aides/faux-stockage.js';
 
-const faux = () => {
-  const donnees = new Map();
-  return { donnees, getItem: (k) => donnees.get(k) ?? null, setItem: (k, v) => donnees.set(k, v) };
-};
+const faux = fauxStockage;
 const DEFAUT = { longueur: 100, particules: true, nombre: 45 };
 
 test('préférences : valeurs par défaut quand rien n’est gardé', () => {

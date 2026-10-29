@@ -1,0 +1,119 @@
+/* ---- En-tête ----------------------------------------------------------- */
+
+.entete {
+  max-width: 1800px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 16px 0.4rem;
+}
+
+.entete-barre {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+}
+
+.entete-actions {
+  display: flex;
+  flex: none;
+  flex-wrap: nowrap;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* Le titre cède la place aux boutons : ils restent sur une seule ligne. */
+.entete-barre > div:first-child {
+  min-width: 0;
+}
+
+.entete-barre h1 {
+  margin-bottom: 0.1em;
+}
+
+.retour {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  text-decoration: none;
+}
+
+.source {
+  color: var(--discret);
+  margin: 0;
+}
+
+@media (min-width: 1001px) and (min-height: 601px) {
+
+  /* En-tête sur une ligne : lien, titre et source. */
+  .entete {
+    padding-top: 0.5rem;
+    padding-bottom: 0;
+  }
+
+  .entete-barre {
+    align-items: center;
+  }
+
+  .entete-barre > div:first-child {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    column-gap: 14px;
+  }
+
+  .entete-barre h1 {
+    font-size: 1.35rem;
+    margin: 0;
+  }
+}
+
+.carte {
+  background: var(--fond-carte);
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-carte);
+  padding: 0.8rem 0.9rem;
+  min-width: 0;
+  overflow-x: auto;
+  box-shadow: var(--ombre-carte);
+}
+
+h3 {
+  font-family: var(--police-ui);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--titre-3);
+  margin: 1.2em 0 0.4em;
+}
+
+h3 .katex {
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+[role='tabpanel'] > h3:first-child {
+  margin-top: 0.2em;
+}
+
+.note {
+  color: var(--discret);
+  font-size: 0.9rem;
+  margin: 0.5em 0;
+}
+
+.petit {
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  color: var(--discret);
+}
+
+.katex {
+  font-size: 1.1em;
+}
+
+.katex-display {
+  margin: 0.4em 0;
+  overflow-x: auto;
+  overflow-y: hidden;
+}

@@ -5,10 +5,10 @@
 // exactement Q(x) = q² + p² − hpq, une ellipse si h < 2. On compare aussi
 // l'ordre de convergence des schémas, dans un graphe d'erreur log-log.
 
-import { champ } from '../ui/controls.js';
-import { nombreCourt } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { nombreCourt, nombreScientifique } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { boutonInfo, carte, legende, paragraphe, tableau, toile, zoomable } from './commun.js';
 
 // Un pas de chaque schéma pour x = (q, p).
@@ -198,15 +198,15 @@ export default {
         nouveau,
         [`n = ${n}`, 'V(xₙ) prédit', 'V(xₙ) calculé'],
         [
-          ['explicite', nombreCourt((1 + r.h * r.h) ** n * V0), nombreCourt(fin(trajets.explicite))],
-          ['implicite', nombreCourt((1 + r.h * r.h) ** -n * V0), nombreCourt(fin(trajets.implicite))],
-          ['exacte', nombreCourt(V0), nombreCourt(V0)],
+          ['explicite', nombreScientifique((1 + r.h * r.h) ** n * V0), nombreScientifique(fin(trajets.explicite))],
+          ['implicite', nombreScientifique((1 + r.h * r.h) ** -n * V0), nombreScientifique(fin(trajets.implicite))],
+          ['exacte', nombreScientifique(V0), nombreScientifique(V0)],
         ],
       );
       const xs = trajets.symplectique;
       const Q = ([q, p]) => q * q + p * p - r.h * p * q;
       const ecartQ = Math.max(...xs.map((x) => Math.abs(Q(x) - Q(xs[0]))));
-      paragraphe(nouveau, `Symplectique : $Q(x_n)$ varie au plus de ${nombreCourt(ecartQ, 2)} sur les $n$ pas, aux erreurs d’arrondi près.`, 'note');
+      paragraphe(nouveau, `Symplectique : $Q(x_n)$ varie au plus de ${nombreScientifique(ecartQ)} sur les $n$ pas, aux erreurs d’arrondi près.`, 'note');
       zoneTableau.replaceChildren(...nouveau.childNodes);
 
       // Ordre de convergence.

@@ -1,0 +1,31 @@
+# Site du cours : tests, puis publication sur GitHub Pages.
+# Modèle à copier dans le dépôt étudiant : .github/workflows/site.yml
+# (publié depuis le dépôt enseignant : etudiant/.github/workflows/site.yml).
+# Réglage unique : Settings → Pages → Source : GitHub Actions.
+# Remplacer vX.Y.Z par la version d'ocots-site épinglée par le cours.
+
+name: Site
+
+on:
+  pull_request:
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
+  push:
+    branches: [main]
+    paths:
+      - 'site/**'
+      - '.github/workflows/site.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  site:
+    uses: ocourses/ocots-site/.github/workflows/site.yml@vX.Y.Z
+    permissions:
+      contents: read
+      pages: write
+      id-token: write

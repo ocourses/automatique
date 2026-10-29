@@ -3,9 +3,9 @@
 // saturation et l'échantillonnage de la commande.
 
 import { ackermann, litPoles, placementPossible } from '../../core/poles.js';
-import { ajoutePas, champ } from '../controls.js';
-import { latexMatrice, latexVecteur, texte } from '../format.js';
-import { rend, rendTexte } from '../katex.js';
+import { ajoutePas, champ } from '../../../socle/js/ui/controls.js';
+import { latexMatrice, latexVecteur, texte } from '../../../socle/js/ui/format.js';
+import { rend, rendTexte } from '../../../socle/js/ui/katex.js';
 
 const $ = (id) => document.getElementById(id);
 const vecteur = (v) => `(${v.map((x) => texte(x)).join(' ; ')})`;

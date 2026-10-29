@@ -5,11 +5,11 @@
 // le bassin d'attraction de chaque puits, et compare, d'un clic, la
 // trajectoire du pendule à celle de son linéarisé en (0, 0).
 
-import { applique, exponentielle, nature, spectre } from '../core/dim2.js';
-import { champ } from '../ui/controls.js';
-import { latexComplexeFixe, latexMatriceFixe, latexNombreFixe } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { applique, exponentielle, nature, spectre } from '../../socle/js/core/dim2.js';
+import { champ } from '../../socle/js/ui/controls.js';
+import { latexComplexeFixe, latexMatriceFixe, latexNombreFixe } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { boutonInfo, carte, glisse, legende, paragraphe, simule, toile, zoomable } from './commun.js';
 
 export const champPendule = (a, w2) => (x) => [x[1], -a * x[1] - w2 * Math.sin(x[0])];

@@ -1,0 +1,200 @@
+/* ---- Infobulle sur un terme, barre de zoom -------------------------------- */
+
+.terme {
+  border-bottom: 1px dotted var(--discret);
+  cursor: help;
+}
+
+.terme:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.infobulle {
+  position: fixed;
+  z-index: 50;
+  max-width: 22rem;
+  padding: 0.5em 0.7em;
+  background: var(--fond-bulle);
+  color: var(--texte);
+  border: 1.5px solid var(--bord-bulle);
+  border-radius: var(--rayon-controle);
+  box-shadow: var(--ombre-carte);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  line-height: 1.4;
+  pointer-events: none;
+}
+
+.barre-legende {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.3em 1em;
+}
+
+.zoom {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.zoom .petit {
+  margin-right: 0.4em;
+}
+
+.zoom button {
+  min-width: 2em;
+  padding: 0.1em 0.5em;
+  font-size: 0.85rem;
+}
+
+/* Bouton « i » d'une carte et légende en bulle. */
+.carte-avec-info {
+  position: relative;
+}
+
+.bouton-info {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.8rem;
+  width: 1.7em;
+  height: 1.7em;
+  padding: 0;
+  border-radius: 50%;
+  font-family: var(--police);
+  font-style: italic;
+  font-weight: 700;
+  font-size: 0.9rem;
+  line-height: 1;
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.titre-bulle {
+  margin: 0 0 0.4em;
+  font-weight: 600;
+}
+
+.legende-bulle {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.legende-bulle li {
+  display: grid;
+  grid-template-columns: 1.6em 1fr;
+  align-items: baseline;
+  gap: 0.4em;
+  margin: 0.3em 0;
+}
+
+.pastille {
+  justify-self: center;
+  display: inline-block;
+  color: var(--couleur-pastille);
+}
+
+.pastille.ligne,
+.pastille.tirets {
+  width: 1.4em;
+  border-top: 2px solid var(--couleur-pastille);
+  transform: translateY(-0.25em);
+}
+
+.pastille.tirets {
+  border-top-style: dashed;
+}
+
+.pastille.point,
+.pastille.cercle {
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 50%;
+  background: var(--couleur-pastille);
+}
+
+.pastille.cercle {
+  background: none;
+  border: 2px solid var(--couleur-pastille);
+}
+
+.pastille.zone {
+  width: 1.2em;
+  height: 0.8em;
+  border-radius: 2px;
+  background: var(--couleur-pastille);
+  border: 1px solid var(--accent);
+}
+
+/* Ligne d'outils au-dessus d'une illustration (choix, bouton « i »), sans carte. */
+.barre-outils {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4em 1em;
+  padding: 0 0.2rem;
+}
+
+.barre-outils .bouton-info {
+  position: static;
+}
+
+/* Infobulle de glossaire : terme, définition du poly, source. */
+.corps-bulle {
+  margin: 0 0 0.4em;
+  font-family: var(--police);
+  font-size: 0.92rem;
+}
+
+.source-bulle {
+  margin: 0;
+  color: var(--discret);
+  font-size: 0.8rem;
+}
+
+/* Bloc repliable (contre-exemple, compléments). */
+.repliable {
+  padding: 0;
+}
+
+.entete-repliable {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1em;
+  padding: 0.6rem 0.9rem;
+  border: none;
+  border-radius: var(--rayon-carte);
+  background: none;
+  font-family: var(--police);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--titre-2);
+  text-align: left;
+}
+
+.etat-repliable {
+  font-family: var(--police-ui);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: var(--accent);
+}
+
+.contenu-repliable {
+  padding: 0 0.9rem 0.8rem;
+}
+
+/* Texte qui change avec un choix mais garde la même hauteur (trois lignes),
+   pour que la figure en dessous ne bouge pas. */
+.texte-fixe {
+  min-height: 5.8em;
+}
+
+.texte-fixe p {
+  margin: 0.3em 0;
+}

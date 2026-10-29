@@ -4,13 +4,18 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <title>Illustration du cours</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css" />
-    <link rel="stylesheet" href="css/theme.css" />
-    <link rel="stylesheet" href="css/style.css" />
-    <script src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
-    <script type="module" src="js/illustration.js"></script>
+    <link rel="stylesheet" href="socle/css/theme.css" />
+    <link rel="stylesheet" href="socle/css/style.css" />
+    <link rel="stylesheet" href="css/cours.css" />
+    <script type="module">
+      import config from './site.config.js';
+      import { demarreIllustration } from './socle/js/illustration.js';
+      demarreIllustration(config);
+    </script>
   </head>
   <body class="page-illustration">
+    <!-- Modèle du socle (ocots-site/modeles/illustration.html), à copier sans le
+         changer : le contenu vient du module de l'illustration. -->
     <header class="entete entete-barre">
       <div>
         <nav class="fil" aria-label="Fil d'Ariane">
@@ -23,6 +28,9 @@
       <div class="entete-actions">
       </div>
     </header>
+    <noscript>
+      <p class="carte">Cette page demande JavaScript.</p>
+    </noscript>
 
     <p id="introuvable" class="carte" hidden>
       Cette illustration n'existe pas ou n'est pas encore disponible.

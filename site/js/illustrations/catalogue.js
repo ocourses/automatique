@@ -118,11 +118,3 @@ export const themes = [
     ],
   },
 ];
-
-export function trouve(id) {
-  for (const theme of themes) {
-    const illustration = theme.illustrations.find((i) => i.id === id);
-    if (illustration) return { theme, illustration };
-  }
-  return null;
-}

@@ -1,0 +1,134 @@
+/* ---- Champs ------------------------------------------------------------ */
+
+.champ {
+  display: grid;
+  grid-template-columns: 2.5em minmax(0, 15em) 5.6em 3.5em;
+  justify-content: start;
+  align-items: center;
+  gap: 0.5em;
+  margin: 0.35em 0;
+}
+
+/* Saisies seules, listes et cases : mêmes colonnes que les champs à curseur,
+   pour que les saisies soient alignées d'une section à l'autre. */
+.saisie-pas {
+  display: inline-flex;
+  vertical-align: middle;
+  overflow: hidden;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  background: var(--fond);
+}
+
+.saisie-pas:focus-within {
+  border-color: var(--accent);
+}
+
+/* La bordure est celle de l'ensemble : la saisie n'a plus la sienne. */
+.saisie-pas input[type='text'] {
+  flex: 1 1 0;
+  min-width: 0;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  outline: none;
+}
+
+.pas-boutons {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 1.6em;
+  border-left: 1px solid var(--bordure);
+}
+
+.pas-boutons button {
+  flex: 1 1 0;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  background: var(--fond-survol);
+  color: var(--texte);
+  font-size: 0.6rem;
+  line-height: 1;
+}
+
+.pas-boutons button + button {
+  border-top: 1px solid var(--bordure);
+}
+
+.pas-boutons button:hover {
+  background: var(--accent-pale);
+  color: var(--accent);
+}
+
+.champ-court {
+  grid-template-columns: 4.5em 7em auto;
+}
+
+.champ-court select {
+  width: 100%;
+}
+
+.case {
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+
+.champ input[type='text'] {
+  width: 100%;
+}
+
+.unite {
+  color: var(--discret);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+}
+
+textarea {
+  display: block;
+  width: 100%;
+  font-family: var(--police-mono);
+  font-size: 0.9rem;
+  color: var(--texte);
+  background: var(--fond);
+  border: 1px solid var(--bordure);
+  border-radius: 4px;
+  padding: 0.3em 0.4em;
+  resize: vertical;
+}
+
+.erreur {
+  color: var(--alerte);
+  font-family: var(--police-ui);
+  font-size: 0.85rem;
+  margin: 0.3em 0;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+/* Lien de l'en-tête présenté comme un bouton (page suivante). */
+a.bouton-lien,
+button.bouton-lien {
+  display: inline-block;
+  cursor: pointer;
+  padding: 0.35em 0.9em;
+  border: 1px solid var(--bordure);
+  border-radius: var(--rayon-controle);
+  background: var(--fond-carte);
+  color: var(--texte);
+  font-family: var(--police-ui);
+  font-size: 0.9rem;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+a.bouton-lien:hover,
+button.bouton-lien:hover {
+  border-color: var(--accent);
+  background: var(--fond-survol);
+}

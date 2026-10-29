@@ -14,19 +14,20 @@ import { Simulation } from './core/sim.js';
 import { Console } from './ui/console.js';
 import { PlanComplexe } from './ui/eigen.js';
 import { Memoire, normaliseAffichage } from './ui/etat.js';
-import { texte, typographie } from './ui/format.js';
-import { rendStatique } from './ui/katex.js';
+import { texte, typographie } from '../socle/js/ui/format.js';
+import { chargeKatex, rendStatique } from '../socle/js/ui/katex.js';
 import { boutonInfo } from './illustrations/commun.js';
 import { ANIMATIONS } from './ui/animations/index.js';
-import { installeNavigation } from './parcours.js';
-import { initOnglets } from './ui/onglets.js';
+import { installeNavigation, parcours } from '../socle/js/parcours.js';
+import config from '../site.config.js';
+import { initOnglets } from '../socle/js/ui/onglets.js';
 import { panneauControleur } from './ui/panneaux/controleur.js';
 import { panneauObservateur } from './ui/panneaux/observateur.js';
 import { panneauSysteme } from './ui/panneaux/systeme.js';
 import { Portrait } from './ui/phase.js';
 import { Courbes } from './ui/plots.js';
 import { Scene } from './ui/scene.js';
-import { surChangementTheme } from './ui/theme.js';
+import { surChangementTheme } from '../socle/js/ui/theme.js';
 import { initTiroirs } from './ui/tiroirs.js';
 import { depuisURL, porteReglages } from './ui/url.js';
 
@@ -44,9 +45,10 @@ async function charge() {
     $('titre').textContent = 'Exemple introuvable';
     $('page').hidden = true;
     $('introuvable').hidden = false;
+    document.body.dataset.ok = '1';
     return;
   }
-  const def = (await import(`./exemples/${entree.id}.js`)).default;
+  const [{ default: def }] = await Promise.all([import(`./exemples/${entree.id}.js`), chargeKatex()]);
   demarre(new Modele(def));
 }
 
@@ -65,7 +67,7 @@ function etatInitial(modele, sim, memoire) {
 }
 
 function demarre(modele) {
-  installeNavigation('exemple', modele.id);
+  installeNavigation(parcours(config), 'exemple', modele.id);
   document.title = `${modele.titre} · Simulateur de stabilisation`;
   $('titre').textContent = modele.titre;
   $('source').textContent = typographie(modele.source);
@@ -417,6 +419,7 @@ function demarre(modele) {
     requestAnimationFrame(image);
   }
   requestAnimationFrame(image);
+  document.body.dataset.ok = '1';
 }
 
 charge();

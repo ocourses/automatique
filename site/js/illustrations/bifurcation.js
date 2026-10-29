@@ -2,17 +2,17 @@
 // point, et le portrait de phase, les valeurs propres, les directions propres
 // et la solution x(t) = e^{tA}x₀ suivent (poly, portraits de phase ; TD1).
 
-import { applique, exponentielle, matrice, nature, spectre } from '../core/dim2.js';
-import { latexComplexeFixe, latexMatriceFixe, latexNombreFixe } from '../ui/format.js';
-import { fermeInfobulle, infobulle } from '../ui/infobulle.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
-import { boutonInfo, carte, choixRadios, glisse, legende, paragraphe, toile, zoomable } from './commun.js';
-import { dessinePlan, plan } from './plan-trace-det.js';
-import { Particules, dessinePortrait } from './portraits.js';
+import { applique, exponentielle, matrice, nature, spectre } from '../../socle/js/core/dim2.js';
+import { latexComplexeFixe, latexMatriceFixe, latexNombreFixe } from '../../socle/js/ui/format.js';
+import { fermeInfobulle, infobulle } from '../../socle/js/ui/infobulle.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
+import { boutonInfo, carte, choixRadios, glisse, legende, paragraphe, toile, verdict, zoomable } from './commun.js';
+import { dessinePlan, plan } from '../../socle/js/briques/plan-trace-det.js';
+import { Particules, dessinePortrait } from '../../socle/js/briques/portraits.js';
 
 // Fonctions du plan (tr, det), exportées ici pour les tests.
-export { aimante, pointDuPlan } from './plan-trace-det.js';
+export { aimante, pointDuPlan } from '../../socle/js/briques/plan-trace-det.js';
 
 // Remarque propre à un cas du TD1, ou null. Pour P₅ (tr = det = 0), la forme
 // réduite est [[0, 1], [0, 0]], non diagonalisable ; mais la matrice nulle a le
@@ -70,7 +70,7 @@ export default {
     const cPlan = carte(gauche, 'Plan $(\\operatorname{tr} A, \\det A)$');
     const canvasPlan = toile(cPlan, '4 / 3', () => dessine());
     const repPlan = new Repere(canvasPlan, { x: [-5, 5], y: [-2.5, 6] });
-    const verdict = paragraphe(cPlan, '', 'verdict');
+    const texteVerdict = verdict(cPlan, '');
 
     // ---- x(t) ------------------------------------------------------------------------
     const cTemps = carte(gauche, 'Solution $x(t) = e^{tA}x_0$');
@@ -178,9 +178,9 @@ export default {
 
       // Plan (tr, det).
       dessinePlan(repPlan, r.tr, r.det, col);
-      verdict.className = `verdict ${n.stabilite === 'asymptotiquement stable' ? 'ok' : n.stabilite === 'instable' ? 'alerte' : ''}`;
+      texteVerdict.className = `verdict ${n.stabilite === 'asymptotiquement stable' ? 'ok' : n.stabilite === 'instable' ? 'alerte' : ''}`;
       outils.rendTexte(
-        verdict,
+        texteVerdict,
         `${n.nom[0].toUpperCase()}${n.nom.slice(1)} : l’origine est ${n.stabilite} (cas ${n.cas} du TD1).`,
       );
       outils.rendTexte(

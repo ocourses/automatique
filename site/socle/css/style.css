@@ -1,0 +1,11 @@
+/* Socle des sites de cours : les composants, dans l'ordre de la cascade. */
+
+@import url('./base.css');
+@import url('./entete.css');
+@import url('./onglets.css');
+@import url('./champs.css');
+@import url('./petit-ecran.css');
+@import url('./catalogue.css');
+@import url('./illustration.css');
+@import url('./accueil.css');
+@import url('./infobulle.css');

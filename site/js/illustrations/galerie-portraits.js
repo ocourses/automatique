@@ -2,12 +2,12 @@
 // du diagramme de bifurcation, avec sa nature et sa stabilité. Chaque portrait
 // ouvre le diagramme de bifurcation en ce point.
 
-import { CAS_TD1, matrice, nature, spectre } from '../core/dim2.js';
-import { latexComplexe } from '../ui/format.js';
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { CAS_TD1, matrice, nature, spectre } from '../../socle/js/core/dim2.js';
+import { latexComplexe } from '../../socle/js/ui/format.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { barreOutils, boutonInfo, choixRadios, paragraphe, toile } from './commun.js';
-import { dessinePortrait } from './portraits.js';
+import { dessinePortrait } from '../../socle/js/briques/portraits.js';
 
 export default {
   etat: { forme: 'propres' },

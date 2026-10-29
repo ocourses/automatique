@@ -6,8 +6,8 @@
 //   ẋ = √|x|    : non-unicité en x = 0 (second membre non lipschitzien) ;
 //   ẋ = −x³     : le linéarisé est nul, l'origine est pourtant asymptotiquement stable.
 
-import { Repere } from '../ui/repere.js';
-import { couleurs } from '../ui/theme.js';
+import { Repere } from '../../socle/js/ui/repere.js';
+import { couleurs } from '../../socle/js/ui/theme.js';
 import { barreOutils, boutonInfo, carte, choixRadios, glisse, paragraphe, toile, zoomable } from './commun.js';
 
 // Solution maximale du problème de Cauchy x(t₀) = x₀ : { a, b, x(t), latex }
