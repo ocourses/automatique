@@ -19,3 +19,4 @@ examens/AAAA-AAAA/correction.pdf
 - [2022–2023 — sujet](2022-2023/sujet.pdf) · [correction](2022-2023/correction.pdf)
 - [2023–2024 — sujet](2023-2024/sujet.pdf) · [correction](2023-2024/correction.pdf)
 - [2024–2025 — sujet](2024-2025/sujet.pdf) · [correction](2024-2025/correction.pdf)
+- [2026–2027 — sujet](2026-2027/sujet.pdf) · [correction](2026-2027/correction.pdf)
